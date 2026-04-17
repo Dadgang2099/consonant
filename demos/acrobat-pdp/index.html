@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adobe Acrobat — Edit, Sign & Share PDFs</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="panel.css">
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     ADOBE GLOBAL NAV
+═══════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav__wrap">
+    <a href="#" class="nav__adobe">
+      <svg width="34" height="26" viewBox="0 0 34 26" fill="none"><path d="M20.4 0H34v26L20.4 0ZM13.6 0H0v26L13.6 0ZM17 9.5L25.7 26h-5.4L17.7 21H11L17 9.5Z" fill="#FA0F00"/></svg>
+      <span>Adobe</span>
+    </a>
+    <ul class="nav__links">
+      <li><a href="#">Products <svg class="nav__caret" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></a></li>
+      <li><a href="#">Use Cases <svg class="nav__caret" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></a></li>
+      <li><a href="#">Solutions <svg class="nav__caret" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></a></li>
+      <li><a href="#">Learn &amp; Support <svg class="nav__caret" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></a></li>
+      <li><a href="#">Plans</a></li>
+    </ul>
+    <div class="nav__right">
+      <button class="nav__grid" aria-label="All apps">
+        <svg width="18" height="18" viewBox="0 0 18 18"><rect x="0" y="0" width="7" height="7" rx="1" fill="currentColor"/><rect x="11" y="0" width="7" height="7" rx="1" fill="currentColor"/><rect x="0" y="11" width="7" height="7" rx="1" fill="currentColor"/><rect x="11" y="11" width="7" height="7" rx="1" fill="currentColor"/></svg>
+      </button>
+      <a href="#" class="nav__signin">Sign In</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     HERO — garage door (sticky, lifts to reveal)
+═══════════════════════════════════════════ -->
+<div class="hero-scrim">
+<section class="hero" id="hero" data-section="Hero">
+
+  <!-- White zone: empty space + text pinned to bottom -->
+  <div class="hero__white">
+    <div class="hero__brand-row">
+      <svg class="hero__app-icon" viewBox="0 0 45 45">
+        <rect width="45" height="45" rx="9" fill="#EB1000"/>
+        <path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/>
+      </svg>
+      <span class="hero__app-name">Acrobat</span>
+    </div>
+    <h1 class="hero__headline">Work smarter with Acrobat. Edit and sign PDFs, understand your documents faster with AI, and share and collaborate with ease.</h1>
+    <div class="hero__cta-strip">
+      <div class="hero__price-tag">
+        <span class="hero__price-amount">US$22.99/mo</span>
+        <span class="hero__price-note">Annuall, billed monthly</span>
+      </div>
+      <a href="#" class="btn-hero btn-hero--solid">Buy</a>
+      <a href="#" class="btn-hero btn-hero--outline">Free Trial</a>
+    </div>
+  </div>
+
+  <!-- Dark zone: scroll-scrubbed iPhone 11 Pro video + Acrobat UI card -->
+  <div class="hero__dark" id="heroDark">
+    <video class="hero__video" id="heroVideo"
+      src="assets/hero.mp4"
+      muted playsinline preload="auto"
+      aria-hidden="true"></video>
+
+    <div class="hero__ui-card" id="heroCard">
+      <div class="aui">
+        <!-- Toolbar -->
+        <div class="aui__toolbar">
+          <div class="aui__toolbar-left">
+            <button class="aui__add-space">Add to PDF Space</button>
+            <nav class="aui__tabs">
+              <span class="aui__tab aui__tab--on">All tools</span>
+              <span class="aui__tab">Edit</span>
+              <span class="aui__tab">Convert</span>
+              <span class="aui__tab">E-Sign</span>
+            </nav>
+          </div>
+          <div class="aui__toolbar-right">
+            <span class="aui__search">Find text or tools</span>
+            <div class="aui__toolbar-icons">
+              <span class="aui__icon-btn">⊕</span><span class="aui__icon-btn">↑</span>
+              <span class="aui__icon-btn">◎</span><span class="aui__icon-btn">⊞</span>
+            </div>
+            <button class="aui__share">Share</button>
+            <button class="aui__ai-btn">✦ AI Assistant</button>
+          </div>
+        </div>
+
+        <!-- Body: sidebar + canvas -->
+        <div class="aui__body">
+          <div class="aui__sidebar">
+            <div class="aui__sidebar-head">All tools</div>
+            <div class="aui__close">✕</div>
+            <ul class="aui__menu">
+              <li class="aui__item aui__item--new"><span class="aui__item-icon">＋</span>Create a PDF Space<span class="aui__new">NEW</span></li>
+              <li class="aui__item aui__item--ai"><span class="aui__item-icon">✦</span>AI Assistant</li>
+              <li class="aui__item aui__item--ai"><span class="aui__item-icon">✦</span>Generative summary</li>
+              <li class="aui__item"><span class="aui__item-icon">↗</span>Export a PDF</li>
+              <li class="aui__item"><span class="aui__item-icon">✎</span>Edit a PDF</li>
+              <li class="aui__item"><span class="aui__item-icon">✉</span>Request e-signatures</li>
+              <li class="aui__item"><span class="aui__item-icon">＋</span>Create a PDF</li>
+              <li class="aui__item aui__item--ai"><span class="aui__item-icon">✦</span>Stylize this PDF</li>
+              <li class="aui__item"><span class="aui__item-icon">✏</span>Fill &amp; Sign</li>
+              <li class="aui__item"><span class="aui__item-icon">⇅</span>Translate this PDF</li>
+              <li class="aui__item"><span class="aui__item-icon">⊞</span>Combine files</li>
+            </ul>
+            <a class="aui__view-more">View more</a>
+          </div>
+
+          <!-- Icon rail -->
+          <div class="aui__icon-rail">
+            <span class="aui__rail-icon aui__rail-icon--on">⬡</span>
+            <span class="aui__rail-icon">⊙</span>
+            <span class="aui__rail-icon">✎</span>
+            <span class="aui__rail-icon">✦</span>
+            <span class="aui__rail-icon">…</span>
+          </div>
+
+          <!-- Canvas: PDF thumbnails -->
+          <div class="aui__canvas">
+            <!-- Invoice (tall, spans 2 rows) -->
+            <div class="aui__pdf aui__pdf--invoice">
+              <div class="aui__pdf-inner">
+                <div class="aui__invoice-title">Invoice</div>
+                <div class="aui__invoice-lines"></div>
+                <div class="aui__invoice-table">
+                  <div></div><div></div>
+                  <div></div><div></div>
+                  <div></div><div></div>
+                </div>
+                <div class="aui__invoice-footer">
+                  <div></div><div></div>
+                </div>
+                <span class="aui__chip">Invoice.pdf</span>
+              </div>
+            </div>
+            <!-- Report -->
+            <div class="aui__pdf aui__pdf--report">
+              <div class="aui__pdf-inner">
+                <p class="aui__report-label">AVERAGE WORKING WEEK<br>MANDATED BY FRENCH LAW</p>
+                <div class="aui__report-stat">35<sup>%</sup></div>
+                <span class="aui__chip aui__chip--light">Report.pdf</span>
+              </div>
+            </div>
+            <!-- Outdoor lifestyle -->
+            <div class="aui__pdf aui__pdf--outdoor">
+              <div class="aui__pdf-inner">
+                <span class="aui__outdoor-text">The new era<br>of outdoor<br>lifestyle and</span>
+              </div>
+            </div>
+            <!-- Mountain -->
+            <div class="aui__pdf aui__pdf--mountain">
+              <div class="aui__pdf-inner"></div>
+            </div>
+          </div>
+
+          <!-- Right pagination rail -->
+          <div class="aui__page-rail">
+            <span class="aui__page-num">1</span>
+            <span class="aui__page-sep"></span>
+            <span class="aui__page-count">100</span>
+            <span class="aui__rail-icon">⌃</span>
+            <span class="aui__rail-icon">⌄</span>
+            <span class="aui__rail-icon">↺</span>
+            <span class="aui__rail-icon">⊕</span>
+            <span class="aui__rail-icon">⊖</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div><!-- /hero-scrim -->
+
+<main class="page-main">
+
+<!-- ═══════════════════════════════════════════
+     BENTO — core product capabilities
+═══════════════════════════════════════════ -->
+<section class="bento" id="bento" data-section="Bento">
+  <header class="bento__hdr">
+    <p class="eyebrow">Core product capabilities</p>
+    <h2 class="bento__h2">Get the essential PDF toolkit,<br>enhanced by AI.</h2>
+    <p class="bento__sub">Create, edit, sign, and manage PDFs with trusted Acrobat tools, and use AI Assistant to speed through document tasks. No experience needed.</p>
+  </header>
+
+  <div class="bento__grid">
+
+    <!-- 50/50 Left — AI/Tell your docs -->
+    <div class="bento-cell bento-cell--half" data-hover="ai">
+      <div class="bento-cell__asset">
+        <div class="ai-asset">
+          <div class="ai-asset__doc">
+            <div class="ai-asset__doc-logo">
+              <svg width="18" height="18" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+            </div>
+            <p class="ai-asset__doc-name">Aetherware LLC<br>Operating Agreement</p>
+            <div class="ai-asset__doc-section">Introduction</div>
+            <div class="ai-asset__doc-lines">
+              <div class="ai-asset__doc-line"></div>
+              <div class="ai-asset__doc-line"></div>
+              <div class="ai-asset__doc-line ai-asset__doc-line--short"></div>
+              <div class="ai-asset__doc-line"></div>
+              <div class="ai-asset__doc-line ai-asset__doc-line--short"></div>
+            </div>
+          </div>
+          <div class="ai-asset__query">
+            <span class="ai-asset__query-text">Analyze this contract and flag anything suspicious.</span>
+            <button class="ai-asset__chooser">Choose an assistant <span>∨</span></button>
+            <div class="ai-asset__actions">
+              <button class="ai-asset__copy">⊡</button>
+              <button class="ai-asset__send">➤</button>
+            </div>
+          </div>
+          <div class="ai-asset__response">
+            <div class="ai-asset__response-lines">
+              <div></div><div></div><div style="width:70%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bento-cell__copy">
+        <h3>Tell your docs what to do.</h3>
+        <p>With AI Assistant, you can use everyday language to turn files into PDFs, make quick edits, ask your docs questions, and more.</p>
+      </div>
+    </div>
+
+    <!-- 50/50 Right — Convert -->
+    <div class="bento-cell bento-cell--half" data-hover="convert">
+      <div class="bento-cell__asset">
+        <div class="convert-asset">
+          <div class="convert-asset__doc convert-asset__doc--1">
+            <div class="convert-asset__doc-thumb convert-asset__doc-thumb--invoice"></div>
+            <div class="convert-asset__doc-name"></div>
+          </div>
+          <div class="convert-asset__doc convert-asset__doc--2">
+            <div class="convert-asset__doc-thumb convert-asset__doc-thumb--orange"></div>
+            <div class="convert-asset__doc-lines"><div></div><div></div></div>
+          </div>
+          <div class="convert-asset__doc convert-asset__doc--3">
+            <div class="convert-asset__doc-thumb convert-asset__doc-thumb--photo"></div>
+            <div class="convert-asset__doc-lines"><div></div><div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bento-cell__copy">
+        <h3>Quickly create and convert PDFs.</h3>
+        <p>Turn MS Office files, images, and other data into high-fidelity PDFs, or convert PDFs to other formats.</p>
+      </div>
+    </div>
+
+    <!-- Full-width — Print to digital -->
+    <div class="bento-cell bento-cell--full" data-hover="print">
+      <div class="bento-cell__photo-bg"></div>
+      <div class="bento-cell__copy bento-cell__copy--dark">
+        <h3>Go from print to digital.</h3>
+        <p>Easily turn scanned paper docs into fully searchable and editable PDFs.</p>
+      </div>
+    </div>
+
+    <!-- Third — Signatures -->
+    <div class="bento-cell bento-cell--third" data-hover="sign">
+      <div class="bento-cell__asset">
+        <div class="sign-asset">
+          <div class="sign-asset__sig">R. Pryce</div>
+          <div class="sign-asset__label">Signature</div>
+          <div class="sign-asset__underline"></div>
+        </div>
+      </div>
+      <div class="bento-cell__copy">
+        <h3>Speed up signature workflows.</h3>
+        <p>Request signatures, track status, and get reminders to keep work flowing.</p>
+      </div>
+    </div>
+
+    <!-- Third — Protect -->
+    <div class="bento-cell bento-cell--third" data-hover="protect">
+      <div class="bento-cell__asset">
+        <div class="protect-asset">
+          <div class="protect-asset__chip">
+            <span class="protect-asset__lock">🔒</span>
+            Request access
+            <span class="protect-asset__caret">∨</span>
+          </div>
+          <div class="protect-asset__doc">
+            <div class="protect-asset__line"></div>
+            <div class="protect-asset__line protect-asset__line--med"></div>
+            <div class="protect-asset__line protect-asset__line--short"></div>
+          </div>
+        </div>
+      </div>
+      <div class="bento-cell__copy">
+        <h3>Protect sensitive info.</h3>
+        <p>Add passwords and Certification, and permanently redact personal info and more.</p>
+      </div>
+    </div>
+
+    <!-- Third — Edit -->
+    <div class="bento-cell bento-cell--third" data-hover="edit">
+      <div class="bento-cell__asset">
+        <div class="edit-asset">
+          <div class="edit-asset__header">Part 2 | Certification</div>
+          <p class="edit-asset__body">1. <mark>Applicable Law: Construed in accordance with the laws</mark> to any conflict of laws rule or provision of this Agreement to the laws of a state shall at all events be construed…</p>
+        </div>
+      </div>
+      <div class="bento-cell__copy">
+        <h3>Edit PDFs in a few clicks.</h3>
+        <p>Update text and images, re-arrange content, organize pages, and more.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PDF SPACES
+═══════════════════════════════════════════ -->
+<section class="spaces" id="spaces" data-section="PDF Spaces">
+  <div class="spaces__wrap">
+    <p class="eyebrow eyebrow--light">PDF Spaces</p>
+    <h2 class="spaces__h2">Take your productivity to the<br>next level with PDF Spaces.</h2>
+    <p class="spaces__sub">Bring all your project files, PDFs, and links into one workspace that is shareable, AI-powered workspace that helps you and your team get more done together.</p>
+
+    <!-- Floating product UI (reuses aui styling) -->
+    <div class="spaces__product">
+      <div class="spaces__product-shell">
+        <div class="aui spaces-aui">
+          <div class="aui__toolbar spaces-toolbar">
+            <div class="aui__toolbar-left">
+              <button class="aui__add-space">Add to PDF Space</button>
+              <nav class="aui__tabs">
+                <span class="aui__tab aui__tab--on">All tools</span>
+                <span class="aui__tab">Edit</span>
+                <span class="aui__tab">Convert</span>
+                <span class="aui__tab">E-Sign</span>
+              </nav>
+            </div>
+            <div class="aui__toolbar-right">
+              <span class="aui__search">Find text or tools</span>
+              <button class="aui__share">Share</button>
+              <button class="aui__ai-btn">✦ AI Assistant</button>
+            </div>
+          </div>
+          <div class="aui__body">
+            <div class="aui__sidebar">
+              <div class="aui__sidebar-head">All tools</div>
+              <ul class="aui__menu">
+                <li class="aui__item aui__item--new"><span class="aui__item-icon">＋</span>Create a PDF Space<span class="aui__new">NEW</span></li>
+                <li class="aui__item aui__item--ai"><span class="aui__item-icon">✦</span>AI Assistant</li>
+                <li class="aui__item aui__item--ai"><span class="aui__item-icon">✦</span>Generative summary</li>
+                <li class="aui__item"><span class="aui__item-icon">↗</span>Export a PDF</li>
+                <li class="aui__item"><span class="aui__item-icon">✎</span>Edit a PDF</li>
+                <li class="aui__item"><span class="aui__item-icon">✉</span>Request e-signatures</li>
+                <li class="aui__item"><span class="aui__item-icon">＋</span>Create a PDF</li>
+                <li class="aui__item aui__item--ai"><span class="aui__item-icon">✦</span>Stylize this PDF</li>
+                <li class="aui__item"><span class="aui__item-icon">✏</span>Fill &amp; Sign</li>
+                <li class="aui__item"><span class="aui__item-icon">⇅</span>Translate this PDF</li>
+                <li class="aui__item"><span class="aui__item-icon">⊞</span>Combine files</li>
+              </ul>
+              <a class="aui__view-more">View more</a>
+            </div>
+            <div class="aui__icon-rail"></div>
+            <div class="aui__canvas">
+              <div class="aui__pdf aui__pdf--invoice">
+                <div class="aui__pdf-inner">
+                  <div class="aui__invoice-title">Invoice</div>
+                  <div class="aui__invoice-lines"></div>
+                  <span class="aui__chip">Invoice.pdf</span>
+                </div>
+              </div>
+              <div class="aui__pdf aui__pdf--report">
+                <div class="aui__pdf-inner">
+                  <div class="aui__report-stat" style="font-size:36px">3</div>
+                  <span class="aui__chip aui__chip--light">Report.pdf</span>
+                </div>
+              </div>
+              <div class="aui__pdf aui__pdf--outdoor">
+                <div class="aui__pdf-inner"><span class="aui__outdoor-text" style="font-size:10px">The new era<br>of outdoor<br>lifestyle and</span></div>
+              </div>
+              <div class="aui__pdf aui__pdf--mountain"><div class="aui__pdf-inner"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hatch-mark tab nav -->
+    <div class="spaces__tabs" id="spacesTabs">
+      <button class="spaces__tab spaces__tab--active" data-st="0">– Collaborate in PDF Spaces.</button>
+      <button class="spaces__tab" data-st="1">– Comprehend faster with help from AI.</button>
+      <button class="spaces__tab" data-st="2">– Create on-brand content.</button>
+    </div>
+  </div>
+
+  <!-- Subscription accordion rows -->
+  <div class="sub-list">
+    <p class="sub-list__note">Your Acrobat subscription comes with even more good tools</p>
+    <div class="sub-list__rows" id="subRows">
+
+      <div class="sub-row" data-sub="0">
+        <span class="sub-row__icon">🔒</span>
+        <span class="sub-row__text">Robust security features for protecting PDF content and controlling access</span>
+        <span class="sub-row__plus">+</span>
+        <div class="nexion"><div class="nexion__doc"><p>Lease Agr…<br>42 Noon W…<br>July 2026</p><div class="nexion__lines"></div></div><div class="nexion__card"><div class="nexion__grad"></div><span class="nexion__n">N</span><span class="nexion__name">Nexion</span></div></div>
+      </div>
+
+      <div class="sub-row" data-sub="1">
+        <span class="sub-row__icon">✦</span>
+        <span class="sub-row__text">Responsible AI built to preserve your document privacy, and more</span>
+        <span class="sub-row__plus">+</span>
+        <div class="nexion"><div class="nexion__doc"><p>Lease Agr…<br>42 Noon W…<br>July 2026</p><div class="nexion__lines"></div></div><div class="nexion__card"><div class="nexion__grad"></div><span class="nexion__n">N</span><span class="nexion__name">Nexion</span></div></div>
+      </div>
+
+      <div class="sub-row" data-sub="2">
+        <span class="sub-row__icon">⊞</span>
+        <span class="sub-row__text">Integration with Microsoft 365, Google, Creative Cloud, and more</span>
+        <span class="sub-row__plus">+</span>
+        <div class="nexion"><div class="nexion__doc"><p>Lease Agr…</p><div class="nexion__lines"></div></div><div class="nexion__card"><div class="nexion__grad"></div><span class="nexion__n">N</span><span class="nexion__name">Nexion</span></div></div>
+      </div>
+
+      <div class="sub-row" data-sub="3">
+        <span class="sub-row__icon">⚖</span>
+        <span class="sub-row__text">Binding, compliant, and secure e-signatures with Adobe Acrobat Sign</span>
+        <span class="sub-row__plus">+</span>
+        <div class="nexion"><div class="nexion__doc"><p>Lease Agr…</p><div class="nexion__lines"></div></div><div class="nexion__card"><div class="nexion__grad"></div><span class="nexion__n">N</span><span class="nexion__name">Nexion</span></div></div>
+      </div>
+
+      <div class="sub-row" data-sub="4">
+        <span class="sub-row__icon">↻</span>
+        <span class="sub-row__text">Access to new features and updates as soon as they're available</span>
+        <span class="sub-row__plus">+</span>
+        <div class="nexion"><div class="nexion__doc"><p>Lease Agr…</p><div class="nexion__lines"></div></div><div class="nexion__card"><div class="nexion__grad"></div><span class="nexion__n">N</span><span class="nexion__name">Nexion</span></div></div>
+      </div>
+
+      <div class="sub-row" data-sub="5">
+        <span class="sub-row__icon">🖥</span>
+        <span class="sub-row__text">Available on desktop, web, and mobile plus browser extensions</span>
+        <span class="sub-row__plus">+</span>
+        <div class="nexion"><div class="nexion__doc"><p>Lease Agr…</p><div class="nexion__lines"></div></div><div class="nexion__card"><div class="nexion__grad"></div><span class="nexion__n">N</span><span class="nexion__name">Nexion</span></div></div>
+      </div>
+
+      <div class="sub-row sub-row--feat" data-sub="6">
+        <span class="sub-row__icon sub-row__icon--ae">Ae</span>
+        <span class="sub-row__text sub-row__text--bold">Add Motion Graphics in After Effects—Fast</span>
+        <span class="sub-row__feat-tag">Ai Clip</span>
+        <span class="sub-row__plus sub-row__plus--r">+</span>
+        <div class="nexion"><div class="nexion__doc"><p>Lease Agr…</p><div class="nexion__lines"></div></div><div class="nexion__card"><div class="nexion__grad"></div><span class="nexion__n">N</span><span class="nexion__name">Nexion</span></div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SOCIAL PROOF CAROUSEL
+═══════════════════════════════════════════ -->
+<section class="carousel" id="carousel" data-section="Social Proof">
+  <div class="carousel__track" id="carouselTrack">
+
+    <div class="carousel__slide carousel__slide--on" data-slide="0">
+      <div class="carousel__copy">
+        <blockquote class="carousel__quote">"Adobe is my secret business companion. Photoshop helps turn my photography into the best shareable social moments."</blockquote>
+        <div class="carousel__attr">
+          <span class="carousel__attr-label">Customer Spotlight</span>
+          <span class="carousel__attr-name">Chip — Creative Director @ Paramount</span>
+        </div>
+      </div>
+      <div class="carousel__photo carousel__photo--0"></div>
+    </div>
+
+    <div class="carousel__slide" data-slide="1">
+      <div class="carousel__copy">
+        <blockquote class="carousel__quote">"Acrobat has made document workflows effortless. We've cut our contract turnaround time in half since switching."</blockquote>
+        <div class="carousel__attr">
+          <span class="carousel__attr-label">Customer Spotlight</span>
+          <span class="carousel__attr-name">Jordan K. — Head of Operations @ Figma</span>
+        </div>
+      </div>
+      <div class="carousel__photo carousel__photo--1"></div>
+    </div>
+
+    <div class="carousel__slide" data-slide="2">
+      <div class="carousel__copy">
+        <blockquote class="carousel__quote">"The PDF redaction tools have been a game-changer. Protecting sensitive information has never been faster."</blockquote>
+        <div class="carousel__attr">
+          <span class="carousel__attr-label">Customer Spotlight</span>
+          <span class="carousel__attr-name">Priya M. — General Counsel @ Stripe</span>
+        </div>
+      </div>
+      <div class="carousel__photo carousel__photo--2"></div>
+    </div>
+
+  </div>
+  <div class="carousel__controls">
+    <div class="carousel__dots" id="carouselDots">
+      <button class="carousel__dot carousel__dot--on" data-dot="0"></button>
+      <button class="carousel__dot" data-dot="1"></button>
+      <button class="carousel__dot" data-dot="2"></button>
+    </div>
+    <button class="carousel__next" id="carouselNext" aria-label="Next slide">→</button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PRICING
+═══════════════════════════════════════════ -->
+<section class="pricing" id="pricing" data-section="Pricing">
+  <h2 class="pricing__h2">Solutions for every size of business.</h2>
+  <p class="pricing__sub">Everyone from solo pioneers to the world's largest enterprises are using Acrobat to work faster, unleash creativity, accelerate document productivity and power their digital businesses.</p>
+
+  <div class="pricing__toggle">
+    <button class="ptab ptab--on" data-pt="individuals">Individuals</button>
+    <button class="ptab" data-pt="businesses">Businesses</button>
+    <button class="ptab" data-pt="students">Students &amp; Teachers</button>
+  </div>
+
+  <!-- Individuals panel -->
+  <div class="pricing__panel pricing__panel--on" data-pp="individuals">
+    <div class="plan-row">
+
+      <div class="plan plan--dark">
+        <svg class="plan__icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+        <h3>Acrobat Studio</h3>
+        <p>PDF editing tools, PDF Spaces, AI Assistant &amp; Adobe Express.</p>
+        <div class="plan__best">Best Value</div>
+        <div class="plan__price-blk">
+          <div class="plan__price-label">Content creation</div>
+          <div class="plan__price">US$24.99<span>/mo</span></div>
+          <div class="plan__billing">Annually, billed monthly</div>
+        </div>
+        <div class="plan__ctas">
+          <a href="#" class="plan-btn plan-btn--white">Free Trial</a>
+          <a href="#" class="plan-btn plan-btn--outline-w">Buy now</a>
+        </div>
+        <ul class="plan__features">
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> PDF tools</li>
+          <li>Create, Convert, Compress, PDFs</li>
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> AI Assistant</li>
+          <li>Customize documents</li>
+          <li>PDF Spaces</li>
+          <li>Contract analysis</li>
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> Creation tools</li>
+          <li>Generate presentations</li>
+          <li>Easy-to-use design tools</li>
+        </ul>
+      </div>
+
+      <div class="plan">
+        <svg class="plan__icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#FF7700"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+        <h3>Acrobat Express</h3>
+        <p>Quickly generate presentations and on-brand content in minutes.</p>
+        <div class="plan__price-blk">
+          <div class="plan__price-label">Content creation</div>
+          <div class="plan__price">US$9.99<span>/mo</span></div>
+          <div class="plan__billing">Annually, billed monthly</div>
+        </div>
+        <div class="plan__ctas">
+          <a href="#" class="plan-btn plan-btn--dark">Free Trial</a>
+          <a href="#" class="plan-btn plan-btn--outline">Buy now</a>
+        </div>
+        <ul class="plan__features">
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> PDF tools</li>
+          <li>Create, Compress, PDFs</li>
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> AI Assistant</li>
+          <li>Summarize documents</li>
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> Creation tools</li>
+          <li>Immersive presentations</li>
+          <li>Easy-to-use design tools</li>
+        </ul>
+      </div>
+
+      <div class="plan">
+        <svg class="plan__icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+        <h3>Acrobat Pro</h3>
+        <p>Tools to edit, convert, protect, and sign PDF documents.</p>
+        <div class="plan__price-blk">
+          <div class="plan__price-label">PDF editing</div>
+          <div class="plan__price">US$19.99<span>/mo</span></div>
+          <div class="plan__billing">Annually, billed monthly</div>
+        </div>
+        <div class="plan__ctas">
+          <a href="#" class="plan-btn plan-btn--dark">Free Trial</a>
+          <a href="#" class="plan-btn plan-btn--outline">Buy now</a>
+        </div>
+        <ul class="plan__features">
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> PDF editing</li>
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> PDF tools</li>
+          <li>Compress, Create PDFs</li>
+          <li>Edit, import, protect and organize PDFs</li>
+          <li>Collect e-signatures and track responses</li>
+          <li>Password-protect PDFs and redact sensitive information</li>
+          <li>Auto-compare versions of a PDF</li>
+        </ul>
+      </div>
+
+      <div class="plan">
+        <svg class="plan__icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+        <h3>Acrobat Pro</h3>
+        <p>The free global standard to view, print, and share PDFs.</p>
+        <div class="plan__price-blk">
+          <div class="plan__price-label">PDF viewing</div>
+          <div class="plan__price plan__price--free">Free</div>
+          <div class="plan__billing">Download today</div>
+        </div>
+        <div class="plan__ctas plan__ctas--solo">
+          <a href="#" class="plan-btn plan-btn--dark">Buy now</a>
+        </div>
+        <ul class="plan__features">
+          <li class="plan__feat-group"><svg class="feat-icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> PDF tools</li>
+          <li>View, Print, Share PDFs</li>
+        </ul>
+      </div>
+
+    </div>
+    <a href="#" class="pricing__compare">Compare Plans</a>
+  </div>
+
+  <!-- Businesses panel -->
+  <div class="pricing__panel" data-pp="businesses">
+    <div class="plan-row plan-row--2">
+      <div class="plan plan--dark">
+        <svg class="plan__icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+        <h3>Acrobat for Teams</h3>
+        <p>Everything in Acrobat Pro, plus admin and license management.</p>
+        <div class="plan__price-blk">
+          <div class="plan__price">US$29.99<span>/mo per user</span></div>
+          <div class="plan__billing">Annually, billed monthly</div>
+        </div>
+        <div class="plan__ctas">
+          <a href="#" class="plan-btn plan-btn--white">Free Trial</a>
+          <a href="#" class="plan-btn plan-btn--outline-w">Buy now</a>
+        </div>
+      </div>
+      <div class="plan">
+        <svg class="plan__icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#1473E6"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+        <h3>Acrobat Enterprise</h3>
+        <p>Custom deployment, SSO, advanced security and compliance.</p>
+        <div class="plan__price-blk">
+          <div class="plan__price plan__price--free">Contact sales</div>
+        </div>
+        <div class="plan__ctas plan__ctas--solo">
+          <a href="#" class="plan-btn plan-btn--dark">Contact sales</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Students panel -->
+  <div class="pricing__panel" data-pp="students">
+    <div class="plan-row plan-row--1">
+      <div class="plan plan--dark">
+        <svg class="plan__icon" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg>
+        <h3>Acrobat Pro</h3>
+        <p>Full Acrobat Pro at a special student &amp; educator price.</p>
+        <div class="plan__best">Student Discount</div>
+        <div class="plan__price-blk">
+          <div class="plan__price">US$14.99<span>/mo</span></div>
+          <div class="plan__billing">Annually, billed monthly. Valid school email required.</div>
+        </div>
+        <div class="plan__ctas plan__ctas--solo">
+          <a href="#" class="plan-btn plan-btn--white">Buy now</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FAQ
+═══════════════════════════════════════════ -->
+<section class="faq" id="faq" data-section="FAQ">
+  <h2 class="faq__h2">Frequently asked questions</h2>
+  <div class="faq__list">
+
+    <div class="faq__item faq__item--open">
+      <button class="faq__q">How much does Creative Cloud cost?<svg class="faq__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="faq__a"><p>US$22.99/mo, for the annual billed monthly plan. <a href="#">Learn more about purchasing options on the Creative Cloud plans page.</a></p></div>
+    </div>
+
+    <div class="faq__item">
+      <button class="faq__q">Is there a free version of Photoshop?<svg class="faq__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="faq__a"><p>Acrobat Reader is a free, trusted PDF viewer. Download it at no cost from Adobe's website.</p></div>
+    </div>
+
+    <div class="faq__item">
+      <button class="faq__q">Is there a free online version of Photoshop?<svg class="faq__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="faq__a"><p>Yes, Acrobat on the web lets you view, fill, sign, and comment on PDFs without downloading anything.</p></div>
+    </div>
+
+    <div class="faq__item">
+      <button class="faq__q">Is there student pricing for Photoshop?<svg class="faq__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="faq__a"><p>Yes. Students and educators can access Acrobat Pro at a discounted price with a valid school email address.</p></div>
+    </div>
+
+    <div class="faq__item">
+      <button class="faq__q">Are there generative AI features for Photoshop?<svg class="faq__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="faq__a"><p>Yes. AI Assistant in Acrobat generates summaries, answers document questions, and extracts key information.</p></div>
+    </div>
+
+    <div class="faq__item">
+      <button class="faq__q">Do my external clients need to have an account?<svg class="faq__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="faq__a"><p>No. Signature recipients can view and sign directly from their browser or email without an Adobe account.</p></div>
+    </div>
+
+    <div class="faq__item">
+      <button class="faq__q">How do I install Photoshop (beta) with the new generative AI features?<svg class="faq__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="faq__a"><p>Open the Creative Cloud desktop app, find Acrobat, and choose the beta version. Beta features roll out gradually to subscribers.</p></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════ -->
+<footer class="footer" id="footer" data-section="Footer">
+
+  <!-- Agentic search -->
+  <div class="footer__agentic" id="footerAgentic">
+    <div class="footer__agentic-inner">
+      <h2 class="footer__agentic-h2">Find what you're looking for.</h2>
+      <p class="footer__agentic-sub">Get answers, find assets, access your work and create.</p>
+      <div class="footer__search">
+        <span class="footer__search-spark">✦</span>
+        <input type="text" placeholder="Ask anything">
+        <button>→</button>
+      </div>
+      <p class="footer__disclaimer">Use of this beta AI chatbot is subject to Adobe's <a href="#">Privacy Policy</a>. Don't share sensitive data.<br>AI responses are not your Content, may be inaccurate and any offers provided are non-binding. <a href="#">Generative AI Terms</a></p>
+    </div>
+  </div>
+
+  <!-- Link columns -->
+  <div class="footer__cols">
+    <div class="footer__col">
+      <h4>For individuals<br>&amp; small business</h4>
+      <ul>
+        <li><a href="#">Creative AI</a></li><li><a href="#">Photography</a></li>
+        <li><a href="#">Design &amp; illustration</a></li><li><a href="#">Video &amp; animation</a></li>
+        <li><a href="#">PDF</a></li><li><a href="#">3D</a></li>
+        <li><a href="#">Elements Family</a></li><li><a href="#">Stock images &amp; video</a></li>
+        <li><a href="#">View all products</a></li>
+      </ul>
+    </div>
+    <div class="footer__col">
+      <h4>For medium<br>&amp; large business</h4>
+      <ul>
+        <li><a href="#">Personalization at scale</a></li>
+        <li><a href="#">Content supply chain</a></li>
+        <li><a href="#">Unified customer experience</a></li>
+        <li><a href="#">Creativity and production</a></li>
+        <li><a href="#">B2B GTM orchestration</a></li>
+        <li><a href="#">View all products</a></li>
+      </ul>
+    </div>
+    <div class="footer__col">
+      <h4>For<br>Organizations</h4>
+      <ul>
+        <li><a href="#">Education</a></li>
+        <li><a href="#">Nonprofits</a></li>
+        <li><a href="#">Government</a></li>
+      </ul>
+    </div>
+    <div class="footer__col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Download and install</a></li>
+        <li><a href="#">Adobe Community</a></li>
+        <li><a href="#">Adobe Learn</a></li>
+        <li><a href="#">Medium &amp; large business support</a></li>
+      </ul>
+    </div>
+    <div class="footer__col">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="#">Chat with sales</a></li>
+        <li><a href="#">Request information</a></li>
+      </ul>
+    </div>
+    <div class="footer__col">
+      <h4>Adobe</h4>
+      <ul>
+        <li><a href="#">Log into your account</a></li><li><a href="#">About</a></li>
+        <li><a href="#">Careers</a></li><li><a href="#">Events</a></li>
+        <li><a href="#">Newsroom</a></li><li><a href="#">Corporate Responsibility</a></li>
+        <li><a href="#">Investor Relations</a></li><li><a href="#">Supply Chain</a></li>
+        <li><a href="#">Trust Center</a></li><li><a href="#">Integrity</a></li>
+        <li><a href="#">Adobe for All</a></li><li><a href="#">Adobe Blog</a></li>
+        <li><a href="#">Terms</a></li><li><a href="#">Privacy</a></li>
+        <li><a href="#">Cookie preferences</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Featured Products -->
+  <div class="footer__featured">
+    <p class="footer__featured-label">Featured Products</p>
+    <div class="footer__featured-products">
+      <a href="#" class="footer__product"><svg width="16" height="16" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#EB1000"/><path d="M10 35L17.5 12H27.5L35 35H28L26 29H19L17 35H10ZM20.5 24H24.5L22.5 15L20.5 24Z" fill="white"/></svg> Acrobat Reader</a>
+      <a href="#" class="footer__product"><svg width="16" height="16" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#FF7700"/></svg> Firefly</a>
+      <a href="#" class="footer__product"><svg width="16" height="16" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#B34BFF"/></svg> Adobe Express</a>
+      <a href="#" class="footer__product"><svg width="16" height="16" viewBox="0 0 45 45"><rect width="45" height="45" rx="9" fill="#31A8FF"/></svg> Photoshop</a>
+    </div>
+  </div>
+
+  <!-- Legal bar -->
+  <div class="footer__legal">
+    <span class="footer__legal-region">Change region <span>∨</span></span>
+    <span class="footer__legal-copy">© 2026 Adobe Inc. All rights reserved. Do not sell or share my personal information.</span>
+    <div class="footer__legal-right">
+      <span>⋮ AdChoices</span>
+      <svg width="48" height="16" viewBox="0 0 34 11"><path d="M20.4 0H34v11L20.4 0ZM13.6 0H0v11L13.6 0ZM17 4L21.6 11h-2.3L18 8.5H15L17 4Z" fill="#FA0F00"/><text x="36" y="10" font-family="Arial" font-weight="700" font-size="9" fill="currentColor">Adobe</text></svg>
+    </div>
+  </div>
+
+  <!-- Adobe wordmark reveal -->
+  <div class="footer__logo-wrap" id="footerLogoWrap">
+    <div class="footer__logo-inner" id="footerLogoInner">
+      <span class="footer__logo-text">Adobe</span>
+    </div>
+  </div>
+
+</footer>
+
+</main><!-- /page-main -->
+
+<!-- Glass control panel -->
+<div class="ctrl-panel" id="ctrlPanel">
+  <div class="ctrl-panel__header" id="ctrlHeader">
+    <div class="ctrl-panel__section-pill" id="ctrlSectionName">Hero</div>
+    <span class="ctrl-panel__title">PDP Controls</span>
+    <button class="ctrl-panel__toggle" id="ctrlToggle">−</button>
+  </div>
+  <div class="ctrl-panel__body" id="ctrlBody"></div>
+</div>
+
+<script src="main.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>
