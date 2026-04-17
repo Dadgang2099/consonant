@@ -1,0 +1,159 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html { scroll-behavior: auto; }
+
+body {
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scroll driver: tall container that pins the stage ─── */
+.scroll-driver {
+  height: 400vh; /* 4 screens of scroll travel */
+  position: relative;
+}
+
+/* ── Sticky stage ─────────────────────────────────────── */
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ── Full-bleed scroll-scrubbed video ────────────────── */
+.stage__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+/* ── Lens mask overlay ───────────────────────────────── */
+.lens-mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.lens-mask__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Lock-up text ─────────────────────────────────────── */
+.lockup {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+
+.lockup__super {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255,255,255,.72);
+  margin-bottom: 12px;
+}
+
+.lockup__headline {
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #fff;
+}
+
+/* ── Scroll hint ─────────────────────────────────────── */
+.scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 4;
+  opacity: 1;
+  transition: opacity 0.4s var(--ease);
+}
+
+.scroll-hint span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+}
+
+.scroll-hint__line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255,255,255,.4), transparent);
+  animation: scrollPulse 2s var(--ease) infinite;
+}
+
+@keyframes scrollPulse {
+  0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
+  50%  { transform: scaleY(1); transform-origin: top; opacity: 1; }
+  100% { transform: scaleY(1); transform-origin: top; opacity: 0; }
+}
+
+/* ── Revealed content after lens opens ───────────────── */
+.reveal-content {
+  background: #000;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 40px;
+}
+
+.reveal-content__inner {
+  max-width: 640px;
+  text-align: center;
+}
+
+.reveal-content__eyebrow {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.45);
+  margin-bottom: 24px;
+}
+
+.reveal-content__h2 {
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-bottom: 28px;
+}
+
+.reveal-content__body {
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: rgba(255,255,255,.65);
+}
