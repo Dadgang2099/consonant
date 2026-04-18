@@ -9,71 +9,461 @@
 <body>
 
 <div class="scroll-driver">
-
-  <!-- Single sticky stage that runs the whole sequence -->
   <div class="stage">
 
-    <!-- Scroll-scrubbed video -->
     <video class="stage__video" id="heroVideo"
       src="assets/hero.mp4"
       muted playsinline preload="auto"
       aria-hidden="true"></video>
 
-    <!-- Lens vignette overlay -->
     <div class="lens-mask" id="lensMask"></div>
 
-    <!-- Full-phone image — crossfades in over video after sequence ends, then scrolls up -->
-    <img class="phone-image" id="phoneImg"
-      src="assets/phone_endframe.jpg"
-      alt="iPhone 11 Pro — midnight green">
+    <div class="phone-image" id="phoneImg">
+      <img class="phone-image__img"
+        src="assets/phone_endframe.jpg"
+        alt="iPhone 11 Pro — midnight green">
+    </div>
 
-    <!-- Headline revealed beneath the phone as it scrolls up -->
-    <div class="phone-headline">
-      <h2 class="phone-headline__h2">And then there<br>was Pro.</h2>
-      <p class="phone-headline__body">A transformative triple‑camera system that adds tons of capability without complexity. An unprecedented leap in battery life. And a mind‑blowing chip that doubles down on machine learning and pushes the boundaries of what a smartphone can do.</p>
-      <div class="phone-headline__ctas">
-        <a class="phone-headline__cta" href="#">Watch the keynote</a>
-        <a class="phone-headline__cta" href="#">Watch the film</a>
+    <div class="phone-headline" id="phoneHeadline">
+      <h2 class="phone-headline__h2" id="hlText">And then there<br>was Pro.</h2>
+      <p class="phone-headline__body" id="bdText">A transformative triple‑camera system that adds tons of capability without complexity. An unprecedented leap in battery life. And a mind‑blowing chip that doubles down on machine learning and pushes the boundaries of what a smartphone can do.</p>
+      <div class="phone-headline__ctas" id="ctasRow">
+        <a class="phone-headline__cta" id="cta1El" href="#">Watch the keynote</a>
+        <a class="phone-headline__cta" id="cta2El" href="#">Watch the film</a>
       </div>
     </div>
 
-    <!-- Scroll hint -->
-    <!-- Alignment tweak panel (debug) -->
-  <div class="tweak-panel" id="tweakPanel">
-    <div class="tweak-panel__header">
-      <span>Phone Alignment</span>
-      <button class="tweak-panel__close" id="tweakToggle">−</button>
+    <!-- ─── Shadow Panel (left, behind phone) ───────────────── -->
+    <div class="pw-panel pw-panel--shadow" id="shadowPanel">
+      <canvas class="pw-panel__gl" id="shadowGl"></canvas>
+      <div class="pw-panel__inner">
+        <header class="pw-panel__hdr">
+          <span class="pw-panel__title">SHADOW</span>
+          <button class="pw-icon-btn" id="shadowToggle">−</button>
+        </header>
+        <div class="pw-panel__body" id="shadowBody">
+          <div class="pw-ai-callout">
+            <p class="pw-ai-callout__text">Yo I noticed that drop shadow hitting heavy on the left — looking moody as hell. Wanna tune it?</p>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">BLUR</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowBlur" min="0" max="200" step="2" value="96">
+            </div>
+            <span class="pw-num" id="shadowBlurNum">96</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="shadowBlur" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">OPACITY</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowOpacity" min="0" max="1" step="0.01" value="0.6">
+            </div>
+            <span class="pw-num" id="shadowOpacityNum">0.60</span><span class="pw-unit"> </span>
+            <button class="pw-cp" data-target="shadowOpacity" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y LIFT</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowY" min="0" max="180" step="2" value="48">
+            </div>
+            <span class="pw-num" id="shadowYNum">48</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="shadowY" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X SHIFT</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowX" min="-80" max="80" step="2" value="0">
+            </div>
+            <span class="pw-num" id="shadowXNum">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="shadowX" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Right-edge fade: visual trick — panel slips behind phone edge -->
+      <div class="pw-panel__edge-fade"></div>
     </div>
-    <div class="tweak-panel__body" id="tweakBody">
-      <label class="tweak-row">
-        <span class="tweak-label">Scale <b id="scaleVal">72</b></span>
-        <input type="range" id="scaleInput" min="20" max="160" step="0.1" value="72">
-      </label>
-      <label class="tweak-row">
-        <span class="tweak-label">Y ref <b id="yRefVal">791</b>px</span>
-        <input type="range" id="yRefInput" min="-500" max="2000" step="1" value="791">
-      </label>
-      <label class="tweak-row">
-        <span class="tweak-label">X off <b id="xOffVal">2</b>px</span>
-        <input type="range" id="xOffInput" min="-600" max="600" step="1" value="2">
-      </label>
-      <div class="tweak-info" id="tweakInfo">S: —</div>
-      <div class="tweak-actions">
-        <button id="tweakReset">Reset</button>
-        <button id="tweakCopy">Copy values</button>
+
+    <!-- ─── Sequence Panel ──────────────────────────────────── -->
+    <div class="pw-panel pw-panel--seq" id="seqPanel">
+      <canvas class="pw-panel__gl" id="seqGl"></canvas>
+      <div class="pw-panel__inner">
+        <header class="pw-panel__hdr">
+          <span class="pw-panel__title">SEQUENCE</span>
+          <button class="pw-icon-btn" id="seqToggle">−</button>
+        </header>
+        <div class="pw-panel__body" id="seqBody">
+          <div class="pw-ai-callout">
+            <p class="pw-ai-callout__text">Woahh I see we're doing an epic image sequence scroll here — this is so sick. Take the controls and let it rip.</p>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SPEED</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="seqSpeed" min="1" max="6" step="0.1" value="3">
+            </div>
+            <span class="pw-num" id="seqSpeedNum">3.0</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="seqSpeed" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">LENS IN</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="seqLensIn" min="0" max="0.5" step="0.01" value="0.2">
+            </div>
+            <span class="pw-num" id="seqLensInNum">20</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="seqLensIn" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">LENS OUT</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="seqLensOut" min="0.5" max="1.0" step="0.01" value="0.8">
+            </div>
+            <span class="pw-num" id="seqLensOutNum">80</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="seqLensOut" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">VIGNETTE</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="seqLensPeak" min="0" max="1" step="0.01" value="0.97">
+            </div>
+            <span class="pw-num" id="seqLensPeakNum">0.97</span><span class="pw-unit"> </span>
+            <button class="pw-cp" data-target="seqLensPeak" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-debug" id="seqInfo">p1: —</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="scroll-hint" id="scrollHint">
+    <!-- ─── Phone Alignment Panel ──────────────────────────── -->
+    <div class="pw-panel" id="tweakPanel">
+      <canvas class="pw-panel__gl" id="tweakGl"></canvas>
+      <div class="pw-panel__inner">
+        <header class="pw-panel__hdr">
+          <span class="pw-panel__title">ALIGNMENT</span>
+          <button class="pw-icon-btn" id="tweakToggle">−</button>
+        </header>
+        <div class="pw-panel__body" id="tweakBody">
+          <div class="pw-ai-callout">
+            <p class="pw-ai-callout__text">Hey nice — phone's coming in clean. Lock in scale and position before you drop into content.</p>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="scaleInput" min="20" max="160" step="0.1" value="72">
+            </div>
+            <span class="pw-num" id="scaleVal">72.0</span>
+            <button class="pw-cp" data-target="scaleInput" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y REF</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="yRefInput" min="-500" max="2000" step="1" value="791">
+            </div>
+            <span class="pw-num" id="yRefVal">791</span>
+            <span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="yRefInput" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X OFF</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="xOffInput" min="-600" max="600" step="1" value="2">
+            </div>
+            <span class="pw-num" id="xOffVal">2</span>
+            <span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="xOffInput" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-debug" id="tweakInfo">S: —</div>
+          <div class="pw-actions">
+            <button class="pw-btn" id="tweakReset">Reset</button>
+            <button class="pw-btn pw-btn--primary" id="tweakCopy">Copy all</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Content Editor Panel ──────────────────────────── -->
+    <div class="pw-panel pw-panel--content" id="contentPanel">
+      <canvas class="pw-panel__gl" id="ctrlGl"></canvas>
+      <div class="pw-panel__inner">
+        <header class="pw-panel__hdr">
+          <span class="pw-panel__title">CONTENT</span>
+          <button class="pw-icon-btn" id="ctrlToggle">−</button>
+        </header>
+        <div class="pw-panel__body pw-panel__body--scroll" id="ctrlBody">
+          <div class="pw-ai-callout">
+            <p class="pw-ai-callout__text">Heyyy this headline is really reading well — clean, punchy. Let's dial in the type and make it sing.</p>
+          </div>
+
+          <!-- HEADLINE -->
+          <section class="pw-sec" id="secHeadline">
+            <div class="pw-sec__hdr" data-sec="secHeadline">
+              <span class="pw-sec__label">HEADLINE</span>
+              <span class="pw-sec__tog">−</span>
+            </div>
+            <div class="pw-sec__body">
+              <div class="pw-editable-wrap">
+                <div class="pw-editable" id="ctrlHlPreview" tabindex="0">And then there was Pro.</div>
+                <span class="pw-editable__hint">double-click to edit</span>
+              </div>
+              <div class="pw-row" data-pro-only>
+                <span class="pw-key">SIZE</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="hlSize" min="24" max="120" step="1" value="48"></div>
+                <span class="pw-num" id="hlSizeNum">48</span><span class="pw-unit">px</span>
+                <button class="pw-cp" data-target="hlSize" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row" data-pro-only>
+                <span class="pw-key">LINE HT</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="hlLineH" min="0.8" max="2.2" step="0.01" value="1.05"></div>
+                <span class="pw-num" id="hlLineHNum">1.05</span><span class="pw-unit"> </span>
+                <button class="pw-cp" data-target="hlLineH" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row" data-pro-only>
+                <span class="pw-key">TRACKING</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="hlTracking" min="-0.08" max="0.12" step="0.001" value="-0.03"></div>
+                <span class="pw-num" id="hlTrackingNum">−0.030</span><span class="pw-unit">em</span>
+                <button class="pw-cp" data-target="hlTracking" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row pw-row--select" data-pro-only>
+                <span class="pw-key">WEIGHT</span>
+                <select class="pw-select" id="hlWeight">
+                  <option value="300">300  Light</option>
+                  <option value="400">400  Regular</option>
+                  <option value="500">500  Medium</option>
+                  <option value="600">600  Semibold</option>
+                  <option value="700" selected>700  Bold</option>
+                  <option value="800">800  Black</option>
+                </select>
+                <button class="pw-cp" data-target="hlWeight" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+            </div>
+          </section>
+
+          <!-- BODY -->
+          <section class="pw-sec" id="secBody">
+            <div class="pw-sec__hdr" data-sec="secBody">
+              <span class="pw-sec__label">BODY</span>
+              <span class="pw-sec__tog">−</span>
+            </div>
+            <div class="pw-sec__body">
+              <div class="pw-editable-wrap">
+                <div class="pw-editable pw-editable--sm" id="ctrlBdPreview" tabindex="0">A transformative triple‑camera system that adds tons of capability without complexity.</div>
+                <span class="pw-editable__hint">double-click to edit</span>
+              </div>
+              <div class="pw-row" data-pro-only>
+                <span class="pw-key">SIZE</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="bdSize" min="12" max="32" step="0.5" value="17"></div>
+                <span class="pw-num" id="bdSizeNum">17</span><span class="pw-unit">px</span>
+                <button class="pw-cp" data-target="bdSize" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row" data-pro-only>
+                <span class="pw-key">LINE HT</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="bdLineH" min="1.0" max="2.5" step="0.01" value="1.6"></div>
+                <span class="pw-num" id="bdLineHNum">1.6</span><span class="pw-unit"> </span>
+                <button class="pw-cp" data-target="bdLineH" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row" data-pro-only>
+                <span class="pw-key">TRACKING</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="bdTracking" min="-0.04" max="0.1" step="0.001" value="-0.022"></div>
+                <span class="pw-num" id="bdTrackingNum">−0.022</span><span class="pw-unit">em</span>
+                <button class="pw-cp" data-target="bdTracking" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row pw-row--select" data-pro-only>
+                <span class="pw-key">WEIGHT</span>
+                <select class="pw-select" id="bdWeight">
+                  <option value="300">300  Light</option>
+                  <option value="400" selected>400  Regular</option>
+                  <option value="500">500  Medium</option>
+                  <option value="600">600  Semibold</option>
+                </select>
+                <button class="pw-cp" data-target="bdWeight" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+            </div>
+          </section>
+
+          <!-- BUTTONS -->
+          <section class="pw-sec" id="secButtons">
+            <div class="pw-sec__hdr" data-sec="secButtons">
+              <span class="pw-sec__label">BUTTONS</span>
+              <span class="pw-sec__tog">−</span>
+            </div>
+            <div class="pw-sec__body">
+              <div class="pw-row pw-row--text">
+                <span class="pw-key">CTA 1</span>
+                <input type="text" class="pw-textinput" id="cta1Text" value="Watch the keynote">
+                <button class="pw-cp" data-target="cta1Text" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row pw-row--text">
+                <span class="pw-key">CTA 2</span>
+                <input type="text" class="pw-textinput" id="cta2Text" value="Watch the film">
+                <button class="pw-cp" data-target="cta2Text" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row">
+                <span class="pw-key">GAP</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="ctaGap" min="0" max="80" step="2" value="28"></div>
+                <span class="pw-num" id="ctaGapNum">28</span><span class="pw-unit">px</span>
+                <button class="pw-cp" data-target="ctaGap" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row pw-row--seg">
+                <span class="pw-key">ALIGN</span>
+                <div class="pw-seg" id="ctaAlignSeg">
+                  <button class="pw-seg__btn" data-val="flex-start">L</button>
+                  <button class="pw-seg__btn pw-seg__btn--on" data-val="center">C</button>
+                  <button class="pw-seg__btn" data-val="flex-end">R</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- LOCKUP -->
+          <section class="pw-sec" id="secLockup">
+            <div class="pw-sec__hdr" data-sec="secLockup">
+              <span class="pw-sec__label">LOCKUP</span>
+              <span class="pw-sec__tog">−</span>
+            </div>
+            <div class="pw-sec__body">
+              <div class="pw-row">
+                <span class="pw-key">TOP</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="lockupTop" min="10" max="80" step="0.5" value="38"></div>
+                <span class="pw-num" id="lockupTopNum">38</span><span class="pw-unit">%</span>
+                <button class="pw-cp" data-target="lockupTop" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row">
+                <span class="pw-key">MAX W</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="lockupMaxW" min="320" max="1400" step="10" value="820"></div>
+                <span class="pw-num" id="lockupMaxWNum">820</span><span class="pw-unit">px</span>
+                <button class="pw-cp" data-target="lockupMaxW" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row">
+                <span class="pw-key">H PAD</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="lockupPad" min="0" max="160" step="4" value="60"></div>
+                <span class="pw-num" id="lockupPadNum">60</span><span class="pw-unit">px</span>
+                <button class="pw-cp" data-target="lockupPad" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+              <div class="pw-row">
+                <span class="pw-key">BLK GAP</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="lockupGap" min="0" max="80" step="2" value="24"></div>
+                <span class="pw-num" id="lockupGapNum">24</span><span class="pw-unit">px</span>
+                <button class="pw-cp" data-target="lockupGap" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
+            </div>
+          </section>
+
+          <!-- COPY DECK -->
+          <section class="pw-sec pw-sec--upload" id="secCopyDeck">
+            <div class="pw-sec__hdr" data-sec="secCopyDeck">
+              <span class="pw-sec__label">COPY DECK</span>
+              <span class="pw-sec__tog">−</span>
+            </div>
+            <div class="pw-sec__body">
+              <div class="pw-drop" id="ctrlDrop">
+                <input type="file" id="ctrlFile" accept=".txt,.pdf,.docx,.doc" hidden>
+                <div class="pw-drop__zone" id="ctrlDropZone">
+                  <div class="pw-drop__icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 13V4M10 4L6.5 7.5M10 4L13.5 7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  </div>
+                  <div class="pw-drop__label">PDF · DOCX · TXT</div>
+                  <button class="pw-drop__browse" id="ctrlBrowse">browse files</button>
+                </div>
+                <div class="pw-drop__progress" id="ctrlProgress" hidden>
+                  <div class="pw-drop__bar-track"><div class="pw-drop__bar" id="ctrlBar"></div></div>
+                  <span class="pw-drop__status" id="ctrlStatus">Parsing…</span>
+                </div>
+              </div>
+              <div class="pw-parsed" id="ctrlParsed" hidden>
+                <textarea class="pw-parsed__text" id="ctrlParsedText" rows="4" spellcheck="false" placeholder="Extracted text…"></textarea>
+                <div class="pw-parsed__row">
+                  <button class="pw-parsed__apply" id="ctrlApplyHl">→ Headline</button>
+                  <button class="pw-parsed__apply" id="ctrlApplyBd">→ Body</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- FOOTER -->
+          <div class="pw-footer">
+            <button class="pw-footer__btn pw-footer__btn--primary" id="ctrlCopyAll">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+              Copy all values
+            </button>
+            <button class="pw-footer__btn" id="ctrlResetAll">Reset</button>
+          </div>
+
+        </div><!-- /pw-panel__body -->
+      </div><!-- /pw-panel__inner -->
+    </div><!-- /contentPanel -->
+
+    <!-- ─── Scope Modal ────────────────────────────────────── -->
+    <div class="scope-modal" id="scopeModal" hidden>
+      <div class="scope-modal__card">
+        <canvas class="scope-modal__gl" id="scopeGl"></canvas>
+        <div class="scope-modal__inner">
+          <p class="scope-modal__q">Apply parsed copy to</p>
+          <div class="scope-modal__choices">
+            <button class="scope-choice" id="scopeSection">
+              <span class="scope-choice__n">01</span>
+              <div class="scope-choice__text">
+                <span class="scope-choice__label">This section only</span>
+                <span class="scope-choice__sub">Headline &amp; body in view</span>
+              </div>
+            </button>
+            <button class="scope-choice" id="scopeGlobal">
+              <span class="scope-choice__n">02</span>
+              <div class="scope-choice__text">
+                <span class="scope-choice__label">Entire page</span>
+                <span class="scope-choice__sub">All text blocks &amp; CTAs</span>
+              </div>
+            </button>
+          </div>
+          <button class="scope-modal__cancel" id="scopeCancel">cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-hint" id="scrollHint">
       <span>Scroll</span>
       <div class="scroll-hint__line"></div>
     </div>
 
   </div><!-- /stage -->
-
 </div><!-- /scroll-driver -->
 
+<!-- ─── Pro / Newb mode toggle ─────────────────────────── -->
+<div class="mode-toggle" id="modeToggle">
+  <div class="mode-toggle__pill" id="modePill"></div>
+  <button class="mode-toggle__opt mode-toggle__opt--on" data-mode="pro">Pro</button>
+  <button class="mode-toggle__opt" data-mode="newb">Newb</button>
+</div>
+
+<!-- PDF.js for copy deck parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Mammoth.js for DOCX parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
 <script src="main.js"></script>
 </body>
 </html>
