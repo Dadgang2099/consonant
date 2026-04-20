@@ -38,12 +38,21 @@
       <canvas class="pw-panel__gl" id="shadowGl"></canvas>
       <div class="pw-panel__inner">
         <header class="pw-panel__hdr">
-          <span class="pw-panel__title">SHADOW</span>
+          <div class="pw-panel__hdr-left">
+            <svg class="pw-panel__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="5.5" r="3.5" stroke="currentColor" stroke-width="1.1"/>
+              <ellipse cx="6.5" cy="10.5" rx="3.8" ry="1.1" fill="currentColor" opacity="0.38"/>
+            </svg>
+            <span class="pw-panel__title">SHADOW</span>
+          </div>
           <button class="pw-icon-btn" id="shadowToggle">−</button>
         </header>
         <div class="pw-panel__body" id="shadowBody">
-          <div class="pw-ai-callout">
-            <p class="pw-ai-callout__text">Yo I noticed that drop shadow hitting heavy on the left — looking moody as hell. Wanna tune it?</p>
+          <div class="pw-ai-callout" data-pro-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>Yo I noticed that drop shadow hitting heavy on the left — looking moody as hell. Wanna tune it?<span class="pw-ai-callout__qc">"</span></p>
+          </div>
+          <div class="pw-ai-callout" data-newb-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>Adjust the shadow under the phone. Blur softens it, opacity makes it lighter or darker.<span class="pw-ai-callout__qc">"</span></p>
           </div>
           <div class="pw-row">
             <span class="pw-key">BLUR</span>
@@ -65,7 +74,12 @@
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
             </button>
           </div>
-          <div class="pw-row">
+          <div class="pw-row pw-row--color">
+            <span class="pw-key">COLOR</span>
+            <button class="pw-color-chip" id="shadowColorChip" aria-label="Shadow color" aria-haspopup="true"></button>
+            <span class="pw-color-chip__hex" id="shadowColorHex">#000000</span>
+          </div>
+          <div class="pw-row" data-pro-only>
             <span class="pw-key">Y LIFT</span>
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="shadowY" min="0" max="180" step="2" value="48">
@@ -75,7 +89,7 @@
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
             </button>
           </div>
-          <div class="pw-row">
+          <div class="pw-row" data-pro-only>
             <span class="pw-key">X SHIFT</span>
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="shadowX" min="-80" max="80" step="2" value="0">
@@ -96,12 +110,21 @@
       <canvas class="pw-panel__gl" id="seqGl"></canvas>
       <div class="pw-panel__inner">
         <header class="pw-panel__hdr">
-          <span class="pw-panel__title">SEQUENCE</span>
+          <div class="pw-panel__hdr-left">
+            <svg class="pw-panel__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="1" y="2" width="11" height="8.5" rx="1.4" stroke="currentColor" stroke-width="1.1"/>
+              <path d="M5 4.8L9 6.5L5 8.2V4.8Z" fill="currentColor"/>
+            </svg>
+            <span class="pw-panel__title">SEQUENCE</span>
+          </div>
           <button class="pw-icon-btn" id="seqToggle">−</button>
         </header>
         <div class="pw-panel__body" id="seqBody">
-          <div class="pw-ai-callout">
-            <p class="pw-ai-callout__text">Woahh I see we're doing an epic image sequence scroll here — this is so sick. Take the controls and let it rip.</p>
+          <div class="pw-ai-callout" data-pro-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>Woahh I see we're doing an epic image sequence scroll here — this is so sick. Take the controls and let it rip.<span class="pw-ai-callout__qc">"</span></p>
+          </div>
+          <div class="pw-ai-callout" data-newb-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>This controls the scroll speed. Drag Speed higher to make the video move faster as you scroll.<span class="pw-ai-callout__qc">"</span></p>
           </div>
           <div class="pw-row">
             <span class="pw-key">SPEED</span>
@@ -113,7 +136,7 @@
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
             </button>
           </div>
-          <div class="pw-row">
+          <div class="pw-row" data-pro-only>
             <span class="pw-key">LENS IN</span>
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="seqLensIn" min="0" max="0.5" step="0.01" value="0.2">
@@ -123,7 +146,7 @@
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
             </button>
           </div>
-          <div class="pw-row">
+          <div class="pw-row" data-pro-only>
             <span class="pw-key">LENS OUT</span>
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="seqLensOut" min="0.5" max="1.0" step="0.01" value="0.8">
@@ -133,7 +156,7 @@
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
             </button>
           </div>
-          <div class="pw-row">
+          <div class="pw-row" data-pro-only>
             <span class="pw-key">VIGNETTE</span>
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="seqLensPeak" min="0" max="1" step="0.01" value="0.97">
@@ -153,17 +176,26 @@
       <canvas class="pw-panel__gl" id="tweakGl"></canvas>
       <div class="pw-panel__inner">
         <header class="pw-panel__hdr">
-          <span class="pw-panel__title">ALIGNMENT</span>
+          <div class="pw-panel__hdr-left">
+            <svg class="pw-panel__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.1"/>
+              <path d="M6.5 1v2.2M6.5 10.8V13M1 6.5h2.2M10.8 6.5H13" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+            </svg>
+            <span class="pw-panel__title">ALIGNMENT</span>
+          </div>
           <button class="pw-icon-btn" id="tweakToggle">−</button>
         </header>
         <div class="pw-panel__body" id="tweakBody">
-          <div class="pw-ai-callout">
-            <p class="pw-ai-callout__text">Hey nice — phone's coming in clean. Lock in scale and position before you drop into content.</p>
+          <div class="pw-ai-callout" data-pro-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>Hey nice — phone's coming in clean. Lock in scale and position before you drop into content.<span class="pw-ai-callout__qc">"</span></p>
           </div>
-          <div class="pw-row">
+          <div class="pw-ai-callout" data-newb-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>Move the phone on screen. Y Ref shifts it up or down, X Off moves it left or right.<span class="pw-ai-callout__qc">"</span></p>
+          </div>
+          <div class="pw-row" data-pro-only>
             <span class="pw-key">SCALE</span>
             <div class="pw-slider-wrap">
-              <input type="range" class="pw-range" id="scaleInput" min="20" max="160" step="0.1" value="72">
+              <input type="range" class="pw-range" id="scaleInput" min="20" max="160" step="0.1" value="71.9">
             </div>
             <span class="pw-num" id="scaleVal">72.0</span>
             <button class="pw-cp" data-target="scaleInput" title="Copy">
@@ -173,9 +205,9 @@
           <div class="pw-row">
             <span class="pw-key">Y REF</span>
             <div class="pw-slider-wrap">
-              <input type="range" class="pw-range" id="yRefInput" min="-500" max="2000" step="1" value="791">
+              <input type="range" class="pw-range" id="yRefInput" min="-500" max="2000" step="1" value="789">
             </div>
-            <span class="pw-num" id="yRefVal">791</span>
+            <span class="pw-num" id="yRefVal">150</span>
             <span class="pw-unit">px</span>
             <button class="pw-cp" data-target="yRefInput" title="Copy">
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
@@ -186,7 +218,7 @@
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="xOffInput" min="-600" max="600" step="1" value="2">
             </div>
-            <span class="pw-num" id="xOffVal">2</span>
+            <span class="pw-num" id="xOffVal">0</span>
             <span class="pw-unit">px</span>
             <button class="pw-cp" data-target="xOffInput" title="Copy">
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
@@ -206,12 +238,20 @@
       <canvas class="pw-panel__gl" id="ctrlGl"></canvas>
       <div class="pw-panel__inner">
         <header class="pw-panel__hdr">
-          <span class="pw-panel__title">CONTENT</span>
+          <div class="pw-panel__hdr-left">
+            <svg class="pw-panel__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <path d="M2 3.5h9M2 6.5h6.5M2 9.5h7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <span class="pw-panel__title">CONTENT</span>
+          </div>
           <button class="pw-icon-btn" id="ctrlToggle">−</button>
         </header>
         <div class="pw-panel__body pw-panel__body--scroll" id="ctrlBody">
-          <div class="pw-ai-callout">
-            <p class="pw-ai-callout__text">Heyyy this headline is really reading well — clean, punchy. Let's dial in the type and make it sing.</p>
+          <div class="pw-ai-callout" data-pro-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>Heyyy this headline is really reading well — clean, punchy. Let's dial in the type and make it sing.<span class="pw-ai-callout__qc">"</span></p>
+          </div>
+          <div class="pw-ai-callout" data-newb-only>
+            <p class="pw-ai-callout__text"><span class="pw-ai-callout__q">"</span>Edit your headline and body text — just double-click. Use the sliders to adjust size and spacing.<span class="pw-ai-callout__qc">"</span></p>
           </div>
 
           <!-- HEADLINE -->
@@ -227,8 +267,8 @@
               </div>
               <div class="pw-row" data-pro-only>
                 <span class="pw-key">SIZE</span>
-                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="hlSize" min="24" max="120" step="1" value="48"></div>
-                <span class="pw-num" id="hlSizeNum">48</span><span class="pw-unit">px</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="hlSize" min="24" max="160" step="1" value="80"></div>
+                <span class="pw-num" id="hlSizeNum">80</span><span class="pw-unit">px</span>
                 <button class="pw-cp" data-target="hlSize" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
               </div>
               <div class="pw-row" data-pro-only>
@@ -365,6 +405,12 @@
                 <span class="pw-num" id="lockupGapNum">24</span><span class="pw-unit">px</span>
                 <button class="pw-cp" data-target="lockupGap" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
               </div>
+              <div class="pw-row">
+                <span class="pw-key">SCALE</span>
+                <div class="pw-slider-wrap"><input type="range" class="pw-range" id="lockupScale" min="50" max="150" step="1" value="100"></div>
+                <span class="pw-num" id="lockupScaleNum">100</span><span class="pw-unit">%</span>
+                <button class="pw-cp" data-target="lockupScale" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+              </div>
             </div>
           </section>
 
@@ -439,13 +485,115 @@
       </div>
     </div>
 
-    <div class="scroll-hint" id="scrollHint">
-      <span>Scroll</span>
-      <div class="scroll-hint__line"></div>
-    </div>
 
   </div><!-- /stage -->
 </div><!-- /scroll-driver -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     BELOW-HERO — triptych + Take a closer look
+     ═══════════════════════════════════════════════════════════ -->
+<div class="lp-below">
+
+  <!-- Triptych: three-panel camera showcase -->
+  <section class="lp-tri" aria-label="Triple camera system">
+    <div class="lp-tri__panel lp-tri__panel--a">
+      <img class="lp-tri__img" src="assets/phone_endframe.jpg"
+           alt="iPhone 11 Pro triple camera" aria-hidden="true">
+      <div class="lp-tri__veil lp-tri__veil--r"></div>
+      <div class="lp-tri__caption">
+        <span class="lp-tri__cap-rule"></span>
+        <span class="lp-tri__cap-label">Ultra Wide</span>
+        <span class="lp-tri__cap-sub">0.5×  13mm</span>
+      </div>
+    </div>
+    <div class="lp-tri__panel lp-tri__panel--b">
+      <img class="lp-tri__img" src="assets/phone_endframe.jpg"
+           alt="" aria-hidden="true">
+      <div class="lp-tri__caption">
+        <span class="lp-tri__cap-rule"></span>
+        <span class="lp-tri__cap-label">Wide</span>
+        <span class="lp-tri__cap-sub">1×  26mm</span>
+      </div>
+    </div>
+    <div class="lp-tri__panel lp-tri__panel--c">
+      <img class="lp-tri__img" src="assets/phone_endframe.jpg"
+           alt="iPhone 11 Pro camera detail" aria-hidden="true">
+      <div class="lp-tri__veil lp-tri__veil--l"></div>
+      <div class="lp-tri__caption">
+        <span class="lp-tri__cap-rule"></span>
+        <span class="lp-tri__cap-label">Telephoto</span>
+        <span class="lp-tri__cap-sub">2×  52mm</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Take a closer look -->
+  <section class="lp-closer" aria-label="Take a closer look">
+    <div class="lp-closer__copy">
+      <div class="lp-closer__copy-inner">
+        <h2 class="lp-closer__headline">Take a<br>closer look.</h2>
+        <p class="lp-closer__body">Two sizes. Four finishes.<br>Stainless steel and glass design.</p>
+        <a class="lp-closer__btn" href="#">View the gallery ›</a>
+      </div>
+    </div>
+    <div class="lp-closer__photo">
+      <img class="lp-closer__img" src="assets/phone_endframe.jpg"
+           alt="Camera lens detail" aria-hidden="true">
+    </div>
+  </section>
+
+</div><!-- /lp-below -->
+
+<!-- ─── Publish + History cluster ───────────────────────── -->
+<div class="pub-cluster" id="pubCluster">
+  <button class="publish-btn" id="publishBtn" aria-label="Publish">
+    <span class="publish-btn__dot"></span>
+    <span class="publish-btn__label">PUBLISH</span>
+  </button>
+  <button class="pushlive-btn" id="pushLiveBtn" aria-label="Push live">
+    <span class="pushlive-btn__dot"></span>
+    <span class="pushlive-btn__label">PUSH LIVE</span>
+  </button>
+  <button class="history-btn" id="historyBtn" aria-label="Version history">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.1"/>
+      <path d="M6.5 3.5V6.8l2.2 1.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+    </svg>
+    <span class="history-btn__label">HISTORY</span>
+  </button>
+</div>
+
+<!-- ─── Time Machine overlay ────────────────────────────── -->
+<div class="tm-overlay" id="tmOverlay" hidden aria-modal="true" role="dialog" aria-label="Version history">
+  <div class="tm-bg" id="tmBg"></div>
+  <div class="tm-header">
+    <span class="tm-title">TIME MACHINE</span>
+    <span class="tm-sub" id="tmSub">0 versions saved</span>
+    <button class="tm-close" id="tmClose" aria-label="Close history">×</button>
+  </div>
+  <!-- 3D perspective stage -->
+  <div class="tm-stage" id="tmStage">
+    <div class="tm-stack" id="tmStack"></div>
+    <!-- Explicit nav — always clickable -->
+    <button class="tm-nav tm-nav--prev" id="tmPrev" aria-label="Newer version">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="tm-nav tm-nav--next" id="tmNext" aria-label="Older version">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <!-- Restore confirmation modal -->
+  <div class="tm-confirm" id="tmConfirm" hidden>
+    <div class="tm-confirm__box">
+      <p class="tm-confirm__msg" id="tmConfirmMsg">Restore this version?</p>
+      <p class="tm-confirm__sub">Your current unpublished changes will be saved as a draft.</p>
+      <div class="tm-confirm__btns">
+        <button class="tm-confirm__cancel" id="tmConfirmCancel">Cancel</button>
+        <button class="tm-confirm__ok"     id="tmConfirmOk">Restore</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ─── Pro / Newb mode toggle ─────────────────────────── -->
 <div class="mode-toggle" id="modeToggle">
@@ -454,6 +602,24 @@
   <button class="mode-toggle__opt" data-mode="newb">Newb</button>
 </div>
 
+<!-- ─── Shadow color picker popover ─────────────────────── -->
+<div class="pw-cpicker" id="shadowCPicker" hidden>
+  <div class="pw-cpicker__sv-wrap" id="shadowCPickerSVWrap">
+    <canvas class="pw-cpicker__sv" id="shadowCPickerSV" width="220" height="130"></canvas>
+    <div class="pw-cpicker__sv-cursor" id="shadowCPickerCursor"></div>
+  </div>
+  <div class="pw-cpicker__hue" id="shadowCPickerHue">
+    <div class="pw-cpicker__hue-thumb" id="shadowCPickerHueThumb"></div>
+  </div>
+  <div class="pw-cpicker__footer">
+    <div class="pw-cpicker__preview" id="shadowCPickerPreview"></div>
+    <span class="pw-cpicker__hash">#</span>
+    <input class="pw-cpicker__hex" id="shadowCPickerHex" value="000000" maxlength="6" autocomplete="off" spellcheck="false">
+  </div>
+</div>
+
+<!-- html2canvas for version snapshots -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- PDF.js for copy deck parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <!-- Mammoth.js for DOCX parsing -->
@@ -464,6 +630,47 @@
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 </script>
+<!-- ─── AI Prompt Bar ───────────────────────────────────── -->
+<div class="ai-bar ai-bar--collapsed" id="aiBar">
+  <canvas class="ai-bar__canvas" id="aiCanvas"></canvas>
+  <div class="ai-bar__glass">
+    <textarea class="ai-bar__input" id="aiInput" rows="1"
+      placeholder="tell me what you wanna do, I got you"></textarea>
+    <button class="ai-bar__send" id="aiSend" aria-label="Open / Send">
+      <!-- Single SVG: horizontal bar morphs into arrowhead, stem stays -->
+      <svg class="ai-bar__morph-icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path class="ai-bar__mi-stem"  d="M 7.5 13 L 7.5 2"     stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        <path class="ai-bar__mi-left"  d="M 2 7.5 L 7.5 7.5"    stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        <path class="ai-bar__mi-right" d="M 7.5 7.5 L 13 7.5"   stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      </svg>
+      <svg class="ai-bar__spinner" width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="20 14" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="ai-bar__prog-wrap">
+      <div class="ai-bar__prog-fill" id="aiProgress"></div>
+    </div>
+  </div>
+</div>
+<div class="ai-dust-overlay" id="aiDustOverlay"></div>
+
+<!-- ─── Panel toggle (balaclava) ─────────────────────── -->
+<button class="panel-tog" id="panelTog" aria-label="Toggle panels" title="Show / hide panels">
+  <div class="panel-tog__plate">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <path d="M 1.5 7.5 C 3 3.5 12 3.5 13.5 7.5 C 12 11.5 3 11.5 1.5 7.5 Z"
+            stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+      <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.9"/>
+    </svg>
+  </div>
+</button>
+
+<!-- ─── FX Intensity Knob ──────────────────────────────────── -->
+<div class="fx-knob" id="fxKnob" title="Effect intensity — drag to rotate">
+  <canvas class="fx-knob__canvas" id="fxKnobCanvas"></canvas>
+</div>
+
+<canvas id="globalCanvas"></canvas>
 <script src="main.js"></script>
 </body>
 </html>
