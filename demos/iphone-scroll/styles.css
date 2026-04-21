@@ -16,8 +16,9 @@ body {
 /* ── Scroll driver: tall container that pins the stage ─── */
 .scroll-driver {
   /* 300vh Phase 1 (video scrub) + 300vh Phase 2 (phone reveal) + 100vh stage + 100vh reading buffer */
-  height: 800vh;
+  height: 700vh;
   position: relative;
+  z-index: 1; /* creates stacking context — lp-below at z-index:2 paints cleanly above */
 }
 
 /* ── Sticky stage ─────────────────────────────────────── */
@@ -487,7 +488,7 @@ body {
 /* ── Row (slider + label + value + copy) ────────────────── */
 .pw-row {
   display: grid;
-  grid-template-columns: 52px 1fr auto auto auto auto;
+  grid-template-columns: 52px 1fr auto auto auto auto 18px;
   align-items: center;
   gap: 0 6px;
   min-height: 22px;
@@ -495,13 +496,13 @@ body {
 }
 .pw-row:last-child { margin-bottom: 0; }
 .pw-row--select {
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 52px 1fr auto 18px;
 }
 .pw-row--text {
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 52px 1fr auto 18px;
 }
 .pw-row--seg {
-  grid-template-columns: 52px 1fr;
+  grid-template-columns: 52px 1fr 18px;
 }
 
 .pw-key {
@@ -569,7 +570,8 @@ body {
   color: rgba(255,255,255,0.88);
   text-align: right;
   white-space: nowrap;
-  min-width: 32px;
+  min-width: 44px;
+  width: 44px;
 }
 
 .pw-unit {
@@ -1325,7 +1327,6 @@ body {
   bottom: 7px;
   width: 8px;
   height: 8px;
-  border-bottom: 1.5px solid rgba(255,255,255,0.22);
   transition: border-color 0.15s;
 }
 .pw-panel__resize--right::after {
@@ -1339,6 +1340,26 @@ body {
   border-radius: 0 0 0 2px;
 }
 .pw-panel__resize:hover::after { border-color: rgba(255,255,255,0.55); }
+
+/* ── Header right cluster — badge + rec + close stay together ── */
+.pw-panel__hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Corner hatches — all 4 ──────────────────────────────────── */
+.pw-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  z-index: 50;
+}
+.pw-corner--tl { top: 8px;    left: 8px;  border-top:    1.5px solid rgba(255,255,255,0.18); border-left:   1.5px solid rgba(255,255,255,0.18); }
+.pw-corner--tr { top: 8px;    right: 8px; border-top:    1.5px solid rgba(255,255,255,0.18); border-right:  1.5px solid rgba(255,255,255,0.18); }
+.pw-corner--bl { bottom: 8px; left: 8px;  border-bottom: 1.5px solid rgba(255,255,255,0.18); border-left:   1.5px solid rgba(255,255,255,0.18); }
+.pw-corner--br { bottom: 8px; right: 8px; border-bottom: 1.5px solid rgba(255,255,255,0.18); border-right:  1.5px solid rgba(255,255,255,0.18); }
 
 /* Decorative corner mark — bottom left (legacy, kept for compat) */
 .pw-panel__corner-bl {
@@ -1425,14 +1446,102 @@ body {
 /* ═══════════════════════════════════════════════════════════
    PUBLISH CLUSTER — pub btn + history btn side by side
    ═══════════════════════════════════════════════════════════ */
+/* ── Pub cluster: circle → rounded-rect morph on hover ── */
 .pub-cluster {
   position: fixed;
   top: 20px;
   left: 20px;
   z-index: 9999;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 50px;
+  background: rgba(18,18,22,0.90);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.11);
+  box-shadow:
+    0 0 0 0.5px rgba(255,255,255,0.06) inset,
+    0 2px 14px rgba(0,0,0,0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  cursor: pointer;
+  transition:
+    width  0.36s cubic-bezier(0.34,1.56,0.64,1),
+    height 0.40s cubic-bezier(0.34,1.56,0.64,1),
+    border-radius 0.32s ease,
+    box-shadow 0.22s ease;
+}
+.pub-cluster:hover {
+  width: 152px;
+  height: 164px;
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 0.5px rgba(255,255,255,0.13) inset,
+    0 6px 30px rgba(0,0,0,0.55);
+}
+
+/* Hamburger row — always at top of container */
+.pub-ham {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  align-self: flex-start;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  color: rgba(255,255,255,0.50);
+  background: none;
+  border: none;
+  padding: 0;
+  pointer-events: none;
+  transition: color 0.20s;
+}
+.pub-cluster:hover .pub-ham {
+  color: rgba(255,255,255,0.82);
+}
+
+/* Pills container — always in DOM, clipped by overflow:hidden when collapsed */
+.pub-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 7px 7px;
+  pointer-events: none;
+}
+.pub-cluster:hover .pub-menu {
+  pointer-events: auto;
+}
+
+/* Pill cascade — staggered slide-up + fade */
+.pub-menu .publish-btn,
+.pub-menu .pushlive-btn,
+.pub-menu .history-btn {
+  opacity: 0;
+  transform: translateY(-7px) scale(0.95);
+  transition:
+    opacity  0.24s ease,
+    transform 0.30s cubic-bezier(0.34,1.56,0.64,1);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.pub-cluster:hover .pub-menu .publish-btn {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.13s;
+}
+.pub-cluster:hover .pub-menu .pushlive-btn {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.20s;
+}
+.pub-cluster:hover .pub-menu .history-btn {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.27s;
 }
 
 /* History button — same glass pill language as publish btn */
@@ -1674,6 +1783,31 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Screenshot thumbnail — full-bleed behind card content */
+.tm-card__thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  z-index: 0;
+}
+/* Overlay gradient so text stays legible over thumbnail */
+.tm-card__body--over {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(to top,
+    rgba(6,8,16,0.96) 0%,
+    rgba(6,8,16,0.70) 60%,
+    rgba(6,8,16,0.30) 100%);
+}
+.tm-card__foot--over {
+  position: relative;
+  z-index: 1;
+  background: rgba(4,5,12,0.80);
 }
 
 /* Seed / test card — blank neon outline */
@@ -2335,6 +2469,7 @@ body {
 .panel-tog {
   left: 28px;
   cursor: pointer;
+  color: rgba(255,255,255,0.85);
 }
 
 /* Inner glass plate — matches AI bar send button */
@@ -2361,6 +2496,7 @@ body {
   -webkit-user-select: none;
   overflow: visible;
   position: fixed;
+  opacity: 0.80; /* more visible than panel-tog */
 }
 
 /* Inner glass plate on knob — canvas draws ticks on top of it */
@@ -2407,8 +2543,7 @@ body {
   grid-template-columns: 1fr 1fr 1fr;
   width: 100%;
   height: clamp(220px, 50vw, 540px);
-  border-top: 0.5px solid rgba(255,255,255,0.12);
-  border-bottom: 0.5px solid rgba(255,255,255,0.12);
+  border: 1px solid rgb(72, 72, 72);
   overflow: hidden;
 }
 
@@ -2417,10 +2552,10 @@ body {
   overflow: hidden;
 }
 
-.lp-tri__panel--a { border-right: 0.5px solid rgba(255,255,255,0.10); }
-.lp-tri__panel--b { border-right: 0.5px solid rgba(255,255,255,0.10); }
+.lp-tri__panel--a { border-right: 1px solid rgb(72, 72, 72); }
+.lp-tri__panel--b { border-right: 1px solid rgb(72, 72, 72); }
 
-/* Base image — JS driver applies all transforms */
+/* Base image — position/scale driven by CSS vars set inline on each panel */
 .lp-tri__img {
   width: 100%;
   height: 100%;
@@ -2428,11 +2563,10 @@ body {
   display: block;
   transition: transform 0.12s ease;
   will-change: transform;
+  object-position: var(--px, center) var(--py, center);
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+  transform: scale(var(--scale, 1));
 }
-
-.lp-tri__panel--a .lp-tri__img { object-position: left top;    transform-origin: 23% 28%; transform: scale(2.6);  }
-.lp-tri__panel--b .lp-tri__img { object-position: center 42%;  transform-origin: 50% 42%; transform: scale(1.06); }
-.lp-tri__panel--c .lp-tri__img { object-position: left top;    transform-origin: 34% 12%; transform: scale(4.8);  }
 
 /* Grey bar captions — overline rule + label + focal length */
 .lp-tri__caption {
@@ -2489,103 +2623,6 @@ body {
   background: linear-gradient(to left, transparent, rgba(0,0,0,0.28));
 }
 
-/* ── Take a closer look ────────────────────────────────── */
-.lp-closer {
-  display: grid;
-  /* Apple's proportion: copy narrower, image wider */
-  grid-template-columns: 42fr 58fr;
-  width: 100%;
-  height: clamp(320px, 50vw, 640px);
-  border-top: 0.5px solid rgba(255,255,255,0.07);
-  overflow: hidden;
-}
-
-/* Left: pure black copy card */
-.lp-closer__copy {
-  background: #000;
-  display: flex;
-  align-items: flex-end;          /* text anchored to bottom-left */
-  padding: clamp(28px, 4.5vw, 68px);
-  border-right: 0.5px solid rgba(255,255,255,0.07);
-}
-
-.lp-closer__copy-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  /* Lift slightly from bottom edge — breathing room */
-  padding-bottom: clamp(4px, 1vw, 16px);
-}
-
-/* Overline label — small caps above headline */
-.lp-closer__copy-inner::before {
-  content: 'Design';
-  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.28);
-  display: block;
-  margin-bottom: -4px;
-}
-
-.lp-closer__headline {
-  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  font-size: clamp(34px, 3.8vw, 60px);
-  font-weight: 700;
-  letter-spacing: -0.026em;
-  line-height: 1.02;
-  color: #f5f5f7;
-}
-
-.lp-closer__body {
-  font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  font-size: clamp(13px, 1.05vw, 17px);
-  font-weight: 400;
-  line-height: 1.54;
-  color: rgba(255,255,255,0.52);
-  letter-spacing: -0.01em;
-}
-
-.lp-closer__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
-  font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: rgba(255,255,255,0.70);
-  text-decoration: none;
-  border: 1px solid rgba(255,255,255,0.30);
-  border-radius: 100px;
-  padding: 8px 20px;
-  transition: border-color 0.2s ease, color 0.2s ease;
-  white-space: nowrap;
-}
-.lp-closer__btn:hover {
-  border-color: rgba(255,255,255,0.58);
-  color: #fff;
-}
-
-/* Right: camera detail photo */
-.lp-closer__photo {
-  position: relative;
-  overflow: hidden;
-}
-.lp-closer__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: left top;
-  display: block;
-  transform-origin: 24% 16%;
-  transform: scale(2.2);
-  transition: transform 0.12s ease;
-  will-change: transform;
-}
 
 
 /* ══════════════════════════════════════════════════════════
@@ -2792,10 +2829,10 @@ body {
 .pw-kf-snap {
   width: 18px;
   height: 18px;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
   border: none;
   background: none;
   color: rgba(255,255,255,0.20);
@@ -2833,21 +2870,23 @@ body {
   border-color: var(--badge-color, rgba(56,210,255,0.35));
   text-shadow: 0 0 8px var(--badge-color, rgba(56,210,255,0.50));
 }
+.pw-anim-badge--bypassed {
+  color: rgba(255,80,80,0.70);
+  border-color: rgba(255,80,80,0.25);
+  text-shadow: 0 0 8px rgba(255,80,80,0.35);
+}
 
-/* ── Right-edge keyframe sidebar ──────────────────────── */
+/* ── Right-edge keyframe sidebar — always visible ──────── */
 .drv-overlay {
   position: fixed;
   top: 0;
   right: 0;
   width: 48px;
   height: 100vh;
-  z-index: 9990;
+  z-index: 10002;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.30s;
+  opacity: 1;
 }
-/* Visible whenever there are ≥2 KF tracks */
-.drv-overlay--has-kfs { opacity: 1; }
 
 .drv-overlay__col {
   position: absolute;
@@ -2891,6 +2930,15 @@ body {
   box-shadow:
     0 0 16px var(--track-color, rgba(255,255,255,0.8)),
     0 0 4px rgba(0,0,0,0.5);
+}
+.drv-overlay__dot--dragging {
+  transform: translate(-50%, -50%) scale(2);
+  box-shadow:
+    0 0 20px var(--track-color, rgba(255,255,255,1)),
+    0 0 6px rgba(0,0,0,0.6);
+  cursor: grabbing;
+  transition: none;
+  z-index: 10;
 }
 
 /* Pending dot — first KF set, waiting for second */
@@ -2974,12 +3022,23 @@ body {
 /* Current scroll hairline */
 .drv-overlay__hair {
   position: absolute;
-  left: -36px;
+  left: -6px;
   right: 0;
   height: 1px;
-  background: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.55);
   pointer-events: none;
-  box-shadow: 0 0 5px rgba(255,255,255,0.18);
+  box-shadow: 0 0 6px rgba(255,255,255,0.28);
+  z-index: 2;
+}
+
+/* Pulse on newly added dot */
+@keyframes kfDotIn {
+  0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+  60%  { transform: translate(-50%,-50%) scale(1.8); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+}
+.drv-overlay__dot--new {
+  animation: kfDotIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 
 /* ── Track selector ───────────────────────────────────── */
@@ -3117,18 +3176,4 @@ body {
   .lp-tri__panel--a { border-right: none; border-bottom: 0.5px solid rgba(255,255,255,0.09); }
   .lp-tri__panel--b { border-right: none; border-bottom: 0.5px solid rgba(255,255,255,0.09); }
 
-  .lp-closer {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
-    height: auto;
-  }
-  .lp-closer__copy {
-    border-right: none;
-    border-bottom: 0.5px solid rgba(255,255,255,0.07);
-    padding: 48px 28px;
-    align-items: flex-start;
-  }
-  .lp-closer__photo {
-    height: clamp(220px, 65vw, 420px);
-  }
 }

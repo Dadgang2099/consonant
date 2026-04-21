@@ -116,6 +116,8 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     return { tx, ty, phoneW };
   }
 
+  const lpBelow = document.querySelector('.lp-below');
+
   let raf = false;
   function onScroll() {
     if (raf) return;
@@ -156,24 +158,26 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         seqInfoEl.textContent = `p1: ${p1.toFixed(3)}  ${dur}`;
       }
 
-      // ── Phase 2: phone crossfade + garage-door scroll-up ──
+      // ── Phase 2: phone crossfade + slide-off ─────────────
+      let p2 = 0, slideFraction = 0;
       if (phoneImg) {
-        const p2 = Math.min(Math.max((y - ph1End) / PH2(), 0), 1);
+        p2 = Math.min(Math.max((y - ph1End) / PH2(), 0), 1);
 
         phoneImg.style.opacity = Math.min(p2 / 0.08, 1);
         video.style.opacity    = 1 - Math.min(Math.max((p2 - 0.04) / 0.11, 0), 1);
 
-        const slideFraction = Math.max((p2 - 0.15) / 0.85, 0);
+        slideFraction = Math.max((p2 - 0.15) / 0.85, 0);
         const { tx, ty, phoneW } = placePhone(slideFraction);
 
         phoneImg.style.width     = `${phoneW}px`;
         phoneImg.style.transform = `translate(${tx}px, ${ty}px)`;
 
         if (phoneHeadline) {
-          // Starts fading in as phone begins to lift — overlap is intentional
           phoneHeadline.style.opacity = Math.min(Math.max((p2 - 0.12) / 0.28, 0), 1);
         }
       }
+
+      // lp-below enters naturally via 700vh driver — no JS transform needed
 
       raf = false;
     });
@@ -428,9 +432,8 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     if (shadowPanel) {
       let opa = 0;
       if (y >= ph1End) {
-        if      (p2 < 0.10) opa = p2 / 0.10;
-        else if (p2 < 0.85) opa = 1;
-        else                 opa = 1 - (p2 - 0.85) / 0.15;
+        if (p2 < 0.10) opa = p2 / 0.10;
+        else            opa = Math.max(0, 1 - t2);
         opa = Math.max(0, Math.min(1, opa));
       }
       shadowPanel.style.opacity       = opa;
@@ -1476,16 +1479,48 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     return changes.slice(0, 3).join(', ');
   }
 
+  // ── Thumbnail capture — canvas composite of video + phone ──
+  function captureThumb() {
+    return new Promise(resolve => {
+      try {
+        const cvs = document.createElement('canvas');
+        const TW = 340, TH = 200;
+        cvs.width = TW; cvs.height = TH;
+        const ctx = cvs.getContext('2d');
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, TW, TH);
+        const vid = document.getElementById('heroVideo');
+        if (vid && vid.readyState >= 2) {
+          try { ctx.drawImage(vid, 0, 0, TW, TH); } catch(_) {}
+        }
+        const phoneEl = document.getElementById('phoneImg');
+        if (phoneEl && phoneEl.complete && phoneEl.style.width) {
+          const m  = phoneEl.style.transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+          const pw = parseFloat(phoneEl.style.width) || 0;
+          if (m && pw > 0) {
+            const sx = TW / window.innerWidth, sy = TH / window.innerHeight;
+            const px = parseFloat(m[1]) * sx, py = parseFloat(m[2]) * sy;
+            const ph = pw * (phoneEl.naturalHeight / phoneEl.naturalWidth);
+            try { ctx.drawImage(phoneEl, px, py, pw * sx, ph * sy); } catch(_) {}
+          }
+        }
+        resolve(cvs.toDataURL('image/jpeg', 0.40));
+      } catch(_) { resolve(null); }
+    });
+  }
+
   // ── Save on publish ───────────────────────────────────────
-  window.addEventListener('pw:publish', (e) => {
+  window.addEventListener('pw:publish', async (e) => {
     const vs      = load();
     const prev    = vs[vs.length - 1]?.payload || null;
     const payload = e.detail;
+    const screenshot = await captureThumb();
     const entry   = {
       v:       vs.length + 1,
       ts:      new Date().toISOString(),
       label:   diffLabel(prev, payload),
       payload,
+      screenshot,
     };
     vs.push(entry);
     if (vs.length > MAX_VERSIONS) vs.splice(0, vs.length - MAX_VERSIONS);
@@ -1593,63 +1628,52 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     stack.innerHTML = '';
     cards = [];
 
-    // Always ensure at least 8 cards so scroll can be tested immediately
-    let display = versions.slice();
-    if (display.length < 8) {
-      const n = display.length;
-      for (let i = n; i < 8; i++) {
-        display.push({
-          v:      i + 1,
-          ts:     new Date(Date.now() - (8 - i) * 7200000).toISOString(),
-          label:  '—',
-          payload: null,
-          _seed:  true,
-        });
-      }
+    const rev = [...versions].reverse(); // newest first
+
+    if (!rev.length) {
+      // No versions yet — show empty state
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.25);font:700 11px/1 -apple-system,sans-serif;letter-spacing:.2em;text-transform:uppercase;text-align:center';
+      msg.innerHTML = 'NO VERSIONS YET<br><span style="font-weight:400;font-size:9px;letter-spacing:.08em;margin-top:8px;display:block">Press PUBLISH to save your first version</span>';
+      stack.appendChild(msg);
+      applyTransforms(0);
+      return;
     }
 
-    const rev = [...display].reverse(); // newest first
     rev.forEach((ver, i) => {
       const card   = document.createElement('div');
       card.className = 'tm-card';
 
       const accent = ACCENTS[(ver.v - 1) % ACCENTS.length];
 
-      if (ver._seed) {
-        // Blank neon placeholder — for testing scroll interaction
-        card.classList.add('tm-card--seed');
-        card.innerHTML = `
-          <div class="tm-card__face tm-card__face--seed" style="--neon:${accent}">
-            <div class="tm-card__ver" style="color:${accent}">v${ver.v}</div>
-          </div>`;
-      } else {
-        const p     = ver.payload || {};
-        const hl    = (p.copy?.headline || '').replace(/<[^>]+>/g,'') || '—';
-        const scale = p.layout?.scale  ?? '—';
-        const speed = p.scroll?.ph1Mult ?? '—';
-        const hlSz  = p.typography?.hlSize ?? '—';
-        const ts    = new Date(ver.ts);
-        const tsStr = ts.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' · ' +
-                      ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const p      = ver.payload || {};
+      const hl     = (p.copy?.headline || '').replace(/<[^>]+>/g,'') || '—';
+      const scale  = p.layout?.scale  ?? '—';
+      const speed  = p.scroll?.ph1Mult ?? '—';
+      const hlSz   = p.typography?.hlSize ?? '—';
+      const ts     = new Date(ver.ts);
+      const tsStr  = ts.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' · ' +
+                     ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const hasThumb = !!ver.screenshot;
 
-        card.innerHTML = `
-          <div class="tm-card__face">
-            <div class="tm-card__accent" style="background:${accent}"></div>
-            <div class="tm-card__body">
-              <div class="tm-card__hl">${hl}</div>
-              <div class="tm-card__pills">
-                <span class="tm-card__pill">Scale ${scale}</span>
-                <span class="tm-card__pill">Speed ${speed}×</span>
-                <span class="tm-card__pill">HL ${hlSz}px</span>
-              </div>
+      card.innerHTML = `
+        <div class="tm-card__face">
+          ${hasThumb ? `<img class="tm-card__thumb" src="${ver.screenshot}" alt="">` : ''}
+          <div class="tm-card__accent" style="background:${accent}"></div>
+          <div class="tm-card__body${hasThumb ? ' tm-card__body--over' : ''}">
+            <div class="tm-card__hl">${hl}</div>
+            <div class="tm-card__pills">
+              <span class="tm-card__pill">Scale ${scale}</span>
+              <span class="tm-card__pill">Speed ${speed}×</span>
+              <span class="tm-card__pill">HL ${hlSz}px</span>
             </div>
-            <div class="tm-card__foot">
-              <span class="tm-card__ts">${tsStr}</span>
-              <span class="tm-card__diff">${ver.label || 'Minor tweaks'}</span>
-            </div>
-            <div class="tm-card__ver" style="color:${accent}">v${ver.v}</div>
-          </div>`;
-      }
+          </div>
+          <div class="tm-card__foot${hasThumb ? ' tm-card__foot--over' : ''}">
+            <span class="tm-card__ts">${tsStr}</span>
+            <span class="tm-card__diff">${ver.label || 'Minor tweaks'}</span>
+          </div>
+          <div class="tm-card__ver" style="color:${accent}">v${ver.v}</div>
+        </div>`;
 
       // Click any back card to bring it forward; click front card's restore btn to restore
       card.addEventListener('click', (e) => {
@@ -1660,7 +1684,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       card.addEventListener('mouseenter', () => card.classList.add('tm-card--hovered'));
       card.addEventListener('mouseleave', () => card.classList.remove('tm-card--hovered'));
 
-      if (i > 0 && !ver._seed) {
+      if (i > 0) {
         const btn = document.createElement('button');
         btn.className = 'tm-card__restore';
         btn.textContent = 'RESTORE THIS VERSION';
@@ -2012,10 +2036,12 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     }
 
     knobEl.addEventListener('mouseenter', () => {
-      if (!cascHovering) { cascHovering = true; fireCascade(); }
+      cascHovering = true;
+      fireCascade();
     });
     knobEl.addEventListener('mouseleave', () => {
       cascHovering = false;
+      cascLines.forEach(c => { c.t = -1; });
     });
 
     let kDragging = false, kCenterX = 0, kCenterY = 0;
@@ -2041,22 +2067,21 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
           c.t = Math.min(c.t + 0.028, 1);
         }
 
-        // Base visibility from scroll (lines quietly glow when user has scrolled)
-        const baseAlpha  = scrollVis * 0.18;
         // Animated burst: extend outward then fade
         let burstLen   = 0;
         let burstAlpha = 0;
         if (c.t >= 0) {
-          // First half: extend outward; second half: fade
-          burstLen   = Math.sin(c.t * Math.PI);                 // 0→1→0
-          burstAlpha = (1 - c.t) * 0.75;
+          burstLen   = Math.sin(c.t * Math.PI);          // 0→1→0
+          burstAlpha = (1 - c.t) * 0.92;
         }
 
-        const totalAlpha = Math.max(baseAlpha, burstAlpha);
+        // Sustained glow while hovering after burst completes
+        const hoverAlpha = cascHovering && c.t >= 1 ? 0.38 : 0;
+        const totalAlpha = Math.max(burstAlpha, hoverAlpha);
         if (totalAlpha < 0.01) continue;
 
         const rIn  = CASCADE_R_IN;
-        const rOut = CASCADE_R_IN + (CASCADE_R_OUT - CASCADE_R_IN) * Math.max(scrollVis * 0.4, burstLen);
+        const rOut = CASCADE_R_IN + (CASCADE_R_OUT - CASCADE_R_IN) * burstLen;
 
         const x1 = KCX + Math.cos(angle) * rIn;
         const y1 = KCY + Math.sin(angle) * rIn;
@@ -2067,7 +2092,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         kCtx.moveTo(x1, y1);
         kCtx.lineTo(x2, y2);
         kCtx.strokeStyle = `rgba(56,210,255,${totalAlpha})`;
-        kCtx.lineWidth   = 1;
+        kCtx.lineWidth   = 1.5;
         kCtx.lineCap     = 'round';
         kCtx.stroke();
       }
@@ -2726,8 +2751,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   let applying   = false; // re-entry guard — prevents seqSpeed dispatch loop
   let kfEnabled  = true;  // global KF playback toggle — false = bypass all KFs
 
-  // Position calibration inputs must never be KF-animated
-  const KF_BLOCKLIST = new Set(['scaleInput', 'yRefInput', 'xOffInput']);
+  const KF_BLOCKLIST = new Set([]);
   let overlayEl  = null;
   let animBtn    = null;
 
@@ -2751,25 +2775,15 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   // ── Persistence ───────────────────────────────────────
   function load() {
     try {
-      const raw = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-      kfStore = {};
-      for (const [k, v] of Object.entries(raw)) {
-        if (Array.isArray(v) && v.every(e => typeof e.scrollY === 'number')) kfStore[k] = v;
-      }
+      const raw = localStorage.getItem(STORE_KEY);
+      kfStore = raw ? JSON.parse(raw) : {};
     } catch(_) { kfStore = {}; }
-
-    // One-time migration: clear any stale position KFs captured before calibration was fixed
-    if (!localStorage.getItem(STORE_MIGR)) {
-      delete kfStore['scaleInput'];
-      delete kfStore['yRefInput'];
-      delete kfStore['xOffInput'];
-      localStorage.setItem(STORE_MIGR, '1');
-      save();
-    }
   }
   function save() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(kfStore)); } catch(_) {}
   }
+
+  let _lastCapturedSY = -1; // track most recent capture scroll for dot pulse
 
   // ── Capture one input's value as a KF at scrollY ──────
   function captureInputKF(inputId, sy, val) {
@@ -2777,10 +2791,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     kfStore[inputId] = kfStore[inputId].filter(k => Math.abs(k.scrollY - sy) > 30);
     kfStore[inputId].push({ id: Date.now(), scrollY: sy, val });
     kfStore[inputId].sort((a, b) => a.scrollY - b.scrollY);
+    _lastCapturedSY = sy;
     save();
     updateBadges();
     refreshSnapButtons();
-    if (animMode) buildOverlayLines();
+    buildOverlayLines();
   }
 
   // ── Helper: color for an input based on its panel ─────
@@ -2822,9 +2837,14 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       if (val !== undefined) {
         const inp = document.getElementById(inputId);
         if (!inp) continue;
-        inp.value = val;
-        inp.dispatchEvent(new Event('input',  { bubbles: true }));
-        inp.dispatchEvent(new Event('change', { bubbles: true }));
+        if (inp.classList.contains('pw-seg')) {
+          const btn = inp.querySelector(`.pw-seg__btn[data-val="${String(val)}"]`);
+          if (btn && !btn.classList.contains('pw-seg__btn--on')) btn.click();
+        } else {
+          inp.value = val;
+          inp.dispatchEvent(new Event('input',  { bubbles: true }));
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       }
     }
     playback = false;
@@ -2846,39 +2866,153 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
     const totalKFs = Object.values(kfStore).reduce((n, kfs) => n + kfs.length, 0);
     overlayEl.classList.toggle('drv-overlay--has-kfs', totalKFs > 0);
-    if (!totalKFs) return;
 
     const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
+    const OVERLAY_W  = 48;
+    const panelIds   = Object.keys(PANEL_COLORS);
 
-    // Scrubber hairline
+    // Scrubber hairline — always visible
     const hair = document.createElement('div');
     hair.className = 'drv-overlay__hair';
     hair.id = 'kwHair';
     overlayEl.appendChild(hair);
 
-    // KF bypass toggle button in sidebar
-    const bypassBtn = document.createElement('button');
-    bypassBtn.className = 'drv-overlay__bypass';
-    bypassBtn.id = 'kfBypassBtn';
-    bypassBtn.title = 'Toggle KF playback (K)';
-    bypassBtn.textContent = kfEnabled ? 'KF' : 'OFF';
-    bypassBtn.classList.toggle('drv-overlay__bypass--off', !kfEnabled);
-    bypassBtn.addEventListener('click', toggleKFEnabled);
-    overlayEl.appendChild(bypassBtn);
+    if (totalKFs > 0) {
+      // KF bypass toggle
+      const bypassBtn = document.createElement('button');
+      bypassBtn.className = 'drv-overlay__bypass';
+      bypassBtn.id = 'kfBypassBtn';
+      bypassBtn.title = 'Toggle KF playback (K)';
+      bypassBtn.textContent = kfEnabled ? 'KF' : 'OFF';
+      bypassBtn.classList.toggle('drv-overlay__bypass--off', !kfEnabled);
+      bypassBtn.addEventListener('click', toggleKFEnabled);
+      overlayEl.appendChild(bypassBtn);
 
-    // Clear-all KFs button (× icon, bottom of sidebar)
-    const clearBtn = document.createElement('button');
-    clearBtn.className = 'drv-overlay__clear';
-    clearBtn.title = 'Clear all keyframes';
-    clearBtn.textContent = '×';
-    clearBtn.addEventListener('click', () => {
-      if (!confirm('Clear all keyframes?')) return;
-      kfStore = {};
-      save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
+      // Clear-all button
+      const clearBtn = document.createElement('button');
+      clearBtn.className = 'drv-overlay__clear';
+      clearBtn.title = 'Clear all keyframes';
+      clearBtn.textContent = '×';
+      clearBtn.addEventListener('click', () => {
+        if (!confirm('Clear all keyframes?')) return;
+        kfStore = {};
+        save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
+      });
+      overlayEl.appendChild(clearBtn);
+    }
+
+    // ── Per-panel colored track columns ──────────────────
+    panelIds.forEach((panelId, idx) => {
+      const color   = PANEL_COLORS[panelId];
+      const panelEl = document.getElementById(panelId);
+      if (!panelEl) return;
+
+      // Collect all KF scrollY values for this panel's inputs
+      const positions = [];
+      Object.entries(kfStore).forEach(([inputId, kfs]) => {
+        if (KF_BLOCKLIST.has(inputId)) return;
+        if (!panelEl.querySelector(`#${inputId}`)) return;
+        kfs.forEach(kf => positions.push(kf.scrollY));
+      });
+      if (!positions.length) return;
+
+      const sorted = [...new Set(positions)].sort((a, b) => a - b);
+
+      const col = document.createElement('div');
+      col.className = 'drv-overlay__col';
+      col.style.setProperty('--track-color', color);
+      const colCenter = Math.round((idx + 0.5) * (OVERLAY_W / panelIds.length));
+      col.style.left = `${colCenter - 1}px`;
+      overlayEl.appendChild(col);
+
+      // Connecting line between first and last KF
+      if (sorted.length >= 2) {
+        const line = document.createElement('div');
+        line.className = 'drv-overlay__line';
+        const topPct  = (sorted[0] / scrollMax) * 100;
+        const botPct  = (sorted[sorted.length - 1] / scrollMax) * 100;
+        line.style.top    = `${topPct}%`;
+        line.style.height = `${Math.max(0.4, botPct - topPct)}%`;
+        col.appendChild(line);
+      }
+
+      // Dot at each KF scroll position — click to scroll/delete, drag to move
+      sorted.forEach(sy => {
+        const dot = document.createElement('div');
+        dot.className = 'drv-overlay__dot' + (Math.abs(sy - _lastCapturedSY) <= KF_SNAP_RADIUS ? ' drv-overlay__dot--new' : '');
+        dot.style.top  = `${(sy / scrollMax) * 100}%`;
+        dot.title      = `KF @ ${Math.round(sy)}px — click here to delete, drag to move`;
+        dot.style.pointerEvents = 'auto';
+        let didDrag = false;
+
+        dot.addEventListener('mousedown', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          didDrag = false;
+          const rect = overlayEl.getBoundingClientRect();
+          const oldSY = sy;
+          const panelEl2 = document.getElementById(panelId);
+
+          dot.classList.add('drv-overlay__dot--dragging');
+
+          function onMove(e2) {
+            didDrag = true;
+            const frac = Math.max(0, Math.min(1, (e2.clientY - rect.top) / rect.height));
+            dot.style.top = `${frac * 100}%`;
+          }
+          function onUp(e2) {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup',   onUp);
+            dot.classList.remove('drv-overlay__dot--dragging');
+
+            if (!didDrag) {
+              // Click: if already at this position, delete; otherwise scroll here
+              if (Math.abs(window.scrollY - oldSY) <= KF_SNAP_RADIUS) {
+                deleteKFsAtScroll(panelId, oldSY);
+              } else {
+                window.scrollTo({ top: oldSY, behavior: 'smooth' });
+              }
+              return;
+            }
+
+            // Drag released — move all KFs at oldSY to newSY
+            const frac  = Math.max(0, Math.min(1, (e2.clientY - rect.top) / rect.height));
+            const newSY = Math.round(frac * scrollMax);
+            for (const [inputId, kfs] of Object.entries(kfStore)) {
+              if (!panelEl2?.querySelector(`#${inputId}`)) continue;
+              kfs.forEach(kf => {
+                if (Math.abs(kf.scrollY - oldSY) <= KF_SNAP_RADIUS) kf.scrollY = newSY;
+              });
+              kfs.sort((a, b) => a.scrollY - b.scrollY);
+            }
+            save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup',   onUp);
+        });
+
+        col.appendChild(dot);
+      });
     });
-    overlayEl.appendChild(clearBtn);
 
     updateKFSidebar(window.scrollY);
+  }
+
+  // Delete all KFs at a scroll position for a panel; clean up orphaned single KFs
+  function deleteKFsAtScroll(panelId, sy) {
+    const panelEl = document.getElementById(panelId);
+    for (const [inputId, kfs] of Object.entries(kfStore)) {
+      if (!panelEl?.querySelector(`#${inputId}`)) continue;
+      const before = kfs.length;
+      kfStore[inputId] = kfs.filter(k => Math.abs(k.scrollY - sy) > KF_SNAP_RADIUS);
+      if (!kfStore[inputId].length) {
+        delete kfStore[inputId];
+      } else if (kfStore[inputId].length === 1 && before > 1) {
+        // Removing this position left exactly 1 KF — clean it up (can't interpolate)
+        delete kfStore[inputId];
+      }
+    }
+    save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
   }
 
   function updateKFSidebar(sy) {
@@ -2896,6 +3030,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       btn.classList.toggle('drv-overlay__bypass--off', !kfEnabled);
     }
     overlayEl?.classList.toggle('drv-overlay--bypassed', !kfEnabled);
+    // Sync all panel header badges to reflect master state
+    document.querySelectorAll('.pw-anim-badge').forEach(b => {
+      b.classList.toggle('pw-anim-badge--bypassed', !kfEnabled);
+      b.title = kfEnabled ? 'Master KF toggle — enable / disable all keyframes' : 'KFs bypassed — click to re-enable';
+    });
   }
 
   // K key toggles KF playback
@@ -2920,6 +3059,25 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     }
   }
 
+  function captureAllPanelKFs(panelId) {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    const sy = Math.round(window.scrollY);
+    panel.querySelectorAll('input[type=range], input[type=text], select').forEach(inp => {
+      if (!inp.id || KF_BLOCKLIST.has(inp.id)) return;
+      const val = inp.type === 'range' ? parseFloat(inp.value) : inp.value;
+      captureInputKF(inp.id, sy, val);
+    });
+    panel.querySelectorAll('.pw-seg[id]').forEach(seg => {
+      const active = seg.querySelector('.pw-seg__btn--on');
+      if (active) captureInputKF(seg.id, sy, active.dataset.val || '');
+    });
+    panel.querySelectorAll('.pw-cpicker__hex[id]').forEach(inp => {
+      captureInputKF(inp.id, sy, inp.value.replace('#','').toLowerCase());
+    });
+    buildOverlayLines();
+  }
+
   function addBadges() {
     for (const [panelId, color] of Object.entries(PANEL_COLORS)) {
       const hdr = document.querySelector(`#${panelId} .pw-panel__hdr`);
@@ -2928,23 +3086,17 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       badge.className = 'pw-anim-badge';
       badge.id  = `kwBadge_${panelId}`;
       badge.style.setProperty('--badge-color', color);
-      badge.title = 'Keyframes on this panel';
+      badge.title = 'Master keyframe — capture all metrics at current scroll';
       badge.textContent = '◆';
-      // Clear KFs for this panel on click (with confirm)
       badge.addEventListener('click', e => {
         e.stopPropagation();
-        const panel  = document.getElementById(panelId);
-        const inputs = panel ? [...panel.querySelectorAll('input[type=range]')] : [];
-        const count  = inputs.filter(inp => inp.id && (kfStore[inp.id]||[]).length).length;
-        if (!count) return;
-        if (confirm(`Clear all ${count} keyframe(s) on this panel?`)) {
-          inputs.forEach(inp => { if (inp.id) delete kfStore[inp.id]; });
-          save(); updateBadges(); buildOverlayLines();
-        }
+        captureAllPanelKFs(panelId);
       });
-      const closeBtn = hdr.querySelector('.pw-icon-btn');
-      if (closeBtn) hdr.insertBefore(badge, closeBtn);
-      else hdr.appendChild(badge);
+      const hdrRight = hdr.querySelector('.pw-panel__hdr-right');
+      const closeBtn = hdrRight ? hdrRight.querySelector('.pw-icon-btn') : hdr.querySelector('.pw-icon-btn');
+      const target   = hdrRight || hdr;
+      if (closeBtn) target.insertBefore(badge, closeBtn);
+      else target.appendChild(badge);
     }
     updateBadges();
   }
@@ -2962,9 +3114,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       pill.dataset.panel = panelId;
       pill.innerHTML = REC_ICON;
       pill.addEventListener('click', e => { e.stopPropagation(); toggleAnimate(); });
-      const closeBtn = hdr.querySelector('.pw-icon-btn');
-      if (closeBtn) hdr.insertBefore(pill, closeBtn);
-      else hdr.appendChild(pill);
+      const hdrRight2 = hdr.querySelector('.pw-panel__hdr-right');
+      const closeBtn2 = hdrRight2 ? hdrRight2.querySelector('.pw-icon-btn') : hdr.querySelector('.pw-icon-btn');
+      const target2   = hdrRight2 || hdr;
+      if (closeBtn2) target2.insertBefore(pill, closeBtn2);
+      else target2.appendChild(pill);
     }
   }
 
@@ -2982,7 +3136,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     <path d="M5 1L9 5L5 9L1 5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
   </svg>`;
 
-  // ── ◆ Snap-KF button on every slider + color row ─────
+  // ── ◆ Snap-KF button on every row type ───────────────
   function addKFSnapButtons() {
     for (const panelId of Object.keys(PANEL_COLORS)) {
       const panel = document.getElementById(panelId);
@@ -2996,8 +3150,28 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
         attachKFBtn(row, inp.id, () => parseFloat(inp.value));
       });
 
-      // Color rows — chip button is in .pw-row--color; hex input is in a separate picker element
-      // ID pattern: {prefix}ColorChip  →  {prefix}CPickerHex
+      // Select dropdowns
+      panel.querySelectorAll('select[id]').forEach(inp => {
+        const row = inp.closest('.pw-row');
+        if (!row) return;
+        attachKFBtn(row, inp.id, () => inp.value);
+      });
+
+      // Text inputs
+      panel.querySelectorAll('input[type=text][id]').forEach(inp => {
+        const row = inp.closest('.pw-row');
+        if (!row) return;
+        attachKFBtn(row, inp.id, () => inp.value);
+      });
+
+      // Segment controls
+      panel.querySelectorAll('.pw-seg[id]').forEach(seg => {
+        const row = seg.closest('.pw-row');
+        if (!row) return;
+        attachKFBtn(row, seg.id, () => seg.querySelector('.pw-seg__btn--on')?.dataset.val || '');
+      });
+
+      // Color rows
       panel.querySelectorAll('.pw-row--color').forEach(row => {
         const chip = row.querySelector('.pw-color-chip');
         if (!chip?.id) return;
@@ -3041,9 +3215,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       }
     });
 
-    const copyBtn = row.querySelector('.pw-cp');
-    if (copyBtn) row.insertBefore(btn, copyBtn);
-    else         row.appendChild(btn);
+    row.appendChild(btn);
   }
 
   // Update snap buttons: --has = has any KF, --here = sitting on a KF at current scroll
@@ -3059,7 +3231,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     });
   }
 
-  // ── Auto-capture ALL input types inside panels when REC is active ──
+  // ── Auto-capture ALL panel values when REC is active ────
   function bindAutoCapture() {
     function capture(e) {
       if (!animMode || playback) return;
@@ -3067,29 +3239,19 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       if (!inp.id) return;
       if (KF_BLOCKLIST.has(inp.id)) return;
 
-      // Must be inside a tracked panel
-      const inPanel = Object.keys(PANEL_COLORS).some(id => {
+      // Find which panel this input belongs to
+      const panelId = Object.keys(PANEL_COLORS).find(id => {
         const p = document.getElementById(id);
         return p && p.contains(inp);
       });
-      if (!inPanel) return;
+      if (!panelId) return;
 
-      let val;
-      if (inp.type === 'range') {
-        val = parseFloat(inp.value);
-      } else if (inp.classList.contains('pw-cpicker__hex')) {
-        val = inp.value.replace('#', '').toLowerCase();
-      } else if (inp.tagName === 'SELECT' || inp.type === 'text' || inp.tagName === 'INPUT') {
-        val = inp.value;
-      } else {
-        return;
-      }
-
-      captureInputKF(inp.id, Math.round(window.scrollY), val);
+      // Capture ALL values in the panel, not just the changed input
+      captureAllPanelKFs(panelId);
     }
 
     document.addEventListener('input',  capture, true);
-    document.addEventListener('change', capture, true); // select elements fire 'change'
+    document.addEventListener('change', capture, true);
   }
 
   // ── Scroll ────────────────────────────────────────────
@@ -3099,10 +3261,25 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     refreshSnapButtons();
   }
 
+  function buildCornerHatches() {
+    for (const panelId of Object.keys(PANEL_COLORS)) {
+      const panel = document.getElementById(panelId);
+      if (!panel) continue;
+      ['tl','tr','bl','br'].forEach(pos => {
+        if (panel.querySelector(`.pw-corner--${pos}`)) return;
+        const c = document.createElement('span');
+        c.className = `pw-corner pw-corner--${pos}`;
+        c.setAttribute('aria-hidden', 'true');
+        panel.appendChild(c);
+      });
+    }
+  }
+
   // ── Init ─────────────────────────────────────────────
   function init() {
     load();
     buildAnimateButton();
+    buildCornerHatches();
     buildOverlay();
     buildOverlayLines();   // render any persisted KF tracks immediately
     addBadges();

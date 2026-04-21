@@ -45,7 +45,7 @@
             </svg>
             <span class="pw-panel__title">SHADOW</span>
           </div>
-          <button class="pw-icon-btn" id="shadowToggle">−</button>
+          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="shadowToggle">−</button></div>
         </header>
         <div class="pw-panel__body" id="shadowBody">
           <div class="pw-ai-callout" data-pro-only>
@@ -117,7 +117,7 @@
             </svg>
             <span class="pw-panel__title">SEQUENCE</span>
           </div>
-          <button class="pw-icon-btn" id="seqToggle">−</button>
+          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="seqToggle">−</button></div>
         </header>
         <div class="pw-panel__body" id="seqBody">
           <div class="pw-ai-callout" data-pro-only>
@@ -183,7 +183,7 @@
             </svg>
             <span class="pw-panel__title">ALIGNMENT</span>
           </div>
-          <button class="pw-icon-btn" id="tweakToggle">−</button>
+          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="tweakToggle">−</button></div>
         </header>
         <div class="pw-panel__body" id="tweakBody">
           <div class="pw-ai-callout" data-pro-only>
@@ -244,7 +244,7 @@
             </svg>
             <span class="pw-panel__title">CONTENT</span>
           </div>
-          <button class="pw-icon-btn" id="ctrlToggle">−</button>
+          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="ctrlToggle">−</button></div>
         </header>
         <div class="pw-panel__body pw-panel__body--scroll" id="ctrlBody">
           <div class="pw-ai-callout" data-pro-only>
@@ -496,7 +496,8 @@
 
   <!-- Triptych: three-panel camera showcase -->
   <section class="lp-tri" aria-label="Triple camera system">
-    <div class="lp-tri__panel lp-tri__panel--a">
+    <div class="lp-tri__panel lp-tri__panel--a"
+         style="--scale:2.8; --ox:15%; --oy:24%; --px:left; --py:top">
       <img class="lp-tri__img" src="assets/phone_endframe.jpg"
            alt="iPhone 11 Pro triple camera" aria-hidden="true">
       <div class="lp-tri__veil lp-tri__veil--r"></div>
@@ -506,7 +507,8 @@
         <span class="lp-tri__cap-sub">0.5×  13mm</span>
       </div>
     </div>
-    <div class="lp-tri__panel lp-tri__panel--b">
+    <div class="lp-tri__panel lp-tri__panel--b"
+         style="--scale:1.12; --ox:50%; --oy:50%; --px:center; --py:56%">
       <img class="lp-tri__img" src="assets/phone_endframe.jpg"
            alt="" aria-hidden="true">
       <div class="lp-tri__caption">
@@ -515,7 +517,8 @@
         <span class="lp-tri__cap-sub">1×  26mm</span>
       </div>
     </div>
-    <div class="lp-tri__panel lp-tri__panel--c">
+    <div class="lp-tri__panel lp-tri__panel--c"
+         style="--scale:6.0; --ox:28%; --oy:22%; --px:left; --py:top">
       <img class="lp-tri__img" src="assets/phone_endframe.jpg"
            alt="iPhone 11 Pro camera detail" aria-hidden="true">
       <div class="lp-tri__veil lp-tri__veil--l"></div>
@@ -527,40 +530,34 @@
     </div>
   </section>
 
-  <!-- Take a closer look -->
-  <section class="lp-closer" aria-label="Take a closer look">
-    <div class="lp-closer__copy">
-      <div class="lp-closer__copy-inner">
-        <h2 class="lp-closer__headline">Take a<br>closer look.</h2>
-        <p class="lp-closer__body">Two sizes. Four finishes.<br>Stainless steel and glass design.</p>
-        <a class="lp-closer__btn" href="#">View the gallery ›</a>
-      </div>
-    </div>
-    <div class="lp-closer__photo">
-      <img class="lp-closer__img" src="assets/phone_endframe.jpg"
-           alt="Camera lens detail" aria-hidden="true">
-    </div>
-  </section>
-
 </div><!-- /lp-below -->
 
-<!-- ─── Publish + History cluster ───────────────────────── -->
-<div class="pub-cluster" id="pubCluster">
-  <button class="publish-btn" id="publishBtn" aria-label="Publish">
-    <span class="publish-btn__dot"></span>
-    <span class="publish-btn__label">PUBLISH</span>
-  </button>
-  <button class="pushlive-btn" id="pushLiveBtn" aria-label="Push live">
-    <span class="pushlive-btn__dot"></span>
-    <span class="pushlive-btn__label">PUSH LIVE</span>
-  </button>
-  <button class="history-btn" id="historyBtn" aria-label="Version history">
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-      <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.1"/>
-      <path d="M6.5 3.5V6.8l2.2 1.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+<!-- ─── Design tools — circle grows into pill container ─── -->
+<div class="pub-cluster" id="pubCluster" role="navigation" aria-label="Design tools">
+  <div class="pub-ham" id="pubHam" aria-hidden="true">
+    <svg width="15" height="12" viewBox="0 0 15 12" fill="none" aria-hidden="true">
+      <rect x="0" y="0"   width="15" height="1.8" rx="0.9" fill="currentColor"/>
+      <rect x="0" y="5.1" width="15" height="1.8" rx="0.9" fill="currentColor"/>
+      <rect x="0" y="10.2" width="15" height="1.8" rx="0.9" fill="currentColor"/>
     </svg>
-    <span class="history-btn__label">HISTORY</span>
-  </button>
+  </div>
+  <div class="pub-menu" id="pubMenu" role="menu">
+    <button class="publish-btn" id="publishBtn" aria-label="Publish" role="menuitem">
+      <span class="publish-btn__dot"></span>
+      <span class="publish-btn__label">PUBLISH</span>
+    </button>
+    <button class="pushlive-btn" id="pushLiveBtn" aria-label="Push live" role="menuitem">
+      <span class="pushlive-btn__dot"></span>
+      <span class="pushlive-btn__label">PUSH LIVE</span>
+    </button>
+    <button class="history-btn" id="historyBtn" aria-label="Version history" role="menuitem">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+        <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.1"/>
+        <path d="M6.5 3.5V6.8l2.2 1.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+      <span class="history-btn__label">HISTORY</span>
+    </button>
+  </div>
 </div>
 
 <!-- ─── Time Machine overlay ────────────────────────────── -->
