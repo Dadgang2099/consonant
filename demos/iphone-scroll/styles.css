@@ -11,6 +11,7 @@ body {
   color: #fff;
   font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* ── Scroll driver: tall container that pins the stage ─── */
