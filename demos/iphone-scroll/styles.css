@@ -2833,6 +2833,7 @@ body {
   align-items: center;
   justify-content: center;
   justify-self: center;
+  grid-column: -1;
   border: none;
   background: none;
   color: rgba(255,255,255,0.20);
