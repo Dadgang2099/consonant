@@ -1,4 +1,6 @@
 {
+  "buildCommand": "",
+  "outputDirectory": ".",
   "redirects": [
     { "source": "/", "destination": "/demos/iphone-scroll/", "permanent": false }
   ]
