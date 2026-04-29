@@ -3212,7 +3212,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       const panelId = T.panelId;
       // Dot at each KF scroll position — click to scroll/delete, shift-click to multi-select, drag to move
       T.sorted.forEach(sy => {
-        const key = `${panelId}:${sy}`;
+        // Selection key now includes inputId so each metric is independently
+        // selectable and draggable. Use a single capture-all-metrics action
+        // (the panel header ◆) to move the whole block at once.
+        const key = `${panelId}|${T.inputId}|${sy}`;
         const isNew = Math.abs(sy - _lastCapturedSY) <= KF_SNAP_RADIUS;
         const isSel = kfSel.has(key);
         const dot = document.createElement('div');
@@ -3250,10 +3253,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           window.scrollTo(0, oldSY);
           const startScrollY = oldSY;
 
-          // Snapshot all currently selected {panelId, sy} for delta-move
+          // Snapshot {panelId, inputId, sy} for every currently-selected dot
           const selSnap = [...kfSel].map(k => {
-            const colonIdx = k.lastIndexOf(':');
-            return { key: k, panelId: k.slice(0, colonIdx), sy: parseInt(k.slice(colonIdx + 1)) };
+            const [pid, iid, sStr] = k.split('|');
+            return { key: k, panelId: pid, inputId: iid, sy: parseInt(sStr) };
           });
 
           dot.classList.add('drv-overlay__dot--dragging');
@@ -3267,12 +3270,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           // currentSY passed directly — no dependency on window.scrollY settling
           function updateKFVisuals(currentSY) {
             const deltaSY = Math.round(currentSY - startScrollY);
-            selSnap.forEach(({ panelId: pid, sy: sSY }) => {
-              // querySelectorAll: one dot per metric column at this scrollY
-              const els = overlayEl.querySelectorAll(`[data-kf-pan="${pid}"][data-kf-sy="${sSY}"]`);
-              els.forEach(el => {
-                el.style.top = `${Math.max(0, Math.min(100, ((sSY + deltaSY) / scrollMax) * 100))}%`;
-              });
+            selSnap.forEach(({ panelId: pid, inputId: iid, sy: sSY }) => {
+              const el = overlayEl.querySelector(
+                `[data-kf-pan="${pid}"][data-kf-input="${iid}"][data-kf-sy="${sSY}"]`
+              );
+              if (el) el.style.top = `${Math.max(0, Math.min(100, ((sSY + deltaSY) / scrollMax) * 100))}%`;
             });
             if (dragState) dragState.deltaSY = deltaSY;
 
@@ -3336,22 +3338,21 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             }
 
             const deltaSY = finalDeltaSY;
-            selSnap.forEach(({ panelId: pid, sy: sSY }) => {
+            // Move only the selected metric's KF — each input is independent
+            selSnap.forEach(({ inputId: iid, sy: sSY }) => {
+              const kfs = kfStore[iid];
+              if (!kfs) return;
               const targetSY = Math.max(0, sSY + deltaSY);
-              for (const [inputId, kfs] of Object.entries(kfStore)) {
-                const pe = document.getElementById(pid);
-                if (!pe?.querySelector(`#${inputId}`)) continue;
-                kfs.forEach(kf => {
-                  if (Math.abs(kf.scrollY - sSY) <= KF_SNAP_RADIUS) kf.scrollY = targetSY;
-                });
-                kfs.sort((a, b) => a.scrollY - b.scrollY);
-              }
+              kfs.forEach(kf => {
+                if (Math.abs(kf.scrollY - sSY) <= KF_SNAP_RADIUS) kf.scrollY = targetSY;
+              });
+              kfs.sort((a, b) => a.scrollY - b.scrollY);
             });
 
             // Update selection keys to reflect new positions
             kfSel.clear();
-            selSnap.forEach(({ panelId: pid, sy: sSY }) => {
-              kfSel.add(`${pid}:${Math.max(0, sSY + deltaSY)}`);
+            selSnap.forEach(({ panelId: pid, inputId: iid, sy: sSY }) => {
+              kfSel.add(`${pid}|${iid}|${Math.max(0, sSY + deltaSY)}`);
             });
 
             save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
@@ -3518,7 +3519,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     <path d="M1.5 1.5L7.5 7.5M7.5 1.5L1.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
   </svg>`;
 
-  const kfSel = new Set(); // Set of `${panelId}:${sy}` — multi-select for sidebar drag
+  const kfSel = new Set(); // Set of `${panelId}|${inputId}|${sy}` — per-metric selection
 
   // ── ◆ Snap-KF button on every row type ───────────────
   function addKFSnapButtons() {
