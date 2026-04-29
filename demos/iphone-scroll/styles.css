@@ -2231,7 +2231,37 @@ body {
   transition: width 0.44s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ai-bar--expanded {
-  width: min(560px, calc(100vw - 240px));
+  width: min(720px, calc(100vw - 96px));
+}
+
+/* X close button on the LEFT of the expanded chat bar. Hidden when
+   collapsed; fades + scales in once the bar opens. Click → closeBar(). */
+.ai-bar__close {
+  width: 28px; height: 28px;
+  flex-shrink: 0;
+  border: none;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.55);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 4px;
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
+  transition: opacity 0.20s ease 0.10s,
+              transform 0.30s cubic-bezier(0.34, 1.56, 0.64, 1) 0.10s,
+              color 0.18s, background 0.18s;
+}
+.ai-bar--expanded .ai-bar__close {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+.ai-bar__close:hover {
+  color: #fff;
+  background: rgba(255,80,80,0.18);
 }
 
 .ai-bar__glass {
@@ -2722,6 +2752,21 @@ body {
   transform: scale(0.4);
   pointer-events: none;
 }
+
+/* Chat mode: when the AI bar is expanded, hide the eye / sparkle /
+   timeline circles so the chat input has the dock's full attention.
+   Same snap-spring as the eye-collapse path. */
+.app-dock--chat-mode > .panel-tog,
+.app-dock--chat-mode > .fx-knob,
+.app-dock--chat-mode > .tl-tog {
+  width: 0;
+  max-width: 0;
+  opacity: 0;
+  transform: scale(0.4);
+  pointer-events: none;
+}
+.app-dock--chat-mode { gap: 0; }
+.app-dock--chat-mode > .ai-bar { width: auto; }
 /* AI bar's collapsed circle is 56x56; lock its base width so the
    transition has something to interpolate from. */
 .app-dock > .ai-bar { width: 56px; }

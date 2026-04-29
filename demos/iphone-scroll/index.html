@@ -200,7 +200,7 @@
             </button>
           </div>
           <div class="pw-row">
-            <span class="pw-key">Y REF</span>
+            <span class="pw-key">Y POS</span>
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="yRefInput" min="-500" max="2000" step="1" value="789">
             </div>
@@ -211,13 +211,24 @@
             </button>
           </div>
           <div class="pw-row">
-            <span class="pw-key">X OFF</span>
+            <span class="pw-key">X POS</span>
             <div class="pw-slider-wrap">
               <input type="range" class="pw-range" id="xOffInput" min="-600" max="600" step="1" value="2">
             </div>
             <span class="pw-num" id="xOffVal">0</span>
             <span class="pw-unit">px</span>
             <button class="pw-cp" data-target="xOffInput" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">OPACITY</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="phoneOpacity" min="0" max="100" step="1" value="100">
+            </div>
+            <span class="pw-num" id="phoneOpacityVal">100</span>
+            <span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="phoneOpacity" title="Copy">
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
             </button>
           </div>
@@ -703,6 +714,11 @@
   <div class="ai-bar ai-bar--collapsed" id="aiBar">
     <canvas class="ai-bar__canvas" id="aiCanvas"></canvas>
     <div class="ai-bar__glass">
+      <button class="ai-bar__close" id="aiClose" type="button" aria-label="Close chat">
+        <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+          <path d="M 3.5 3.5 L 11.5 11.5  M 11.5 3.5 L 3.5 11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
       <textarea class="ai-bar__input" id="aiInput" rows="1"
         placeholder="tell me what you wanna do, I got you"></textarea>
       <button class="ai-bar__send" id="aiSend" aria-label="Open / Send">

@@ -45,6 +45,18 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     yRefInput.addEventListener('input',  () => { tweakYRef  = +yRefInput.value;  syncLabels(); onScroll(); });
     xOffInput.addEventListener('input',  () => { tweakXOff  = +xOffInput.value;  syncLabels(); onScroll(); });
 
+    // Phone OPACITY slider — multiplier on top of the scroll-driven opacity
+    const phoneOpacity = document.getElementById('phoneOpacity');
+    const phoneOpacityValEl = document.getElementById('phoneOpacityVal');
+    if (phoneOpacity) {
+      phoneOpacity.addEventListener('input', () => {
+        window.__phoneOpacity = parseFloat(phoneOpacity.value) / 100;
+        if (phoneOpacityValEl) phoneOpacityValEl.textContent = Math.round(parseFloat(phoneOpacity.value));
+        onScroll();
+      });
+      window.__phoneOpacity = parseFloat(phoneOpacity.value) / 100;
+    }
+
     document.getElementById('tweakReset')?.addEventListener('click', () => {
       tweakScale = 71.9; tweakYRef = 789; tweakXOff = 2;
       scaleInput.value = tweakScale;
@@ -158,7 +170,8 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       if (phoneImg) {
         p2 = Math.min(Math.max((y - ph1End) / PH2(), 0), 1);
 
-        phoneImg.style.opacity = Math.min(p2 / 0.08, 1);
+        const userPhoneOpa = window.__phoneOpacity ?? 1;
+        phoneImg.style.opacity = userPhoneOpa * Math.min(p2 / 0.08, 1);
         video.style.opacity    = 1 - Math.min(Math.max((p2 - 0.04) / 0.11, 0), 1);
 
         slideFraction = Math.max((p2 - 0.15) / 0.85, 0);
@@ -2049,6 +2062,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     morphTarget   = 1;
     bar.classList.remove('ai-bar--collapsed');
     bar.classList.add('ai-bar--expanded', 'ai-bar--hovered');
+    document.getElementById('appDock')?.classList.add('app-dock--chat-mode');
     hoverEnergy = 1.0;
     nextBeat    = 0;
     emitExplosion();
@@ -2063,9 +2077,16 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     morphTarget   = 0;
     bar.classList.remove('ai-bar--expanded', 'ai-bar--hovered');
     bar.classList.add('ai-bar--collapsed');
+    document.getElementById('appDock')?.classList.remove('app-dock--chat-mode');
     input.blur();
     emitRing(16, 0.7, 0.75);
   }
+
+  // X close button on the left of the expanded bar
+  document.getElementById('aiClose')?.addEventListener('click', e => {
+    e.stopPropagation();
+    closeBar();
+  });
 
   // Scroll collapses the bar back to circle
   window.addEventListener('scroll', () => {
