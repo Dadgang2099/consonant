@@ -254,7 +254,7 @@ body {
   position: fixed;
   top: 64px;
   right: 20px;
-  z-index: 9999;
+  z-index: 10500;       /* above timeline (9999), drv-overlay (10002), all content */
   width: 296px;
   border-radius: 14px;
   overflow: hidden;
@@ -1444,7 +1444,7 @@ body {
   left: 20px;
   top: 50%;
   width: 260px;
-  z-index: 1;           /* below phone (z-index: 2) */
+  z-index: 10500;       /* shadow panel sits above everything alongside other panels */
   /* JS sets transform: translateY(-50%) translateX(slideX) */
   /* opacity managed entirely by JS */
   pointer-events: none; /* JS re-enables when visible */
