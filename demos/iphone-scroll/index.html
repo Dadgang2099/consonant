@@ -723,6 +723,74 @@
   <canvas class="fx-knob__canvas" id="fxKnobCanvas"></canvas>
 </div>
 
+<!-- ─── Timeline trigger ─────────────────────────────────────
+     Main click toggles the bottom timeline panel.
+     Inner eye toggles visibility of the right-edge KF dots in the build. -->
+<button class="tl-tog" id="tlTog" aria-label="Toggle timeline" title="Show / hide timeline">
+  <div class="tl-tog__plate">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <path d="M 1.6 3.5 H 13.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M 1.6 7.5 H 13.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M 1.6 11.5 H 13.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="5"   cy="3.5"  r="1.4" fill="currentColor"/>
+      <circle cx="9.5" cy="7.5"  r="1.4" fill="currentColor"/>
+      <circle cx="3.5" cy="11.5" r="1.4" fill="currentColor"/>
+    </svg>
+  </div>
+  <button class="tl-tog__eye" id="tlEye" aria-label="Toggle build keyframes"
+          title="Show / hide keyframes in the build">
+    <svg width="11" height="11" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <path d="M 1.5 7.5 C 3 3.5 12 3.5 13.5 7.5 C 12 11.5 3 11.5 1.5 7.5 Z"
+            stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.6"/>
+    </svg>
+  </button>
+</button>
+
+<!-- ─── Bottom Timeline Panel ────────────────────────────────
+     Slides up from the bottom; design tokens match panel system. -->
+<aside class="tl-panel" id="tlPanel" aria-label="Keyframe timeline" hidden>
+  <div class="tl-panel__handle" id="tlPanelHandle" title="Drag to resize"></div>
+  <header class="tl-panel__hdr">
+    <div class="tl-panel__hdr-left">
+      <div class="tl-axis" role="tablist" aria-label="Scroll axis">
+        <button class="tl-axis__btn tl-axis__btn--on" data-axis="y" role="tab" aria-selected="true">Y</button>
+        <button class="tl-axis__btn"                 data-axis="x" role="tab" aria-selected="false">X</button>
+      </div>
+      <span class="tl-panel__divider" aria-hidden="true"></span>
+      <span class="tl-panel__title">SECTION</span>
+      <span class="tl-panel__caret" aria-hidden="true">▾</span>
+      <span class="tl-panel__divider" aria-hidden="true"></span>
+      <button class="tl-add" id="tlAdd" type="button">+ ADD ASSET</button>
+    </div>
+    <div class="tl-panel__hdr-right">
+      <button class="tl-icon-btn" id="tlHistory"  title="Version history"   aria-label="Version history">
+        <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+          <path d="M 7.5 2 A 5.5 5.5 0 1 1 2 7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <path d="M 2 4 V 7.5 H 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </button>
+      <button class="tl-icon-btn" id="tlRefresh"  title="Refresh — discard unpublished" aria-label="Refresh to published">
+        <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+          <path d="M 12.5 4 A 5 5 0 1 0 13 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <path d="M 12.5 1.6 V 4.4 H 9.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </button>
+      <button class="tl-publish" id="tlPublish" type="button" disabled>PUBLISH</button>
+    </div>
+  </header>
+  <div class="tl-panel__body">
+    <div class="tl-tree"  id="tlTree"  aria-label="Asset list"></div>
+    <div class="tl-tracks" id="tlTracks" aria-label="Keyframe tracks">
+      <div class="tl-ruler" id="tlRuler" aria-hidden="true"></div>
+      <div class="tl-lanes" id="tlLanes"></div>
+      <div class="tl-playhead" id="tlPlayhead" aria-hidden="true">
+        <span class="tl-playhead__head"></span>
+      </div>
+    </div>
+  </div>
+</aside>
+
 <canvas id="globalCanvas"></canvas>
 <script src="main.js"></script>
 </body>

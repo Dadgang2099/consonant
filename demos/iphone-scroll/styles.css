@@ -2679,6 +2679,315 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   TIMELINE — bottom slide-up panel + 4th dock circle (trigger)
+   Design tokens (from spec):
+     --tl-bg:        #0d0d14   (panel bg, cool blue-black)
+     --tl-bg-alt:    #0a0a12   (track area, slightly darker for depth)
+     --tl-border:    rgba(255,255,255,0.08)
+     --tl-rule:      rgba(255,255,255,0.06)   (row separator)
+     --tl-section:   #4a4a6a   (muted blue-gray micro labels)
+     --tl-asset:     #ebebf5   (asset row label)
+     --tl-value:     #ffffff
+     --tl-input-bg:  #1a1a2e
+     --tl-dot:       #0a84ff   (KF dot)
+     --tl-line:      rgba(10,132,255,0.35)
+     --tl-playhead:  #ff453a
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --tl-bg:       #0d0d14;
+  --tl-bg-alt:   #0a0a12;
+  --tl-border:   rgba(255,255,255,0.08);
+  --tl-rule:     rgba(255,255,255,0.06);
+  --tl-section:  #4a4a6a;
+  --tl-asset:    #ebebf5;
+  --tl-value:    #ffffff;
+  --tl-input-bg: #1a1a2e;
+  --tl-dot:      #0a84ff;
+  --tl-line:     rgba(10,132,255,0.35);
+  --tl-playhead: #ff453a;
+}
+
+/* ── 4th dock circle — timeline trigger + inner build-marker eye ── */
+.tl-tog {
+  position: fixed;
+  bottom: 28px;
+  right: 96px;          /* sits to the LEFT of the fx-knob (right: 28px) */
+  z-index: 9997;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  background: rgba(7, 8, 13, 0.84);
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+  box-shadow:
+    0 0 0 0.5px rgba(110,140,255,0.18),
+    0 12px 48px rgba(0,0,0,0.75),
+    inset 0 0.5px 0 rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  transition: opacity 0.22s, border-color 0.22s, box-shadow 0.22s;
+  padding: 0;
+  cursor: pointer;
+  color: rgba(255,255,255,0.85);
+}
+.tl-tog:hover { opacity: 1; }
+.tl-tog--on   { opacity: 1; border-color: rgba(10,132,255,0.45); box-shadow:
+    0 0 0 0.5px rgba(10,132,255,0.30),
+    0 16px 56px rgba(0,0,0,0.80),
+    0 0 48px rgba(10,132,255,0.10),
+    inset 0 0.5px 0 rgba(255,255,255,0.22); }
+
+.tl-tog__plate {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  border: 0.5px solid rgba(255,255,255,0.16);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14), 0 1px 4px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Inner eye — top-right of the trigger; toggles right-edge KF overlay
+   visibility independently from opening/closing the timeline panel. */
+.tl-tog__eye {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(255,255,255,0.16);
+  background: rgba(13,13,20,0.96);
+  color: rgba(255,255,255,0.55);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+}
+.tl-tog__eye:hover { color: rgba(255,255,255,0.95); border-color: rgba(255,255,255,0.30); }
+.tl-tog__eye--off  { color: rgba(255,80,80,0.85); border-color: rgba(255,80,80,0.40); }
+
+/* Hide right-edge KF overlay when build markers are toggled off */
+body.tl-build-hidden .drv-overlay { opacity: 0; pointer-events: none; }
+
+/* ── Bottom slide-up timeline panel ───────────────────────── */
+.tl-panel {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 260px;
+  min-height: 120px;
+  max-height: 50vh;
+  background: var(--tl-bg);
+  border-top: 1px solid var(--tl-border);
+  border-radius: 12px 12px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.30s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+  color: var(--tl-value);
+}
+.tl-panel[hidden] { display: flex; }   /* still rendered, just translated off */
+.tl-panel--open   { transform: translateY(0); }
+
+.tl-panel__handle {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  cursor: ns-resize;
+  z-index: 2;
+}
+.tl-panel__handle::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: 50%;
+  transform: translateX(-50%);
+  width: 36px; height: 2px;
+  border-radius: 1px;
+  background: rgba(255,255,255,0.16);
+}
+
+/* Header ──────────────────────────────────────────────── */
+.tl-panel__hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--tl-rule);
+  flex-shrink: 0;
+}
+.tl-panel__hdr-left,
+.tl-panel__hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tl-panel__title,
+.tl-panel__caret {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--tl-section);
+}
+.tl-panel__caret { font-size: 9px; }
+
+.tl-panel__divider {
+  width: 1px; height: 18px;
+  background: var(--tl-rule);
+}
+
+/* Y/X axis pill toggle — matches Pro/Newb pill style */
+.tl-axis {
+  display: inline-flex;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 999px;
+  padding: 2px;
+}
+.tl-axis__btn {
+  border: none;
+  background: transparent;
+  color: var(--tl-section);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.tl-axis__btn--on {
+  background: var(--tl-dot);
+  color: #fff;
+}
+
+/* + ADD ASSET ghost button */
+.tl-add {
+  border: none;
+  background: transparent;
+  color: var(--tl-section);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.tl-add:hover { color: var(--tl-asset); background: rgba(255,255,255,0.04); }
+
+/* Right-side icon buttons (history, refresh) */
+.tl-icon-btn {
+  width: 22px; height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--tl-section);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.tl-icon-btn:hover { color: var(--tl-value); background: rgba(255,255,255,0.05); }
+
+/* PUBLISH pill — disabled (gray) until draft != published */
+.tl-publish {
+  border: none;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.32);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tl-publish:not(:disabled) {
+  background: var(--tl-dot);
+  color: #fff;
+}
+.tl-publish:disabled { cursor: not-allowed; }
+
+/* Body: tree | tracks ───────────────────────────────────── */
+.tl-panel__body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 0;     /* lets children scroll */
+}
+
+.tl-tree {
+  border-right: 1px solid var(--tl-rule);
+  overflow-y: auto;
+  background: var(--tl-bg);
+}
+
+.tl-tracks {
+  position: relative;
+  background: var(--tl-bg-alt);
+  overflow: hidden;
+}
+
+.tl-ruler {
+  position: relative;
+  height: 24px;
+  border-bottom: 1px solid var(--tl-rule);
+  background: var(--tl-bg-alt);
+  flex-shrink: 0;
+}
+/* 0 / 25 / 50 / 75 / 100 marks via gradient — keeps it pure CSS for now */
+.tl-ruler::before,
+.tl-ruler::after { content: ''; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--tl-rule); }
+.tl-ruler::before { left: 25%; }
+.tl-ruler::after  { left: 50%; }
+
+.tl-lanes {
+  position: absolute;
+  top: 24px; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+}
+
+.tl-playhead {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: var(--tl-playhead);
+  pointer-events: none;
+  z-index: 5;
+  /* JS sets transform: translateX */
+}
+.tl-playhead__head {
+  position: absolute;
+  top: 0; left: -3px;
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid var(--tl-playhead);
+}
+
+/* Empty-state hint while no asset rows are wired yet */
+.tl-tree:empty::after {
+  content: 'NO ASSETS YET';
+  display: block;
+  padding: 14px;
+  color: var(--tl-section);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+}
+
+/* ═══════════════════════════════════════════════════════════
    BELOW-HERO — triptych + Take a closer look
    Pure-black Apple marketing layout. No padding on outer
    container; each section spans full viewport width.

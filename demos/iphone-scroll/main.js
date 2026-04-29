@@ -3962,3 +3962,81 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   })();
 
 }());
+
+// ═══════════════════════════════════════════════════════════
+//  TIMELINE — bottom slide-up panel + 4th dock circle
+//  Phase 1a scope: chrome only.
+//    - Trigger toggles panel open/close
+//    - Inner eye toggles right-edge KF overlay visibility (independent)
+//    - Playhead syncs to window.scrollY (read-only)
+//    - Track lanes are empty placeholders; data wiring lands in P1b
+// ═══════════════════════════════════════════════════════════
+(function timelineSystem() {
+  'use strict';
+
+  const tog       = document.getElementById('tlTog');
+  const eyeBtn    = document.getElementById('tlEye');
+  const panel     = document.getElementById('tlPanel');
+  const playhead  = document.getElementById('tlPlayhead');
+  const handle    = document.getElementById('tlPanelHandle');
+  if (!tog || !panel) return;
+
+  // ── Open / close ─────────────────────────────────────────
+  let open = false;
+  function setOpen(next) {
+    open = next;
+    panel.classList.toggle('tl-panel--open', open);
+    tog.classList.toggle('tl-tog--on', open);
+    panel.hidden = false; // keep mounted; just translate off
+  }
+  tog.addEventListener('click', e => {
+    // Inner eye click should NOT toggle the panel
+    if (e.target.closest('.tl-tog__eye')) return;
+    setOpen(!open);
+  });
+
+  // ── Inner eye: toggle right-edge KF overlay visibility ───
+  let buildKFsVisible = true;
+  eyeBtn?.addEventListener('click', e => {
+    e.stopPropagation();
+    buildKFsVisible = !buildKFsVisible;
+    eyeBtn.classList.toggle('tl-tog__eye--off', !buildKFsVisible);
+    document.body.classList.toggle('tl-build-hidden', !buildKFsVisible);
+  });
+
+  // ── Playhead: track scrollY as a fraction of total scroll ──
+  function updatePlayhead() {
+    const tracksEl = document.getElementById('tlTracks');
+    if (!tracksEl) return;
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const frac = Math.max(0, Math.min(1, window.scrollY / max));
+    const w = tracksEl.clientWidth;
+    playhead.style.transform = `translateX(${frac * w}px)`;
+  }
+  window.addEventListener('scroll', updatePlayhead, { passive: true });
+  window.addEventListener('resize', updatePlayhead);
+  updatePlayhead();
+
+  // ── Resize panel via top handle ──────────────────────────
+  let resizing = false, startY = 0, startH = 0;
+  handle?.addEventListener('mousedown', e => {
+    e.preventDefault();
+    resizing = true;
+    startY = e.clientY;
+    startH = panel.offsetHeight;
+    document.body.style.cursor = 'ns-resize';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!resizing) return;
+    const dy = startY - e.clientY;
+    const min = 120;
+    const max = Math.floor(window.innerHeight * 0.5);
+    panel.style.height = Math.max(min, Math.min(max, startH + dy)) + 'px';
+    updatePlayhead();
+  });
+  window.addEventListener('mouseup', () => {
+    if (!resizing) return;
+    resizing = false;
+    document.body.style.cursor = '';
+  });
+}());
