@@ -2803,6 +2803,13 @@ body {
   -webkit-user-select: none;
   overflow: visible;
   opacity: 0.85;
+  color: rgba(255,255,255,0.85);
+}
+.fx-knob:hover { opacity: 1; }
+.fx-knob__icon {
+  position: relative;
+  z-index: 2;          /* above .fx-knob__canvas particles */
+  pointer-events: none;
 }
 
 /* Inner glass plate on knob — canvas draws ticks on top of it */
@@ -2901,26 +2908,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Inner eye — top-right of the trigger; toggles right-edge KF overlay
-   visibility independently from opening/closing the timeline panel. */
-.tl-tog__eye {
-  position: absolute;
-  top: -2px; right: -2px;
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  border: 0.5px solid rgba(255,255,255,0.16);
-  background: rgba(13,13,20,0.96);
-  color: rgba(255,255,255,0.55);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.18s, background 0.18s, border-color 0.18s;
-}
-.tl-tog__eye:hover { color: rgba(255,255,255,0.95); border-color: rgba(255,255,255,0.30); }
-.tl-tog__eye--off  { color: rgba(255,80,80,0.85); border-color: rgba(255,80,80,0.40); }
-
-/* Hide right-edge KF overlay when build markers are toggled off */
-body.tl-build-hidden .drv-overlay { opacity: 0; pointer-events: none; }
 
 /* ── Bottom slide-up timeline panel ───────────────────────── */
 .tl-panel {

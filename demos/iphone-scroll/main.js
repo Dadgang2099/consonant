@@ -3994,7 +3994,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   'use strict';
 
   const tog       = document.getElementById('tlTog');
-  const eyeBtn    = document.getElementById('tlEye');
   const panel     = document.getElementById('tlPanel');
   const playhead  = document.getElementById('tlPlayhead');
   const handle    = document.getElementById('tlPanelHandle');
@@ -4119,11 +4118,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     panel.hidden = false; // keep mounted; just translate off
     syncDockOffset();
   }
-  tog.addEventListener('click', e => {
-    // Inner eye click should NOT toggle the panel
-    if (e.target.closest('.tl-tog__eye')) return;
-    setOpen(!open);
-  });
+  tog.addEventListener('click', () => setOpen(!open));
 
   // Header close button → collapse timeline
   document.getElementById('tlClose')?.addEventListener('click', () => setOpen(false));
@@ -4153,15 +4148,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     const tlH = dock.style.getPropertyValue('--tl-h');
     if (tlH) dockCloseBtn.style.setProperty('--tl-h', tlH);
   }
-
-  // ── Inner eye: toggle right-edge KF overlay visibility ───
-  let buildKFsVisible = true;
-  eyeBtn?.addEventListener('click', e => {
-    e.stopPropagation();
-    buildKFsVisible = !buildKFsVisible;
-    eyeBtn.classList.toggle('tl-tog__eye--off', !buildKFsVisible);
-    document.body.classList.toggle('tl-build-hidden', !buildKFsVisible);
-  });
 
   // ── Playhead: track scrollY as a fraction of total scroll ──
   function updatePlayhead() {

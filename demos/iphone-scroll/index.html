@@ -726,12 +726,21 @@
     </div>
   </div>
 
-  <!-- Sparkle: FX intensity knob -->
-  <div class="fx-knob" id="fxKnob" title="Effect intensity — drag to rotate">
+  <!-- Sparkle: FX intensity knob — sparkle icon overlay reads at-a-glance -->
+  <div class="fx-knob" id="fxKnob" title="Sparkle effects — drag vertically to adjust">
     <canvas class="fx-knob__canvas" id="fxKnobCanvas"></canvas>
+    <div class="fx-knob__plate">
+      <svg class="fx-knob__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <!-- 4-point sparkle / spark glyph -->
+        <path d="M 8 1.6 L 9 7 L 14.4 8 L 9 9 L 8 14.4 L 7 9 L 1.6 8 L 7 7 Z"
+              fill="currentColor"/>
+        <circle cx="12.6" cy="3.4"  r="0.8" fill="currentColor" opacity="0.6"/>
+        <circle cx="3.2"  cy="12.4" r="0.6" fill="currentColor" opacity="0.45"/>
+      </svg>
+    </div>
   </div>
 
-  <!-- Timeline trigger; inner eye toggles right-edge KF dots -->
+  <!-- Timeline trigger -->
   <button class="tl-tog" id="tlTog" aria-label="Toggle timeline" title="Show / hide timeline">
     <div class="tl-tog__plate">
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
@@ -743,14 +752,6 @@
         <circle cx="3.5" cy="11.5" r="1.4" fill="currentColor"/>
       </svg>
     </div>
-    <button class="tl-tog__eye" id="tlEye" aria-label="Toggle build keyframes"
-            title="Show / hide keyframes in the build">
-      <svg width="11" height="11" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-        <path d="M 1.5 7.5 C 3 3.5 12 3.5 13.5 7.5 C 12 11.5 3 11.5 1.5 7.5 Z"
-              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-        <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.6"/>
-      </svg>
-    </button>
   </button>
 
 </div>
