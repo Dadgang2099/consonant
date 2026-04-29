@@ -3310,6 +3310,14 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
         });
         dot.appendChild(xBtn);
 
+        // Double-click the dot to delete (alongside hover-✕ + per-row ✕)
+        dot.addEventListener('dblclick', e => {
+          e.stopPropagation();
+          const inputId = dot.dataset.kfInput;
+          const ksy     = parseInt(dot.dataset.kfSy, 10);
+          if (inputId) window.__deleteKFAt?.(inputId, ksy);
+        });
+
         let didDrag = false;
 
         dot.addEventListener('mousedown', e => {
@@ -3800,6 +3808,21 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     if (!kfs) return;
     kfStore[inputId] = kfs.filter(k => Math.abs(k.scrollY - sy) > KF_SNAP_RADIUS);
     if (!kfStore[inputId].length) delete kfStore[inputId];
+    save();
+    updateBadges();
+    refreshSnapButtons();
+    buildOverlayLines();
+    applyAllKFs(window.scrollY);
+  };
+  // Move one metric's KF from fromSY → toSY (for drag-from-timeline).
+  window.__moveKF = (inputId, fromSY, toSY) => {
+    if (!inputId) return;
+    const kfs = kfStore[inputId];
+    if (!kfs) return;
+    const kf = kfs.find(k => Math.abs(k.scrollY - fromSY) <= KF_SNAP_RADIUS);
+    if (!kf) return;
+    kf.scrollY = Math.max(0, Math.round(toSY));
+    kfs.sort((a, b) => a.scrollY - b.scrollY);
     save();
     updateBadges();
     refreshSnapButtons();
@@ -4347,21 +4370,71 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             dot.className = 'tl-dot';
             dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
             dot.title = `${A.title} – ${P.label}  ·  KF @ ${Math.round(k.scrollY)}px`;
+
             // Hover ✕ for delete
             const x = document.createElement('span');
             x.className = 'tl-dot__x';
             x.textContent = '✕';
             x.title = 'Delete keyframe';
-            x.addEventListener('mousedown', e => e.stopPropagation()); // don't start scrub
+            x.addEventListener('mousedown', e => e.stopPropagation());
             x.addEventListener('click', e => {
               e.stopPropagation();
               window.__deleteKFAt?.(P.inputId, k.scrollY);
             });
             dot.appendChild(x);
-            dot.addEventListener('click', e => {
-              if (e.target === x) return;
-              window.scrollTo({ top: k.scrollY, behavior: 'smooth' });
+
+            // Double-click anywhere on the dot → delete
+            dot.addEventListener('dblclick', e => {
+              e.stopPropagation();
+              window.__deleteKFAt?.(P.inputId, k.scrollY);
             });
+
+            // Click + drag horizontally → move the KF along the timeline.
+            // Click without drag → smooth-scroll to the KF.
+            let dragging = false, didDrag = false, startX = 0;
+            const originalSY = k.scrollY;
+
+            dot.addEventListener('mousedown', e => {
+              if (e.target === x) return;     // delete affordance handles itself
+              e.preventDefault();
+              e.stopPropagation();
+              dragging = true;
+              didDrag = false;
+              startX = e.clientX;
+
+              function onMove(ev) {
+                if (!dragging) return;
+                const dx = ev.clientX - startX;
+                if (!didDrag && Math.abs(dx) < 3) return;
+                didDrag = true;
+                const lanesEl = document.getElementById('tlLanes');
+                const lanesW  = lanesEl?.clientWidth || 1;
+                const max = Math.max(1, document.body.scrollHeight - window.innerHeight);
+                const newSY = Math.max(0, Math.min(max, originalSY + (dx / lanesW) * max));
+                // Visual drag: move dot live
+                dot.style.left = `${(newSY / max) * 100}%`;
+                // Scroll the page so the build mirrors the drag
+                window.scrollTo({ top: newSY, behavior: 'instant' });
+                dot.dataset.dragSY = String(Math.round(newSY));
+              }
+              function onUp() {
+                if (!dragging) return;
+                dragging = false;
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup',   onUp);
+                if (!didDrag) {
+                  window.scrollTo({ top: originalSY, behavior: 'smooth' });
+                  return;
+                }
+                const newSY = parseInt(dot.dataset.dragSY, 10);
+                if (!Number.isNaN(newSY) && newSY !== originalSY) {
+                  window.__moveKF?.(P.inputId, originalSY, newSY);
+                }
+              }
+              document.addEventListener('mousemove', onMove);
+              document.addEventListener('mouseup',   onUp);
+            });
+
             pLane.appendChild(dot);
           });
           lanes.appendChild(pLane);
