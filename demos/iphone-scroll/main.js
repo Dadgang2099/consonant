@@ -432,7 +432,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     el.style.filter        = blur > 0.3 ? `blur(${blur.toFixed(1)}px)` : '';
   }
 
-  let panelsVisible = false;
+  let panelsVisible = true;   // dock + chrome exposed on load; eye toggles hide
 
   function updatePanelVisibility() {
     if (!panelsVisible) return;
@@ -1408,16 +1408,12 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   }
 
-  // Hide everything immediately on load — panelAnimSystem will hide its own overlay after building it
+  // Init: dock chrome (eye, chat, sparkle, timeline) stays exposed on load.
+  // Only the design control panels start hidden — they appear via the
+  // scroll-driven choreography in updatePanelVisibility.
   initHidePanels();
 
-  // Start with all panels hidden — only the eye button is visible
   function initHidePanels() {
-    panelTogBtn?.classList.add('panel-tog--panels-hidden');
-    chromeEls().forEach(el => {
-      el.style.opacity       = '0';
-      el.style.pointerEvents = 'none';
-    });
     [seqPanel, shadowPanel, tweakPanel, contentPanel].forEach(p => {
       if (p) { p.style.opacity = '0'; p.style.pointerEvents = 'none'; }
     });
