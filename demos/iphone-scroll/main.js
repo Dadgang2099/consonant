@@ -384,12 +384,23 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
   function setPanel3D(el, opa, yOff, tz, sc, blur) {
     if (!el) return;
-    // Snap non-dragged panels to shared position when first becoming visible
-    if (opa > 0 && !el.dataset.draggable && el !== shadowPanel && sharedPanelPos) {
-      el.style.left   = sharedPanelPos.left + 'px';
-      el.style.top    = sharedPanelPos.top  + 'px';
-      el.style.right  = 'auto';
-      el.dataset.draggable = '1';
+    // Snap non-dragged panels to shared position when first becoming visible.
+    // Content panel is special: it stacks beneath tweak so both stay visible
+    // (tweak controls phone alignment; content controls the type below it).
+    if (opa > 0 && !el.dataset.draggable && el !== shadowPanel) {
+      if (el === contentPanel && tweakPanel) {
+        const tweakLeft   = sharedPanelPos?.left ?? tweakPanel.offsetLeft;
+        const tweakBottom = tweakPanel.offsetTop + tweakPanel.offsetHeight;
+        el.style.left  = tweakLeft + 'px';
+        el.style.top   = (tweakBottom + 12) + 'px';
+        el.style.right = 'auto';
+        el.dataset.draggable = '1';
+      } else if (sharedPanelPos) {
+        el.style.left  = sharedPanelPos.left + 'px';
+        el.style.top   = sharedPanelPos.top  + 'px';
+        el.style.right = 'auto';
+        el.dataset.draggable = '1';
+      }
     }
     el.style.opacity       = c01(opa);
     el.style.pointerEvents = opa < 0.04 ? 'none' : 'auto';
@@ -408,8 +419,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
     // t1: seq ↔ tweak — 220px window centered just past ph1End
     const t1 = sStep(c01((y - (ph1End - 50)) / 220));
-    // t2: tweak ↔ content — p2 0.82→0.92
-    const t2 = sStep(c01((p2 - 0.82) / 0.10));
+    // t2: content rises in shortly after tweak settles, sits BELOW tweak
+    // (both panels visible; no tweak crossfade-out)
+    const t2 = sStep(c01((p2 - 0.18) / 0.14));
 
     // ── seq: exits backward in Z as t1 → 1 ───────────────
     setPanel3D(seqPanel,
@@ -420,16 +432,16 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       t1 * 12          // blur out
     );
 
-    // ── tweak: rises in on t1→1, retreats on t2→1 ────────
+    // ── tweak: rises in on t1→1 and stays put once visible ───
     setPanel3D(tweakPanel,
-      t1 * (1 - t2),                       // crossfade both transitions
+      t1,                                  // opacity in
       (1 - t1) * 24,                        // rise up from below on entry
-      -t2 * 55,                             // push back on exit
-      (0.94 + t1 * 0.06) * (1 - t2 * 0.06),
-      (1 - t1) * 12 + t2 * 12              // blur: sharpens in, blurs out
+      0,                                   // no Z retreat — tweak stays
+      0.94 + t1 * 0.06,
+      (1 - t1) * 12                        // sharpen in
     );
 
-    // ── content: rises in as t2 → 1 ──────────────────────
+    // ── content: rises in shortly after tweak, sits beneath it ─
     setPanel3D(contentPanel,
       t2,                    // opacity in
       (1 - t2) * 24,         // rise up from below
@@ -439,11 +451,13 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     );
 
     // ── shadow panel: left side, opacity + slide ──────────
+    // (exit timing kept independent of content panel so it doesn't dump early)
     if (shadowPanel) {
+      const shadowExit = sStep(c01((p2 - 0.82) / 0.10));
       let opa = 0;
       if (y >= ph1End) {
         if (p2 < 0.10) opa = p2 / 0.10;
-        else            opa = Math.max(0, 1 - t2);
+        else            opa = Math.max(0, 1 - shadowExit);
         opa = Math.max(0, Math.min(1, opa));
       }
       shadowPanel.style.opacity       = opa;
