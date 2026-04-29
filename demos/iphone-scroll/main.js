@@ -4180,10 +4180,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   function gatherTracks() {
     const store = window.__getKFs ? window.__getKFs() : {};
     const panelIds = Object.keys(ASSET_COLORS);
-    // assets: [{ panelId, title, props: [{ inputId, label, kfs }] }]
-    // Walk every input in every panel — surface all metrics whether or not
-    // they currently have KFs, so the user can see the full set and capture
-    // a new one from the timeline directly.
+    // assets: [{ panelId, title, props: [{ inputId, label, kfs, isColor }] }]
+    // Walk every metric row in every panel — sliders, selects, text inputs,
+    // segmented controls AND color rows so the timeline mirrors the panel
+    // surface in full. KFs may not exist yet; the row still renders so the
+    // user can drop one straight from the timeline.
     const assets = [];
     panelIds.forEach(pid => {
       const pe = document.getElementById(pid);
@@ -4191,18 +4192,25 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       const title = getAssetName(pid);
       const props = [];
       const seen = new Set();
-      pe.querySelectorAll('.pw-row [id]').forEach(input => {
-        if (seen.has(input.id)) return;
-        seen.add(input.id);
-        // Skip non-input nodes that happen to have an id
-        const tag = input.tagName.toLowerCase();
-        if (tag !== 'input' && tag !== 'select' && tag !== 'textarea' && !input.classList.contains('pw-seg')) return;
-        if (input.classList.contains('pw-color-chip')) return;
-        const row = input.closest('.pw-row');
-        if (!row) return;
-        const label = row.querySelector('.pw-key')?.textContent?.trim() || input.id;
-        const kfs   = store[input.id] || [];
-        props.push({ inputId: input.id, label, kfs });
+      pe.querySelectorAll('.pw-row').forEach(row => {
+        const label = row.querySelector('.pw-key')?.textContent?.trim() || '';
+        // Color row: KF target is the hex input from the color picker,
+        // discoverable from the chip's id (eg shadowColorChip → shadowCPickerHex).
+        if (row.classList.contains('pw-row--color')) {
+          const chip = row.querySelector('.pw-color-chip');
+          if (!chip?.id) return;
+          const inputId = chip.id.replace('ColorChip', 'CPickerHex');
+          if (seen.has(inputId)) return;
+          seen.add(inputId);
+          props.push({ inputId, label: label || 'COLOR', kfs: store[inputId] || [], isColor: true });
+          return;
+        }
+        // Standard control rows
+        const ctrl = row.querySelector('input[type=range], input[type=text], select, .pw-seg[id]');
+        if (!ctrl?.id) return;
+        if (seen.has(ctrl.id)) return;
+        seen.add(ctrl.id);
+        props.push({ inputId: ctrl.id, label: label || ctrl.id, kfs: store[ctrl.id] || [] });
       });
       if (props.length) assets.push({ panelId: pid, title, props });
     });

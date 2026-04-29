@@ -2716,10 +2716,20 @@ body {
   padding: 6px;
   border-radius: 999px;
   z-index: 9997;
+  overflow: visible;     /* sparkle canvas extends well past dock bounds */
   /* Snap-spring: positive overshoot on close, settles back on expand */
   transition: bottom 0.30s cubic-bezier(0.4, 0, 0.2, 1),
               gap    0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+/* Explicit overflow:visible on every dock child so nothing clips the
+   AI bar's sparkle canvas, which extends 80px past the bar edge. */
+.app-dock > .panel-tog,
+.app-dock > .ai-bar,
+.app-dock > .fx-knob,
+.app-dock > .tl-tog { overflow: visible; }
+/* The AI bar GLASS still needs its own clip for the morph icon mask
+   and the inner pill background. */
+.ai-bar__glass { overflow: hidden; }
 /* Outer glass tray — subtle but clearly readable behind the 4 circles */
 .app-dock::before {
   content: '';
