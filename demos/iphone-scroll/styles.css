@@ -3321,11 +3321,15 @@ body {
 }
 .tl-dot:hover { transform: scale(1.4); }
 
-/* Selected: dot stays grown + red, ✕ persistent until the user
-   clicks elsewhere or hits Delete. Hover gives the same shape but
-   without the sticky state, so a quick mouse-over doesn't read as
-   "this is going to delete." */
-.tl-dot:hover,
+/* Hover: subtle grow only — no color change, no ✕. Hover should never
+   read as "this is going to delete" because the cursor passes over a
+   dot all the time during click + drag. */
+.tl-dot:hover {
+  transform: scale(1.4);
+}
+/* Selected: sticky red dot with a persistent ✕ — only the selected
+   state exposes the delete affordance. Click outside / press Delete /
+   double-click / hit ✕ all clear or use it. */
 .tl-dot--selected {
   width: 16px;
   height: 16px;
@@ -3347,7 +3351,6 @@ body {
   line-height: 1;
   pointer-events: auto;
 }
-.tl-dot:hover .tl-dot__x,
 .tl-dot--selected .tl-dot__x { display: flex; }
 
 /* Per-row + button (timeline tree side) */
@@ -3859,9 +3862,17 @@ body {
   pointer-events: auto;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.drv-overlay__dot:hover,
+.drv-overlay__dot:hover {
+  /* Hover ≠ delete. Subtle grow + glow only; cursor stays a pointer
+     so click+drag reads as the primary action. */
+  transform: translate(-50%, -50%) scale(1.5);
+  box-shadow:
+    0 0 16px var(--track-color, rgba(255,255,255,0.8)),
+    0 0 4px rgba(0,0,0,0.5);
+}
 .drv-overlay__dot--kf-selected {
-  /* Grow + turn red so the ✕ is legible inside the dot */
+  /* Selected: red + ✕ visible. Double-click / X click / Delete key
+     all remove. Single click anywhere else clears. */
   transform: translate(-50%, -50%) scale(1.8);
   background: rgba(255,80,80,0.95);
   box-shadow:
@@ -3881,7 +3892,6 @@ body {
   pointer-events: auto;
   transform-origin: center;
 }
-.drv-overlay__dot:hover .drv-overlay__dot__x,
 .drv-overlay__dot--kf-selected .drv-overlay__dot__x { display: flex; }
 .drv-overlay__dot--dragging {
   transform: translate(-50%, -50%) scale(2);
