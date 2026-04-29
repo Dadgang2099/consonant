@@ -2796,11 +2796,16 @@ body {
   pointer-events: none;
 }
 .app-dock--chat-mode { gap: 0; }
-.app-dock--chat-mode > .ai-bar { width: auto; }
-/* AI bar's collapsed circle is 56x56; lock its base width so the
-   transition has something to interpolate from. */
-.app-dock > .ai-bar { width: 56px; }
-.app-dock--collapsed > .ai-bar { width: 0; }
+
+/* AI bar width tiers — collapsed circle (default), expanded chat,
+   eye-collapsed (0). Specificity high enough that the chat-mode
+   sibling-shrink rules above don't override the expanded width. */
+.app-dock > .ai-bar              { width: 56px;  max-width: 56px; }
+.app-dock > .ai-bar.ai-bar--expanded {
+  width:     min(820px, calc(100vw - 64px));
+  max-width: min(820px, calc(100vw - 64px));
+}
+.app-dock--collapsed > .ai-bar   { width: 0;     max-width: 0; }
 
 /* ── Shared glass-circle base — panel-tog + fx-knob ──── */
 .panel-tog,
@@ -3197,6 +3202,9 @@ body {
 }
 
 /* ── Asset (panel) header row ────────────────────────────── */
+/* Row height locked to 32px (matches .tl-lane--asset) so the tree
+   and the tracks pane align row-for-row — dots can't drift into a
+   neighboring metric's lane. */
 .tl-asset {
   border-bottom: 0.5px solid var(--tl-rule);
 }
@@ -3204,7 +3212,8 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 10px;
+  padding: 0 10px;
+  height: 32px;
   cursor: pointer;
   user-select: none;
 }
@@ -3242,7 +3251,11 @@ body {
 .tl-prop {
   display: none;
   align-items: center;
-  padding: 5px 10px 5px 26px;
+  gap: 8px;
+  padding: 0 10px 0 26px;
+  height: 28px;          /* match .tl-lane height so rows align across */
+  border-bottom: 0.5px solid var(--tl-rule);
+  box-sizing: border-box;
 }
 .tl-asset--open + .tl-prop,
 .tl-asset--open ~ .tl-prop[data-asset-id] { display: flex; }
@@ -3265,8 +3278,12 @@ body {
   position: relative;
   height: 28px;
   border-bottom: 0.5px solid var(--tl-rule);
+  box-sizing: border-box;
 }
-.tl-lane--asset { background: rgba(255,255,255,0.02); }
+.tl-lane--asset {
+  height: 32px;           /* match .tl-asset__hdr height in the tree */
+  background: rgba(255,255,255,0.02);
+}
 .tl-lane--prop  { display: none; }    /* shown only when parent asset is --open */
 
 /* Aggregate bar for collapsed assets — earliest..latest KF span */
