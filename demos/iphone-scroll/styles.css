@@ -2991,9 +2991,17 @@ body {
   height: 260px;
   min-height: 120px;
   max-height: 50vh;
-  background: var(--tl-bg);
+  /* Dark frosted glass: semi-transparent fill + heavy backdrop blur so
+     page content behind the timeline frosts out instead of disappearing. */
+  background: rgba(13, 13, 20, 0.74);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
   border-top: 1px solid var(--tl-border);
   border-radius: 12px 12px 0 0;
+  box-shadow:
+    0 0 0 0.5px rgba(110,140,255,0.10),
+    0 -16px 48px rgba(0,0,0,0.55),
+    inset 0 0.5px 0 rgba(255,255,255,0.06);
   transform: translateY(100%);
   transition: transform 0.30s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 9999;
@@ -3141,12 +3149,12 @@ body {
 .tl-tree {
   border-right: 1px solid var(--tl-rule);
   overflow-y: auto;
-  background: var(--tl-bg);
+  background: rgba(13, 13, 20, 0.18);   /* tint over the frosted parent */
 }
 
 .tl-tracks {
   position: relative;
-  background: var(--tl-bg-alt);
+  background: rgba(7, 8, 13, 0.30);     /* slightly darker side reads as depth */
   overflow: hidden;
   cursor: ew-resize;
 }
@@ -3156,7 +3164,7 @@ body {
   position: relative;
   height: 24px;
   border-bottom: 1px solid var(--tl-rule);
-  background: var(--tl-bg-alt);
+  background: rgba(7, 8, 13, 0.30);
   flex-shrink: 0;
 }
 /* 0 / 25 / 50 / 75 / 100 marks via gradient — keeps it pure CSS for now */
