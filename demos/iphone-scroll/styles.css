@@ -3321,15 +3321,19 @@ body {
 }
 .tl-dot:hover { transform: scale(1.4); }
 
-/* Hover-✕ delete: dot grows + turns red with a ✕ centered inside */
-.tl-dot:hover {
+/* Selected: dot stays grown + red, ✕ persistent until the user
+   clicks elsewhere or hits Delete. Hover gives the same shape but
+   without the sticky state, so a quick mouse-over doesn't read as
+   "this is going to delete." */
+.tl-dot:hover,
+.tl-dot--selected {
   width: 16px;
   height: 16px;
   margin-left: -8px;
   margin-top: -8px;
   background: rgba(255,80,80,0.95);
   border-color: rgba(0,0,0,0.65);
-  z-index: 6;       /* above neighbouring dots so the X is clickable */
+  z-index: 6;
 }
 .tl-dot__x {
   position: absolute;
@@ -3343,7 +3347,8 @@ body {
   line-height: 1;
   pointer-events: auto;
 }
-.tl-dot:hover .tl-dot__x { display: flex; }
+.tl-dot:hover .tl-dot__x,
+.tl-dot--selected .tl-dot__x { display: flex; }
 
 /* Per-row + button (timeline tree side) */
 .tl-row-add {
@@ -3854,7 +3859,8 @@ body {
   pointer-events: auto;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.drv-overlay__dot:hover {
+.drv-overlay__dot:hover,
+.drv-overlay__dot--kf-selected {
   /* Grow + turn red so the ✕ is legible inside the dot */
   transform: translate(-50%, -50%) scale(1.8);
   background: rgba(255,80,80,0.95);
@@ -3875,7 +3881,8 @@ body {
   pointer-events: auto;
   transform-origin: center;
 }
-.drv-overlay__dot:hover .drv-overlay__dot__x { display: flex; }
+.drv-overlay__dot:hover .drv-overlay__dot__x,
+.drv-overlay__dot--kf-selected .drv-overlay__dot__x { display: flex; }
 .drv-overlay__dot--dragging {
   transform: translate(-50%, -50%) scale(2);
   box-shadow:

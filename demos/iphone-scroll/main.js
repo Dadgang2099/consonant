@@ -3418,9 +3418,16 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             overlayEl.classList.remove('drv-overlay--dragging');
 
             if (!didDrag) {
-              // Click-only: jump to the KF's scroll position. Never delete on click;
-              // the per-row ✕ button in the panel is the only delete path.
+              // Click-only: jump to the KF's scroll position + emit a
+              // selection event so the bottom timeline (and Delete-key
+              // handler) know which KF is now active.
               kfSel.clear();
+              const inputId = dot.dataset.kfInput;
+              if (inputId) {
+                document.dispatchEvent(new CustomEvent('pw-kf-clicked', {
+                  detail: { inputId, scrollY: oldSY }
+                }));
+              }
               window.scrollTo({ top: oldSY, behavior: 'smooth' });
               return;
             }
@@ -4066,6 +4073,54 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
   // Track which asset rows are currently expanded (persists across rebuilds)
   const expanded = new Set();
+  // Selected keyframe — sticky highlight + ✕ visible until something else is
+  // selected or scroll moves away. Delete/Backspace key removes the selected.
+  let selectedKF = null; // { inputId, scrollY }
+  function selectKF(inputId, scrollY) {
+    selectedKF = { inputId, scrollY };
+    refreshSelectedHighlight();
+  }
+  function clearKFSelection() {
+    selectedKF = null;
+    refreshSelectedHighlight();
+  }
+  function refreshSelectedHighlight() {
+    document.querySelectorAll('.tl-dot--selected, .drv-overlay__dot--kf-selected')
+      .forEach(el => el.classList.remove('tl-dot--selected', 'drv-overlay__dot--kf-selected'));
+    if (!selectedKF) return;
+    document.querySelectorAll(
+      `.tl-dot[data-kf-input="${selectedKF.inputId}"][data-kf-sy="${selectedKF.scrollY}"]`
+    ).forEach(el => el.classList.add('tl-dot--selected'));
+    document.querySelectorAll(
+      `.drv-overlay__dot[data-kf-input="${selectedKF.inputId}"][data-kf-sy="${selectedKF.scrollY}"]`
+    ).forEach(el => el.classList.add('drv-overlay__dot--kf-selected'));
+  }
+  // Listen for clicks on the right-edge build dots — they fire
+  // 'pw-kf-clicked' when the user clicks (no drag), so the bottom
+  // timeline can mirror the same selection state.
+  document.addEventListener('pw-kf-clicked', e => {
+    if (!e.detail) return;
+    selectKF(e.detail.inputId, e.detail.scrollY);
+  });
+  // Also re-apply selection highlight when the timeline / overlay rebuilds
+  document.addEventListener('pw-kfs-changed', () => setTimeout(refreshSelectedHighlight, 0));
+  // Delete key removes the selected KF (no-op if nothing selected, or if
+  // focus is in a text input so typing isn't hijacked)
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    const t = document.activeElement?.tagName?.toLowerCase();
+    if (t === 'input' || t === 'textarea' || document.activeElement?.isContentEditable) return;
+    if (!selectedKF) return;
+    e.preventDefault();
+    window.__deleteKFAt?.(selectedKF.inputId, selectedKF.scrollY);
+    selectedKF = null;
+  });
+  // Click anywhere outside a KF dot clears the selection
+  document.addEventListener('mousedown', e => {
+    if (e.target.closest('.tl-dot') || e.target.closest('.drv-overlay__dot')) return;
+    if (!selectedKF) return;
+    clearKFSelection();
+  }, true);
 
   function formatVal(v) {
     if (v === '' || v == null) return '';
@@ -4368,10 +4423,14 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           P.kfs.forEach(k => {
             const dot = document.createElement('div');
             dot.className = 'tl-dot';
+            const isSel = selectedKF && selectedKF.inputId === P.inputId && selectedKF.scrollY === k.scrollY;
+            if (isSel) dot.classList.add('tl-dot--selected');
             dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
-            dot.title = `${A.title} – ${P.label}  ·  KF @ ${Math.round(k.scrollY)}px`;
+            dot.title = `${A.title} – ${P.label}  ·  KF @ ${Math.round(k.scrollY)}px  ·  Delete to remove`;
+            dot.dataset.kfInput = P.inputId;
+            dot.dataset.kfSy    = String(k.scrollY);
 
-            // Hover ✕ for delete
+            // ✕ click → delete (also visible whenever the dot is selected)
             const x = document.createElement('span');
             x.className = 'tl-dot__x';
             x.textContent = '✕';
@@ -4380,6 +4439,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             x.addEventListener('click', e => {
               e.stopPropagation();
               window.__deleteKFAt?.(P.inputId, k.scrollY);
+              selectedKF = null;
             });
             dot.appendChild(x);
 
@@ -4423,12 +4483,16 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup',   onUp);
                 if (!didDrag) {
+                  // Single click: select + jump. ✕ stays visible until
+                  // the user clicks elsewhere or hits Delete.
+                  selectKF(P.inputId, originalSY);
                   window.scrollTo({ top: originalSY, behavior: 'smooth' });
                   return;
                 }
                 const newSY = parseInt(dot.dataset.dragSY, 10);
                 if (!Number.isNaN(newSY) && newSY !== originalSY) {
                   window.__moveKF?.(P.inputId, originalSY, newSY);
+                  selectKF(P.inputId, newSY);
                 }
               }
               document.addEventListener('mousemove', onMove);
