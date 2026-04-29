@@ -682,15 +682,10 @@
 <div class="ai-dust-overlay" id="aiDustOverlay"></div>
 
 <!-- ─── Unified bottom dock ─────────────────────────────
-     Four circles: Eye (panel toggle), Chat (AI bar — expands inline),
+     Four circles: Eye (panel toggle + dock collapse), Chat (AI bar),
      Sparkle (FX knob), Timeline. Slides up to clear the timeline
-     panel when it's open.
-     X tucks the entire block away to a single re-open dot. -->
-<button class="app-dock__close" id="appDockClose" aria-label="Tuck dock away" title="Hide dock">
-  <svg width="11" height="11" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-    <path d="M 3.5 3.5 L 11.5 11.5  M 11.5 3.5 L 3.5 11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-  </svg>
-</button>
+     panel when it's open. Click the Eye to collapse to just the
+     eye centered; click again to expose all four. -->
 <div class="app-dock" id="appDock">
 
   <!-- Eye: panel toggle -->
