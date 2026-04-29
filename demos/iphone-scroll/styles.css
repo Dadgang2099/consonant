@@ -2700,6 +2700,44 @@ body {
   bottom: calc(var(--tl-h, 260px) + 16px);
 }
 
+/* Tucked: hide the four circles. The .app-dock__close X stays visible
+   as the only re-open affordance. */
+.app-dock--tucked {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}
+
+/* ── X button — tucks the entire dock away ─────────────────
+   Lives just to the right of the dock pill. When the dock is tucked
+   away it stays put as a small dot to bring it back. */
+.app-dock__close {
+  position: fixed;
+  right: 24px;
+  bottom: 30px;          /* aligned with circle centers */
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  background: rgba(7, 8, 13, 0.84);
+  color: rgba(255,255,255,0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 9998;
+  transition: bottom 0.30s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.18s, border-color 0.18s, background 0.18s, opacity 0.22s;
+}
+.app-dock__close:hover { color: #fff; border-color: rgba(255,80,80,0.42); background: rgba(255,80,80,0.12); }
+.app-dock__close--tl-open {
+  bottom: calc(var(--tl-h, 260px) + 22px);
+}
+/* When tucked, the X rotates to a + and brightens — hint that
+   it'll re-open the block on click. */
+.app-dock__close--tucked svg { transform: rotate(45deg); transition: transform 0.22s; }
+.app-dock__close--tucked     { color: rgba(255,255,255,0.85); border-color: rgba(56,210,255,0.35); }
+
 /* ── Shared glass-circle base — panel-tog + fx-knob ──── */
 .panel-tog,
 .fx-knob {

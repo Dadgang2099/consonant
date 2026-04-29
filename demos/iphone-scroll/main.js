@@ -4110,6 +4110,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     } else {
       dock.classList.remove('app-dock--tl-open');
     }
+    syncClosePos();
   }
   function setOpen(next) {
     open = next;
@@ -4126,6 +4127,32 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
   // Header close button → collapse timeline
   document.getElementById('tlClose')?.addEventListener('click', () => setOpen(false));
+
+  // ── App-dock tuck/expand — tiny X persists either way ───
+  // Tucked: 4 circles slide off; the X stays as the re-open trigger
+  // and rotates 45° (X → +) to hint that clicking it brings the dock back.
+  const dockCloseBtn = document.getElementById('appDockClose');
+  let tucked = false;
+  function setTucked(next) {
+    tucked = next;
+    if (dock) dock.classList.toggle('app-dock--tucked', tucked);
+    if (dockCloseBtn) {
+      dockCloseBtn.classList.toggle('app-dock__close--tucked', tucked);
+      dockCloseBtn.setAttribute('aria-label', tucked ? 'Show dock' : 'Tuck dock away');
+      dockCloseBtn.title = tucked ? 'Show dock' : 'Hide dock';
+    }
+  }
+  dockCloseBtn?.addEventListener('click', () => setTucked(!tucked));
+
+  // Mirror the timeline-open offset onto the close button so it tracks
+  // the dock when the timeline is open. Called from syncDockOffset above.
+  function syncClosePos() {
+    if (!dock || !dockCloseBtn) return;
+    const tlOpen = dock.classList.contains('app-dock--tl-open');
+    dockCloseBtn.classList.toggle('app-dock__close--tl-open', tlOpen);
+    const tlH = dock.style.getPropertyValue('--tl-h');
+    if (tlH) dockCloseBtn.style.setProperty('--tl-h', tlH);
+  }
 
   // ── Inner eye: toggle right-edge KF overlay visibility ───
   let buildKFsVisible = true;
