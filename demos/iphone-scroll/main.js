@@ -361,6 +361,12 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       const hidden = body.classList.toggle('hidden');
       btn.textContent = hidden ? '+' : '−';
       if (panel) {
+        // Stuck inline height/maxHeight from resize-drag would keep the
+        // panel tall after collapse — reset both so it actually snaps to
+        // header-only when hidden.
+        panel.style.height = '';
+        const sb = panel.querySelector('.pw-panel__body--scroll');
+        if (sb) sb.style.maxHeight = '';
         const afterBottom = panel.offsetTop + panel.offsetHeight;
         const delta = afterBottom - beforeBottom;
         if (delta !== 0) {
@@ -2114,31 +2120,18 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       handle.addEventListener('mousedown', e => {
         e.preventDefault();
         const startX   = e.clientX;
-        const startY   = e.clientY;
         const startW   = panel.offsetWidth;
-        const startH   = panel.offsetHeight;
-        const hdrH     = panel.querySelector('.pw-panel__hdr')?.offsetHeight ?? 46;
 
-        // Measure the panel's natural content height with all clamps lifted,
-        // then restore. This becomes the upper bound during drag so the user
-        // can't grow the panel past what its content actually needs.
-        const prevPanelH  = panel.style.height;
-        const prevBodyMax = scrollBody ? scrollBody.style.maxHeight : null;
+        // Resize is WIDTH-ONLY now. Height is content-driven so the panel
+        // can never be dragged shorter than its content (which would clip
+        // the bottom rows) or taller than needed.
         panel.style.height = 'auto';
         if (scrollBody) scrollBody.style.maxHeight = 'none';
-        const naturalH = panel.offsetHeight;
-        panel.style.height = prevPanelH;
-        if (scrollBody) scrollBody.style.maxHeight = prevBodyMax;
 
         function onMove(ev) {
           const dx = ev.clientX - startX;
-          const dy = ev.clientY - startY;
           const newW = Math.max(220, Math.min(600, side === 'left' ? startW - dx : startW + dx));
-          const maxH = Math.min(window.innerHeight - 80, naturalH);
-          const newH = Math.max(120, Math.min(maxH, startH + dy));
-          panel.style.width  = `${newW}px`;
-          panel.style.height = `${newH}px`;
-          if (scrollBody) scrollBody.style.maxHeight = `${Math.max(60, newH - hdrH - 8)}px`;
+          panel.style.width = `${newW}px`;
         }
 
         function onUp() {
@@ -3164,6 +3157,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   }
 
   function buildOverlayLines() {
+    // Notify any other surface (e.g. bottom timeline) that the store changed.
+    document.dispatchEvent(new CustomEvent('pw-kfs-changed'));
     if (!overlayEl) return;
     // Remove all children except the sparkle canvas
     [...overlayEl.children].forEach(c => { if (c !== sparkCanvas) c.remove(); });
@@ -3965,11 +3960,13 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
 // ═══════════════════════════════════════════════════════════
 //  TIMELINE — bottom slide-up panel + 4th dock circle
-//  Phase 1a scope: chrome only.
 //    - Trigger toggles panel open/close
 //    - Inner eye toggles right-edge KF overlay visibility (independent)
-//    - Playhead syncs to window.scrollY (read-only)
-//    - Track lanes are empty placeholders; data wiring lands in P1b
+//    - Playhead syncs to window.scrollY
+//    - Tree (left) + lanes (right) render every keyframe in the store
+//      grouped by panel (asset) → input (property). Listens for the
+//      'pw-kfs-changed' event from the panel KF system so any capture,
+//      delete, or drag in the panels lands in the timeline immediately.
 // ═══════════════════════════════════════════════════════════
 (function timelineSystem() {
   'use strict';
@@ -3979,7 +3976,20 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   const panel     = document.getElementById('tlPanel');
   const playhead  = document.getElementById('tlPlayhead');
   const handle    = document.getElementById('tlPanelHandle');
+  const tree      = document.getElementById('tlTree');
+  const lanes     = document.getElementById('tlLanes');
   if (!tog || !panel) return;
+
+  // Kept in sync with PANEL_COLORS in panelAnimSystem
+  const ASSET_COLORS = {
+    shadowPanel:  '#38d2ff',
+    seqPanel:     '#ff9f40',
+    tweakPanel:   '#c4ff60',
+    contentPanel: '#ff5eb0',
+  };
+
+  // Track which asset rows are currently expanded (persists across rebuilds)
+  const expanded = new Set();
 
   // ── Open / close ─────────────────────────────────────────
   let open = false;
@@ -4016,6 +4026,130 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   window.addEventListener('scroll', updatePlayhead, { passive: true });
   window.addEventListener('resize', updatePlayhead);
   updatePlayhead();
+
+  // ── Render the tree (left) and lanes (right) from kfStore ───
+  function gatherTracks() {
+    const store = window.__getKFs ? window.__getKFs() : {};
+    const panelIds = Object.keys(ASSET_COLORS);
+    // assets: [{ panelId, title, props: [{ inputId, label, kfs }] }]
+    const assets = [];
+    panelIds.forEach(pid => {
+      const pe = document.getElementById(pid);
+      if (!pe) return;
+      const title = pe.querySelector('.pw-panel__title')?.textContent?.trim() || pid;
+      const props = [];
+      pe.querySelectorAll('[id]').forEach(input => {
+        const kfs = store[input.id];
+        if (!kfs || !kfs.length) return;
+        const row = input.closest('.pw-row');
+        const label = row?.querySelector('.pw-key')?.textContent?.trim() || input.id;
+        props.push({ inputId: input.id, label, kfs });
+      });
+      if (props.length) assets.push({ panelId: pid, title, props });
+    });
+    return assets;
+  }
+
+  function renderTimeline() {
+    if (!tree || !lanes) return;
+    const assets = gatherTracks();
+    tree.innerHTML  = '';
+    lanes.innerHTML = '';
+    if (assets.length === 0) {
+      tree.dataset.empty = '1';
+      return;
+    }
+    delete tree.dataset.empty;
+
+    const scrollMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+
+    assets.forEach(A => {
+      const isOpen = expanded.has(A.panelId);
+      const totalKFs = A.props.reduce((n, p) => n + p.kfs.length, 0);
+      const minSY = Math.min(...A.props.flatMap(p => p.kfs.map(k => k.scrollY)));
+      const maxSY = Math.max(...A.props.flatMap(p => p.kfs.map(k => k.scrollY)));
+
+      // Tree: asset row
+      const aRow = document.createElement('div');
+      aRow.className = 'tl-asset' + (isOpen ? ' tl-asset--open' : '');
+      aRow.dataset.assetId = A.panelId;
+      aRow.style.setProperty('--tl-asset-color', ASSET_COLORS[A.panelId] || 'var(--tl-dot)');
+      aRow.innerHTML = `
+        <div class="tl-asset__hdr">
+          <span class="tl-asset__caret">▶</span>
+          <span class="tl-asset__swatch"></span>
+          <span class="tl-asset__label">${A.title}</span>
+          <span class="tl-asset__count">${totalKFs}</span>
+        </div>
+      `;
+      aRow.querySelector('.tl-asset__hdr').addEventListener('click', () => {
+        if (expanded.has(A.panelId)) expanded.delete(A.panelId);
+        else expanded.add(A.panelId);
+        renderTimeline();
+      });
+      tree.appendChild(aRow);
+
+      // Lanes: matching asset lane (aggregate dots + bar)
+      const aLane = document.createElement('div');
+      aLane.className = 'tl-lane tl-lane--asset';
+      aLane.style.setProperty('--tl-asset-color', ASSET_COLORS[A.panelId] || 'var(--tl-dot)');
+      // Aggregate bar: earliest..latest across all props
+      if (totalKFs >= 2 && maxSY > minSY) {
+        const bar = document.createElement('div');
+        bar.className = 'tl-lane__bar';
+        bar.style.left  = `${(minSY / scrollMax) * 100}%`;
+        bar.style.width = `${((maxSY - minSY) / scrollMax) * 100}%`;
+        aLane.appendChild(bar);
+      }
+      // Aggregate dots — one per unique scrollY across the asset
+      const seen = new Set();
+      A.props.forEach(p => p.kfs.forEach(k => {
+        if (seen.has(k.scrollY)) return;
+        seen.add(k.scrollY);
+        const dot = document.createElement('div');
+        dot.className = 'tl-dot';
+        dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
+        dot.title = `${A.title} · KF @ ${Math.round(k.scrollY)}px`;
+        dot.addEventListener('click', () => window.scrollTo({ top: k.scrollY, behavior: 'smooth' }));
+        aLane.appendChild(dot);
+      }));
+      lanes.appendChild(aLane);
+
+      // Property sub-rows (only when asset is expanded)
+      if (isOpen) {
+        A.props.forEach(P => {
+          const pRow = document.createElement('div');
+          pRow.className = 'tl-prop';
+          pRow.dataset.assetId = A.panelId;
+          pRow.style.display = 'flex';
+          pRow.innerHTML = `
+            <span class="tl-prop__label">${P.label}</span>
+            <span class="tl-prop__count">${P.kfs.length}</span>
+          `;
+          tree.appendChild(pRow);
+
+          const pLane = document.createElement('div');
+          pLane.className = 'tl-lane tl-lane--prop';
+          pLane.style.display = 'block';
+          pLane.style.setProperty('--tl-asset-color', ASSET_COLORS[A.panelId] || 'var(--tl-dot)');
+          P.kfs.forEach(k => {
+            const dot = document.createElement('div');
+            dot.className = 'tl-dot';
+            dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
+            dot.title = `${A.title} – ${P.label}  ·  KF @ ${Math.round(k.scrollY)}px`;
+            dot.addEventListener('click', () => window.scrollTo({ top: k.scrollY, behavior: 'smooth' }));
+            pLane.appendChild(dot);
+          });
+          lanes.appendChild(pLane);
+        });
+      }
+    });
+  }
+
+  // Initial render + subscribe to KF changes from any surface
+  renderTimeline();
+  document.addEventListener('pw-kfs-changed', renderTimeline);
+  window.addEventListener('resize', renderTimeline);
 
   // ── Resize panel via top handle ──────────────────────────
   let resizing = false, startY = 0, startH = 0;
