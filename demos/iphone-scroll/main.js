@@ -51,6 +51,8 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       yRefInput.value  = tweakYRef;
       xOffInput.value  = tweakXOff;
       syncLabels(); onScroll();
+      // Reset wipes the timeline alongside the values
+      window.__applyKFs?.({});
     });
 
     [scaleInput, yRefInput, xOffInput].forEach(input => {
@@ -1037,6 +1039,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       document.getElementById(id)?.dispatchEvent(new Event('input'));
     });
     applyAll();
+    // Reset wipes the timeline too — every metric returns to its default
+    // value AND any keyframes captured against it.
+    window.__applyKFs?.({});
   });
 
   // ── Copy all values ──────────────────────────────────────
@@ -3709,7 +3714,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       }
     }
 
-    document.addEventListener('input',  capture, true);
+    // Only listen on 'change' (fires once on slider release / select pick /
+    // text blur). 'input' would fire continuously during a slider drag and
+    // — combined with auto-scroll happening at the same time — produce
+    // dozens of keyframes for what the user intended as a single edit.
     document.addEventListener('change', capture, true);
   }
 
