@@ -2870,6 +2870,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   const KF_BLOCKLIST = new Set(['scaleInput', 'yRefInput', 'xOffInput']);
   let overlayEl  = null;
   let animBtn    = null;
+  let edgeRaf    = null;  // edge auto-scroll rAF handle (read on KF drop)
 
   // ── Sparkle particle system ───────────────────────────
   let sparkCanvas = null;
