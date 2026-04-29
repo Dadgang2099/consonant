@@ -4101,11 +4101,22 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
   // ── Open / close ─────────────────────────────────────────
   let open = false;
+  const dock = document.getElementById('appDock');
+  function syncDockOffset() {
+    if (!dock) return;
+    if (open) {
+      dock.style.setProperty('--tl-h', panel.offsetHeight + 'px');
+      dock.classList.add('app-dock--tl-open');
+    } else {
+      dock.classList.remove('app-dock--tl-open');
+    }
+  }
   function setOpen(next) {
     open = next;
     panel.classList.toggle('tl-panel--open', open);
     tog.classList.toggle('tl-tog--on', open);
     panel.hidden = false; // keep mounted; just translate off
+    syncDockOffset();
   }
   tog.addEventListener('click', e => {
     // Inner eye click should NOT toggle the panel
@@ -4140,29 +4151,38 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
   // ── Render the tree (left) and lanes (right) from kfStore ───
   function getAssetName(pid) {
-    const inp = document.querySelector(`.pw-asset-name__input[data-asset-for="${pid}"]`);
+    const inp = document.querySelector(`[data-asset-for="${pid}"]`);
     const v = inp?.value?.trim();
     if (v) return v;
-    // Fallback: panel title
-    const pe = document.getElementById(pid);
-    return pe?.querySelector('.pw-panel__title')?.textContent?.trim() || pid;
+    // Fallback: panel id (title is now the editable name field above)
+    return pid;
   }
 
   function gatherTracks() {
     const store = window.__getKFs ? window.__getKFs() : {};
     const panelIds = Object.keys(ASSET_COLORS);
     // assets: [{ panelId, title, props: [{ inputId, label, kfs }] }]
+    // Walk every input in every panel — surface all metrics whether or not
+    // they currently have KFs, so the user can see the full set and capture
+    // a new one from the timeline directly.
     const assets = [];
     panelIds.forEach(pid => {
       const pe = document.getElementById(pid);
       if (!pe) return;
       const title = getAssetName(pid);
       const props = [];
-      pe.querySelectorAll('[id]').forEach(input => {
-        const kfs = store[input.id];
-        if (!kfs || !kfs.length) return;
+      const seen = new Set();
+      pe.querySelectorAll('.pw-row [id]').forEach(input => {
+        if (seen.has(input.id)) return;
+        seen.add(input.id);
+        // Skip non-input nodes that happen to have an id
+        const tag = input.tagName.toLowerCase();
+        if (tag !== 'input' && tag !== 'select' && tag !== 'textarea' && !input.classList.contains('pw-seg')) return;
+        if (input.classList.contains('pw-color-chip')) return;
         const row = input.closest('.pw-row');
-        const label = row?.querySelector('.pw-key')?.textContent?.trim() || input.id;
+        if (!row) return;
+        const label = row.querySelector('.pw-key')?.textContent?.trim() || input.id;
+        const kfs   = store[input.id] || [];
         props.push({ inputId: input.id, label, kfs });
       });
       if (props.length) assets.push({ panelId: pid, title, props });
@@ -4186,8 +4206,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     assets.forEach(A => {
       const isOpen = expanded.has(A.panelId);
       const totalKFs = A.props.reduce((n, p) => n + p.kfs.length, 0);
-      const minSY = Math.min(...A.props.flatMap(p => p.kfs.map(k => k.scrollY)));
-      const maxSY = Math.max(...A.props.flatMap(p => p.kfs.map(k => k.scrollY)));
+      const allSY = A.props.flatMap(p => p.kfs.map(k => k.scrollY));
+      const minSY = allSY.length ? Math.min(...allSY) : 0;
+      const maxSY = allSY.length ? Math.max(...allSY) : 0;
 
       // Tree: asset row
       const aRow = document.createElement('div');
@@ -4315,7 +4336,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       if (!raw) return;
       const map = JSON.parse(raw);
       Object.entries(map).forEach(([pid, name]) => {
-        const inp = document.querySelector(`.pw-asset-name__input[data-asset-for="${pid}"]`);
+        const inp = document.querySelector(`[data-asset-for="${pid}"]`);
         if (inp && typeof name === 'string') inp.value = name;
       });
     } catch (_) {}
@@ -4323,19 +4344,39 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   function saveAssetNames() {
     try {
       const map = {};
-      document.querySelectorAll('.pw-asset-name__input[data-asset-for]').forEach(inp => {
+      document.querySelectorAll('[data-asset-for]').forEach(inp => {
         map[inp.dataset.assetFor] = inp.value;
       });
       localStorage.setItem(ASSET_NAMES_KEY, JSON.stringify(map));
     } catch (_) {}
   }
-  document.querySelectorAll('.pw-asset-name__input[data-asset-for]').forEach(inp => {
+  document.querySelectorAll('[data-asset-for]').forEach(inp => {
     inp.addEventListener('input', () => {
       saveAssetNames();
       renderTimeline();
     });
     // Block global capture handler from treating asset-name edits as KF input
     inp.addEventListener('change', e => e.stopPropagation(), true);
+  });
+  // Pen icon flips the title input between readonly and editable
+  document.querySelectorAll('.pw-panel__edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inp = btn.parentElement?.querySelector('.pw-panel__title--input');
+      if (!inp) return;
+      const wasReadOnly = inp.readOnly;
+      inp.readOnly = false;
+      inp.focus();
+      inp.select();
+      const finish = () => {
+        inp.readOnly = true;
+        inp.removeEventListener('blur', finish);
+        inp.removeEventListener('keydown', onKey);
+      };
+      const onKey = e => { if (e.key === 'Enter' || e.key === 'Escape') inp.blur(); };
+      inp.addEventListener('blur', finish);
+      inp.addEventListener('keydown', onKey);
+      void wasReadOnly;
+    });
   });
   loadAssetNames();
 
@@ -4408,6 +4449,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     const max = Math.floor(window.innerHeight * 0.5);
     panel.style.height = Math.max(min, Math.min(max, startH + dy)) + 'px';
     updatePlayhead();
+    syncDockOffset();
   });
   window.addEventListener('mouseup', () => {
     if (!resizing) return;

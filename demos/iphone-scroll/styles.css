@@ -359,6 +359,41 @@ body {
   color: rgba(255,255,255,0.55);
   text-transform: uppercase;
 }
+/* Editable asset-name title — looks like a label until you click the pen */
+.pw-panel__title--input {
+  background: transparent;
+  border: 0.5px solid transparent;
+  border-radius: 4px;
+  padding: 2px 4px;
+  outline: none;
+  max-width: 180px;
+  text-overflow: ellipsis;
+}
+.pw-panel__title--input[readonly] {
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pw-panel__title--input:not([readonly]) {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(56,210,255,0.42);
+  color: #fff;
+  cursor: text;
+}
+/* Pen icon — sits next to the title, click to enter edit mode */
+.pw-panel__edit {
+  width: 18px; height: 18px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.32);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.pw-panel__edit:hover { color: rgba(56,210,255,0.95); background: rgba(255,255,255,0.05); }
 
 .pw-icon-btn {
   background: none;
@@ -2187,15 +2222,16 @@ body {
    AI PROMPT BAR — centered glass pill, bottom of viewport
    ═══════════════════════════════════════════════════════════ */
 .ai-bar {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9998;
-  width: min(620px, calc(100vw - 48px));
+  position: relative;            /* lives inside .app-dock now */
+  z-index: 1;
+  width: 56px;                   /* collapsed = circle; expands when open */
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  align-items: center;
+  transition: width 0.44s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ai-bar--expanded {
+  width: min(560px, calc(100vw - 240px));
 }
 
 .ai-bar__glass {
@@ -2625,12 +2661,50 @@ body {
   background: rgba(255,255,255,0.10);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   APP DOCK — single bottom-center pill containing the four
+   tool circles: Eye (panels), Chat (AI bar), Sparkle (FX knob),
+   Timeline. Slides up to clear the bottom timeline panel when
+   it's open, so the tools never disappear behind it.
+   ═══════════════════════════════════════════════════════════ */
+.app-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 999px;
+  z-index: 9997;
+  transition: bottom 0.30s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Subtle outer glass — only visible as a hint behind the four circles */
+.app-dock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(7, 8, 13, 0.42);
+  border: 0.5px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.85;
+}
+/* When timeline is open, dock floats up just above it so the chrome
+   stays reachable. --tl-h is set by JS to the live timeline height. */
+.app-dock--tl-open {
+  bottom: calc(var(--tl-h, 260px) + 16px);
+}
+
 /* ── Shared glass-circle base — panel-tog + fx-knob ──── */
 .panel-tog,
 .fx-knob {
-  position: fixed;
-  bottom: 28px;
-  z-index: 9997;
+  position: relative;       /* lives inside .app-dock now */
+  z-index: 1;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -2645,7 +2719,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.55;
+  opacity: 0.85;
   transition: opacity 0.22s, border-color 0.22s, box-shadow 0.22s;
   padding: 0;
 }
@@ -2664,7 +2738,6 @@ body {
 
 /* ── Balaclava panel toggle ───────────────────────────── */
 .panel-tog {
-  left: 28px;
   cursor: pointer;
   color: rgba(255,255,255,0.85);
 }
@@ -2687,13 +2760,11 @@ body {
    FX KNOB — 56px glass circle, bottom-right, piano cascade
    ═══════════════════════════════════════════════════════════ */
 .fx-knob {
-  right: 28px;
   cursor: ns-resize;
   user-select: none;
   -webkit-user-select: none;
   overflow: visible;
-  position: fixed;
-  opacity: 0.80; /* more visible than panel-tog */
+  opacity: 0.85;
 }
 
 /* Inner glass plate on knob — canvas draws ticks on top of it */
@@ -2753,10 +2824,8 @@ body {
 
 /* ── 4th dock circle — timeline trigger + inner build-marker eye ── */
 .tl-tog {
-  position: fixed;
-  bottom: 28px;
-  right: 96px;          /* sits to the LEFT of the fx-knob (right: 28px) */
-  z-index: 9997;
+  position: relative;          /* lives inside .app-dock now */
+  z-index: 1;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -2771,7 +2840,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.55;
+  opacity: 0.85;
   transition: opacity 0.22s, border-color 0.22s, box-shadow 0.22s;
   padding: 0;
   cursor: pointer;
@@ -3134,25 +3203,29 @@ body.tl-build-hidden .drv-overlay { opacity: 0; pointer-events: none; }
 }
 .tl-dot:hover { transform: scale(1.4); }
 
-/* Hover-✕ delete affordance — sits just above the dot */
+/* Hover-✕ delete: dot grows + turns red with a ✕ centered inside */
+.tl-dot:hover {
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  margin-top: -8px;
+  background: rgba(255,80,80,0.95);
+  border-color: rgba(0,0,0,0.65);
+  z-index: 6;       /* above neighbouring dots so the X is clickable */
+}
 .tl-dot__x {
   position: absolute;
-  top: -14px; left: 50%;
-  transform: translateX(-50%) scale(0.85);
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: rgba(255,80,80,0.92);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 13px;
-  text-align: center;
+  inset: 0;
   display: none;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
   pointer-events: auto;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
 }
-.tl-dot:hover .tl-dot__x { display: block; }
-.tl-dot__x:hover { transform: translateX(-50%) scale(1); }
+.tl-dot:hover .tl-dot__x { display: flex; }
 
 /* Per-row + button (timeline tree side) */
 .tl-row-add {
