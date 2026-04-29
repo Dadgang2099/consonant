@@ -2720,19 +2720,22 @@ body {
   transition: bottom 0.30s cubic-bezier(0.4, 0, 0.2, 1),
               gap    0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-/* Subtle outer glass — only visible as a hint behind the four circles */
+/* Outer glass tray — subtle but clearly readable behind the 4 circles */
 .app-dock::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(7, 8, 13, 0.42);
-  border: 0.5px solid rgba(255,255,255,0.06);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(7, 8, 13, 0.78);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 0 0 0.5px rgba(110,140,255,0.14),
+    0 12px 40px rgba(0,0,0,0.55),
+    inset 0 0.5px 0 rgba(255,255,255,0.10);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
   z-index: -1;
   pointer-events: none;
-  opacity: 0.85;
 }
 /* When timeline is open, dock floats up just above it so the chrome
    stays reachable. --tl-h is set by JS to the live timeline height. */
@@ -2742,16 +2745,21 @@ body {
 
 /* Snap collapse: non-eye children animate to width 0 with a spring
    easing while fading + scaling. The pill auto-shrinks around the
-   lone eye and stays centered. */
+   lone eye and stays centered. NB: overflow stays visible so the
+   FX knob's piano-cascade canvas (which intentionally overflows the
+   56px circle) doesn't get masked. */
 .app-dock > :not(.panel-tog) {
   flex-shrink: 0;
-  overflow: hidden;
   transform-origin: center;
   transition: width     0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
               max-width 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
               opacity   0.18s ease,
               transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+/* Only clip the AI bar (its glass intentionally has overflow:hidden
+   for the morph). FX knob and timeline trigger keep visible overflow
+   for their decoration. */
+.app-dock > .ai-bar { overflow: hidden; }
 .app-dock--collapsed { gap: 0; }
 .app-dock--collapsed > :not(.panel-tog) {
   width: 0;
