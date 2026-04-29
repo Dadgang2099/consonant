@@ -1366,6 +1366,25 @@ body {
 
 /* resize handles are invisible hit-areas */
 
+/* ── Corner hatches — bottom-left + bottom-right only ──────────── */
+.pw-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  z-index: 50;
+}
+.pw-corner--bl {
+  bottom: 6px; left: 6px;
+  border-bottom: 1px solid rgba(210,212,218,0.30);
+  border-left:   1px solid rgba(210,212,218,0.30);
+}
+.pw-corner--br {
+  bottom: 6px; right: 6px;
+  border-bottom: 1px solid rgba(210,212,218,0.30);
+  border-right:  1px solid rgba(210,212,218,0.30);
+}
+
 /* ── Header right cluster — badge + rec + close stay together ── */
 .pw-panel__hdr-right {
   display: flex;

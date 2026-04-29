@@ -2052,11 +2052,23 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         const startH   = panel.offsetHeight;
         const hdrH     = panel.querySelector('.pw-panel__hdr')?.offsetHeight ?? 46;
 
+        // Measure the panel's natural content height with all clamps lifted,
+        // then restore. This becomes the upper bound during drag so the user
+        // can't grow the panel past what its content actually needs.
+        const prevPanelH  = panel.style.height;
+        const prevBodyMax = scrollBody ? scrollBody.style.maxHeight : null;
+        panel.style.height = 'auto';
+        if (scrollBody) scrollBody.style.maxHeight = 'none';
+        const naturalH = panel.offsetHeight;
+        panel.style.height = prevPanelH;
+        if (scrollBody) scrollBody.style.maxHeight = prevBodyMax;
+
         function onMove(ev) {
           const dx = ev.clientX - startX;
           const dy = ev.clientY - startY;
           const newW = Math.max(220, Math.min(600, side === 'left' ? startW - dx : startW + dx));
-          const newH = Math.max(120, Math.min(window.innerHeight - 80, startH + dy));
+          const maxH = Math.min(window.innerHeight - 80, naturalH);
+          const newH = Math.max(120, Math.min(maxH, startH + dy));
           panel.style.width  = `${newW}px`;
           panel.style.height = `${newH}px`;
           if (scrollBody) scrollBody.style.maxHeight = `${Math.max(60, newH - hdrH - 8)}px`;
@@ -3637,12 +3649,19 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   }
 
   function buildCornerHatches() {
-    // Corner hatches removed — strip any that exist on panels in case stale
-    // markup got persisted into the DOM from earlier sessions.
+    // Single hatch in each lower corner (no top hatches, no doubling).
     for (const panelId of Object.keys(PANEL_COLORS)) {
       const panel = document.getElementById(panelId);
       if (!panel) continue;
-      panel.querySelectorAll('.pw-corner').forEach(el => el.remove());
+      // Strip any stale top corners from prior sessions
+      panel.querySelectorAll('.pw-corner--tl, .pw-corner--tr').forEach(el => el.remove());
+      ['bl','br'].forEach(pos => {
+        if (panel.querySelector(`.pw-corner--${pos}`)) return;
+        const c = document.createElement('span');
+        c.className = `pw-corner pw-corner--${pos}`;
+        c.setAttribute('aria-hidden', 'true');
+        panel.appendChild(c);
+      });
     }
   }
 
