@@ -2867,7 +2867,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   let applying   = false; // re-entry guard — prevents seqSpeed dispatch loop
   let kfEnabled  = true;  // global KF playback toggle — false = bypass all KFs
 
-  const KF_BLOCKLIST = new Set(['scaleInput', 'yRefInput', 'xOffInput']);
+  const KF_BLOCKLIST = new Set();
   let overlayEl  = null;
   let animBtn    = null;
   let edgeRaf    = null;  // edge auto-scroll rAF handle (read on KF drop)
