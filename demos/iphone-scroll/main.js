@@ -4028,6 +4028,15 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   updatePlayhead();
 
   // ── Render the tree (left) and lanes (right) from kfStore ───
+  function getAssetName(pid) {
+    const inp = document.querySelector(`.pw-asset-name__input[data-asset-for="${pid}"]`);
+    const v = inp?.value?.trim();
+    if (v) return v;
+    // Fallback: panel title
+    const pe = document.getElementById(pid);
+    return pe?.querySelector('.pw-panel__title')?.textContent?.trim() || pid;
+  }
+
   function gatherTracks() {
     const store = window.__getKFs ? window.__getKFs() : {};
     const panelIds = Object.keys(ASSET_COLORS);
@@ -4036,7 +4045,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     panelIds.forEach(pid => {
       const pe = document.getElementById(pid);
       if (!pe) return;
-      const title = pe.querySelector('.pw-panel__title')?.textContent?.trim() || pid;
+      const title = getAssetName(pid);
       const props = [];
       pe.querySelectorAll('[id]').forEach(input => {
         const kfs = store[input.id];
@@ -4145,6 +4154,38 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       }
     });
   }
+
+  // ── Asset name field: persist + sync timeline on edit ───
+  const ASSET_NAMES_KEY = 'pw_asset_names';
+  function loadAssetNames() {
+    try {
+      const raw = localStorage.getItem(ASSET_NAMES_KEY);
+      if (!raw) return;
+      const map = JSON.parse(raw);
+      Object.entries(map).forEach(([pid, name]) => {
+        const inp = document.querySelector(`.pw-asset-name__input[data-asset-for="${pid}"]`);
+        if (inp && typeof name === 'string') inp.value = name;
+      });
+    } catch (_) {}
+  }
+  function saveAssetNames() {
+    try {
+      const map = {};
+      document.querySelectorAll('.pw-asset-name__input[data-asset-for]').forEach(inp => {
+        map[inp.dataset.assetFor] = inp.value;
+      });
+      localStorage.setItem(ASSET_NAMES_KEY, JSON.stringify(map));
+    } catch (_) {}
+  }
+  document.querySelectorAll('.pw-asset-name__input[data-asset-for]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      saveAssetNames();
+      renderTimeline();
+    });
+    // Block global capture handler from treating asset-name edits as KF input
+    inp.addEventListener('change', e => e.stopPropagation(), true);
+  });
+  loadAssetNames();
 
   // Initial render + subscribe to KF changes from any surface
   renderTimeline();

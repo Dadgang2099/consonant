@@ -1305,6 +1305,50 @@ body {
 /* ═══════════════════════════════════════════════════════════
    AI CALLOUT — bare hung-quote typographic treatment
    ═══════════════════════════════════════════════════════════ */
+/* ── Asset name field — replaces the old AI callout ─────────
+   Editable name that surfaces in the timeline as the asset label. */
+.pw-asset-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 12px 14px;
+  margin: 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+}
+.pw-asset-name__key {
+  font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.32);
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.pw-asset-name__input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 5px;
+  color: rgba(255,255,255,0.88);
+  font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 4px 8px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pw-asset-name__input:hover {
+  border-color: rgba(255,255,255,0.18);
+}
+.pw-asset-name__input:focus {
+  border-color: rgba(56,210,255,0.40);
+  background: rgba(255,255,255,0.06);
+  color: #ffffff;
+}
+
 .pw-ai-callout {
   padding: 10px 0 13px 0;
   margin: 0;
