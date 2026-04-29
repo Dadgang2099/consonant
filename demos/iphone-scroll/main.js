@@ -3154,49 +3154,64 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       overlayEl.appendChild(clearBtn);
     }
 
-    // ── Per-panel colored track columns ──────────────────
-    panelIds.forEach((panelId, idx) => {
-      const color   = PANEL_COLORS[panelId];
+    // ── Per-input colored track columns ─────────────────
+    // Each metric (slider/select/etc.) gets its own vertical column,
+    // colored by its parent panel. Hover a dot to see "PANEL – METRIC".
+    const tracks = [];
+    panelIds.forEach(panelId => {
       const panelEl = document.getElementById(panelId);
       if (!panelEl) return;
-
-      // Collect all KF scrollY values for this panel's inputs
-      const positions = [];
-      Object.entries(kfStore).forEach(([inputId, kfs]) => {
+      const panelTitle = panelEl.querySelector('.pw-panel__title')?.textContent?.trim() || panelId;
+      // Walk DOM order so columns sit in the order users see metrics in the panel
+      panelEl.querySelectorAll('[id]').forEach(input => {
+        const inputId = input.id;
         if (KF_BLOCKLIST.has(inputId)) return;
-        if (!panelEl.querySelector(`#${inputId}`)) return;
-        kfs.forEach(kf => positions.push(kf.scrollY));
+        const kfs = kfStore[inputId];
+        if (!kfs || !kfs.length) return;
+        const row = input.closest('.pw-row');
+        const label = row?.querySelector('.pw-key')?.textContent?.trim() || inputId;
+        tracks.push({
+          inputId, panelId, panelTitle, label,
+          color: PANEL_COLORS[panelId] || '#ffffff',
+          sorted: [...new Set(kfs.map(k => k.scrollY))].sort((a, b) => a - b),
+        });
       });
-      if (!positions.length) return;
+    });
 
-      const sorted = [...new Set(positions)].sort((a, b) => a - b);
+    // Layout columns side-by-side; expand overlay if many metrics keyframed
+    const COL_W = 10;
+    const PAD_R = 6;
+    const overlayWidth = Math.max(OVERLAY_W, tracks.length * COL_W + PAD_R * 2);
+    overlayEl.style.width = `${overlayWidth}px`;
 
+    tracks.forEach((T, idx) => {
+      const colCenter = Math.round(overlayWidth - PAD_R - (tracks.length - idx - 0.5) * COL_W);
       const col = document.createElement('div');
       col.className = 'drv-overlay__col';
-      col.style.setProperty('--track-color', color);
-      const colCenter = Math.round((idx + 0.5) * (OVERLAY_W / panelIds.length));
+      col.style.setProperty('--track-color', T.color);
       col.style.left = `${colCenter - 1}px`;
       overlayEl.appendChild(col);
 
-      // Dim full-height track — always visible when panel has any KFs
+      // Dim full-height track — always visible when this metric has any KFs
       const track = document.createElement('div');
       track.className = 'drv-overlay__track';
       col.appendChild(track);
 
-      // Segment lines between every consecutive pair of KFs
-      for (let i = 0; i < sorted.length - 1; i++) {
+      // Segment lines between every consecutive pair of KFs (this metric only)
+      for (let i = 0; i < T.sorted.length - 1; i++) {
         const line = document.createElement('div');
         line.className = 'drv-overlay__line';
-        const topPct = (sorted[i]     / scrollMax) * 100;
-        const botPct = (sorted[i + 1] / scrollMax) * 100;
+        const topPct = (T.sorted[i]     / scrollMax) * 100;
+        const botPct = (T.sorted[i + 1] / scrollMax) * 100;
         line.style.top    = `${topPct}%`;
         line.style.height = `${Math.max(0.5, botPct - topPct)}%`;
-        line.dataset.kfLinePan = panelId;
+        line.dataset.kfLinePan = T.panelId;
         col.appendChild(line);
       }
 
+      const panelId = T.panelId;
       // Dot at each KF scroll position — click to scroll/delete, shift-click to multi-select, drag to move
-      sorted.forEach(sy => {
+      T.sorted.forEach(sy => {
         const key = `${panelId}:${sy}`;
         const isNew = Math.abs(sy - _lastCapturedSY) <= KF_SNAP_RADIUS;
         const isSel = kfSel.has(key);
@@ -3205,11 +3220,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           + (isNew ? ' drv-overlay__dot--new' : '')
           + (isSel ? ' drv-overlay__dot--selected' : '');
         dot.style.top = `${(sy / scrollMax) * 100}%`;
-        dot.title = `KF @ ${Math.round(sy)}px — drag to move, shift-click to multi-select`;
+        dot.title = `${T.panelTitle} – ${T.label}  ·  KF @ ${Math.round(sy)}px`;
         dot.style.pointerEvents = 'auto';
-        dot.dataset.kfPan = panelId;
-        dot.dataset.kfSy  = String(sy);
-        dot.dataset.kfColX = String(colCenter);
+        dot.dataset.kfPan   = panelId;
+        dot.dataset.kfInput = T.inputId;
+        dot.dataset.kfSy    = String(sy);
+        dot.dataset.kfColX  = String(colCenter);
 
         let didDrag = false;
 
@@ -3252,8 +3268,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           function updateKFVisuals(currentSY) {
             const deltaSY = Math.round(currentSY - startScrollY);
             selSnap.forEach(({ panelId: pid, sy: sSY }) => {
-              const el = overlayEl.querySelector(`[data-kf-pan="${pid}"][data-kf-sy="${sSY}"]`);
-              if (el) el.style.top = `${Math.max(0, Math.min(100, ((sSY + deltaSY) / scrollMax) * 100))}%`;
+              // querySelectorAll: one dot per metric column at this scrollY
+              const els = overlayEl.querySelectorAll(`[data-kf-pan="${pid}"][data-kf-sy="${sSY}"]`);
+              els.forEach(el => {
+                el.style.top = `${Math.max(0, Math.min(100, ((sSY + deltaSY) / scrollMax) * 100))}%`;
+              });
             });
             if (dragState) dragState.deltaSY = deltaSY;
 
@@ -3309,12 +3328,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             overlayEl.classList.remove('drv-overlay--dragging');
 
             if (!didDrag) {
+              // Click-only: jump to the KF's scroll position. Never delete on click;
+              // the per-row ✕ button in the panel is the only delete path.
               kfSel.clear();
-              if (Math.abs(window.scrollY - oldSY) <= KF_SNAP_RADIUS) {
-                deleteKFsAtScroll(panelId, oldSY);
-              } else {
-                window.scrollTo({ top: oldSY, behavior: 'smooth' });
-              }
+              window.scrollTo({ top: oldSY, behavior: 'smooth' });
               return;
             }
 
@@ -3634,8 +3651,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
       if (animMode) {
         captureAllPanelKFs(panelId);
-      } else if (kfStore[inp.id] && kfStore[inp.id].length >= 1) {
-        // Auto-KF: input already has keyframes — capture this one input
+      } else {
+        // Auto-KF: every value change captures a keyframe at the current
+        // scroll position. The first change creates the first KF; subsequent
+        // changes either update the existing KF here or add a new one.
         const val = inp.type === 'range' ? parseFloat(inp.value) : inp.value;
         captureInputKF(inp.id, Math.round(window.scrollY), val);
       }
