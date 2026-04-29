@@ -2678,7 +2678,9 @@ body {
   padding: 6px;
   border-radius: 999px;
   z-index: 9997;
-  transition: bottom 0.30s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Snap-spring: positive overshoot on close, settles back on expand */
+  transition: bottom 0.30s cubic-bezier(0.4, 0, 0.2, 1),
+              gap    0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 /* Subtle outer glass — only visible as a hint behind the four circles */
 .app-dock::before {
@@ -2700,12 +2702,30 @@ body {
   bottom: calc(var(--tl-h, 260px) + 16px);
 }
 
-/* Collapsed: only the Eye (first child = .panel-tog) stays.
-   The remaining circles are removed from layout so the pill
-   auto-shrinks and recenters around the lone eye. */
-.app-dock--collapsed > :not(.panel-tog) {
-  display: none;
+/* Snap collapse: non-eye children animate to width 0 with a spring
+   easing while fading + scaling. The pill auto-shrinks around the
+   lone eye and stays centered. */
+.app-dock > :not(.panel-tog) {
+  flex-shrink: 0;
+  overflow: hidden;
+  transform-origin: center;
+  transition: width     0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+              max-width 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity   0.18s ease,
+              transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+.app-dock--collapsed { gap: 0; }
+.app-dock--collapsed > :not(.panel-tog) {
+  width: 0;
+  max-width: 0;
+  opacity: 0;
+  transform: scale(0.4);
+  pointer-events: none;
+}
+/* AI bar's collapsed circle is 56x56; lock its base width so the
+   transition has something to interpolate from. */
+.app-dock > .ai-bar { width: 56px; }
+.app-dock--collapsed > .ai-bar { width: 0; }
 
 /* ── Shared glass-circle base — panel-tog + fx-knob ──── */
 .panel-tog,
@@ -2794,6 +2814,10 @@ body {
   box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.10), 0 1px 4px rgba(0,0,0,0.3);
   pointer-events: none;
   z-index: 0;
+  /* Center the sparkle SVG inside the plate */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fx-knob__canvas {
