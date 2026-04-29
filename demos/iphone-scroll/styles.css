@@ -3071,7 +3071,9 @@ body {
 .drv-overlay {
   position: fixed;
   top: 0;
-  right: 0;
+  /* Inset from right edge so KF dots clear the browser scrollbar
+     (~15-17px on Mac, up to 20px on Windows) and are clickable. */
+  right: 20px;
   width: 48px;
   height: 100vh;
   z-index: 10002;
