@@ -433,6 +433,12 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     const y      = window.scrollY;
     const p2     = Math.min(Math.max((y - ph1End) / ph2, 0), 1);
 
+    // Once phone has fully exited (end of phase 2) and the user has scrolled
+    // 10% of a viewport further, the panels' subjects are gone — fade everything.
+    const exitWindow = window.innerHeight * 0.10;
+    const exitT      = sStep(c01((y - (ph1End + ph2)) / exitWindow));
+    const stay       = 1 - exitT; // multiplier applied to every panel's opacity
+
     // t1: seq ↔ tweak — 220px window centered just past ph1End
     const t1 = sStep(c01((y - (ph1End - 50)) / 220));
     // t2: content rises in shortly after tweak settles, sits BELOW tweak
@@ -441,29 +447,29 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
     // ── seq: exits backward in Z as t1 → 1 ───────────────
     setPanel3D(seqPanel,
-      1 - t1,          // opacity out
+      (1 - t1) * stay,
       0,               // no Y shift on exit
       -t1 * 55,        // push back in Z
       1 - t1 * 0.06,   // shrink slightly
-      t1 * 12          // blur out
+      t1 * 12 + exitT * 8
     );
 
     // ── tweak: rises in on t1→1 and stays put once visible ───
     setPanel3D(tweakPanel,
-      t1,                                  // opacity in
+      t1 * stay,
       (1 - t1) * 24,                        // rise up from below on entry
       0,                                   // no Z retreat — tweak stays
       0.94 + t1 * 0.06,
-      (1 - t1) * 12                        // sharpen in
+      (1 - t1) * 12 + exitT * 8
     );
 
     // ── content: rises in shortly after tweak, sits beneath it ─
     setPanel3D(contentPanel,
-      t2,                    // opacity in
+      t2 * stay,
       (1 - t2) * 24,         // rise up from below
       0,                     // no Z retreat on entry
       0.94 + t2 * 0.06,      // grow in
-      (1 - t2) * 12          // sharpen in
+      (1 - t2) * 12 + exitT * 8
     );
 
     // ── shadow panel: left side, opacity + slide ──────────
@@ -474,6 +480,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       if (y >= ph1End) {
         if (p2 < 0.10) opa = p2 / 0.10;
         else            opa = Math.max(0, 1 - shadowExit);
+        opa *= stay; // also fade with the global phone-gone exit
         opa = Math.max(0, Math.min(1, opa));
       }
       shadowPanel.style.opacity       = opa;
