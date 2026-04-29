@@ -3752,6 +3752,28 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   }
 
   // ── Globals for cross-IIFE KF persistence ────────────
+  // Direct mutators for the bottom timeline (and any other surface) to write
+  // into the same store the panels read from. Each one re-renders / persists.
+  window.__captureKF = (inputId, sy, val) => {
+    if (!inputId || KF_BLOCKLIST.has(inputId)) return;
+    captureInputKF(inputId, sy, val);
+  };
+  window.__captureAllPanel = (panelId) => {
+    if (!panelId) return;
+    captureAllPanelKFs(panelId);
+  };
+  window.__deleteKFAt = (inputId, sy) => {
+    if (!inputId) return;
+    const kfs = kfStore[inputId];
+    if (!kfs) return;
+    kfStore[inputId] = kfs.filter(k => Math.abs(k.scrollY - sy) > KF_SNAP_RADIUS);
+    if (!kfStore[inputId].length) delete kfStore[inputId];
+    save();
+    updateBadges();
+    refreshSnapButtons();
+    buildOverlayLines();
+    applyAllKFs(window.scrollY);
+  };
   window.__getKFs   = () => JSON.parse(JSON.stringify(kfStore));
   window.__applyKFs = kfs => {
     if (!kfs || typeof kfs !== 'object') return;
@@ -3991,6 +4013,92 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   // Track which asset rows are currently expanded (persists across rebuilds)
   const expanded = new Set();
 
+  function formatVal(v) {
+    if (v === '' || v == null) return '';
+    const n = parseFloat(v);
+    if (Number.isNaN(n)) return String(v);
+    // Trim trailing zeros for cleaner display
+    return Math.abs(n) >= 100 ? n.toFixed(0)
+         : Math.abs(n) >= 10  ? n.toFixed(1)
+         :                       n.toFixed(2);
+  }
+
+  // Wire a timeline value field to its underlying real input.
+  // - Typing + Enter / blur: parse, set real input, dispatch change → auto-KF
+  // - Click + horizontal drag: scrubby number editing, live-preview via 'input',
+  //   final 'change' on release captures one keyframe
+  function wireValueEditor(valEl, realInput, isRange) {
+    let dragging = false, startX = 0, startVal = 0, scrubbed = false;
+    const min  = isRange ? parseFloat(realInput.min)  : -Infinity;
+    const max  = isRange ? parseFloat(realInput.max)  :  Infinity;
+    const step = isRange ? (parseFloat(realInput.step) || 1) : 0.5;
+
+    valEl.addEventListener('mousedown', e => {
+      // Cmd/ctrl-click bypasses scrub for normal text edit
+      if (e.metaKey || e.ctrlKey) return;
+      dragging = true;
+      scrubbed = false;
+      startX = e.clientX;
+      startVal = parseFloat(realInput.value) || 0;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (!scrubbed && Math.abs(dx) < 3) return;
+      scrubbed = true;
+      // Pixel-per-step scaling: 1px ≈ 1 step at default; shift = 10x
+      const factor = e.shiftKey ? 10 : 1;
+      let next = startVal + dx * step * factor;
+      if (Number.isFinite(min)) next = Math.max(min, next);
+      if (Number.isFinite(max)) next = Math.min(max, next);
+      realInput.value = next;
+      valEl.value = formatVal(next);
+      // Live preview only — no KF capture yet (auto-capture is on 'change')
+      realInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      if (scrubbed) {
+        // Final value lands a KF via the existing change-listener pipeline
+        realInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // Typed entry — Enter or blur commits
+    valEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); valEl.blur(); }
+      if (e.key === 'Escape') { valEl.value = formatVal(realInput.value); valEl.blur(); }
+    });
+    valEl.addEventListener('change', e => {
+      e.stopPropagation(); // don't let auto-capture treat this as a real-input change
+      const parsed = parseFloat(valEl.value);
+      if (Number.isNaN(parsed)) {
+        valEl.value = formatVal(realInput.value);
+        return;
+      }
+      let next = parsed;
+      if (Number.isFinite(min)) next = Math.max(min, next);
+      if (Number.isFinite(max)) next = Math.min(max, next);
+      realInput.value = next;
+      valEl.value = formatVal(next);
+      realInput.dispatchEvent(new Event('input',  { bubbles: true }));
+      realInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  // Keep timeline value fields in sync as the real inputs animate via scroll.
+  // Listen on capture phase so we see programmatic dispatches from applyAllKFs.
+  document.addEventListener('input', e => {
+    const id = e.target?.id;
+    if (!id) return;
+    document.querySelectorAll(`.tl-prop__val[data-for="${id}"]`).forEach(f => {
+      if (f === document.activeElement) return; // don't yank what user is typing
+      f.value = formatVal(e.target.value);
+    });
+  }, true);
+
   // ── Open / close ─────────────────────────────────────────
   let open = false;
   function setOpen(next) {
@@ -4004,6 +4112,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     if (e.target.closest('.tl-tog__eye')) return;
     setOpen(!open);
   });
+
+  // Header close button → collapse timeline
+  document.getElementById('tlClose')?.addEventListener('click', () => setOpen(false));
 
   // ── Inner eye: toggle right-edge KF overlay visibility ───
   let buildKFsVisible = true;
@@ -4089,12 +4200,18 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           <span class="tl-asset__swatch"></span>
           <span class="tl-asset__label">${A.title}</span>
           <span class="tl-asset__count">${totalKFs}</span>
+          <button class="tl-row-add" title="Capture every metric in this asset at the current scroll" aria-label="Add master keyframe">+</button>
         </div>
       `;
-      aRow.querySelector('.tl-asset__hdr').addEventListener('click', () => {
+      aRow.querySelector('.tl-asset__hdr').addEventListener('click', e => {
+        if (e.target.closest('.tl-row-add')) return; // + has its own handler
         if (expanded.has(A.panelId)) expanded.delete(A.panelId);
         else expanded.add(A.panelId);
         renderTimeline();
+      });
+      aRow.querySelector('.tl-row-add').addEventListener('click', e => {
+        e.stopPropagation();
+        window.__captureAllPanel?.(A.panelId);
       });
       tree.appendChild(aRow);
 
@@ -4127,15 +4244,36 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       // Property sub-rows (only when asset is expanded)
       if (isOpen) {
         A.props.forEach(P => {
+          const realInput = document.getElementById(P.inputId);
+          const isRange = realInput?.type === 'range';
+          const liveVal = realInput?.value ?? '';
+
           const pRow = document.createElement('div');
           pRow.className = 'tl-prop';
           pRow.dataset.assetId = A.panelId;
+          pRow.dataset.inputId = P.inputId;
           pRow.style.display = 'flex';
           pRow.innerHTML = `
             <span class="tl-prop__label">${P.label}</span>
-            <span class="tl-prop__count">${P.kfs.length}</span>
+            <input class="tl-prop__val" type="text" inputmode="decimal"
+                   data-for="${P.inputId}"
+                   value="${formatVal(liveVal)}"
+                   spellcheck="false" autocomplete="off">
+            <button class="tl-row-add" data-add-for="${P.inputId}"
+                    title="Add keyframe at current scroll" aria-label="Add keyframe">+</button>
           `;
           tree.appendChild(pRow);
+
+          // Wire value editor — typed input + scrub-drag to change
+          const valEl = pRow.querySelector('.tl-prop__val');
+          if (valEl && realInput) wireValueEditor(valEl, realInput, isRange);
+          // + button — capture KF for this metric at current scroll
+          pRow.querySelector('.tl-row-add').addEventListener('click', e => {
+            e.stopPropagation();
+            const sy = Math.round(window.scrollY);
+            const v = isRange ? parseFloat(realInput.value) : realInput.value;
+            window.__captureKF?.(P.inputId, sy, v);
+          });
 
           const pLane = document.createElement('div');
           pLane.className = 'tl-lane tl-lane--prop';
@@ -4146,7 +4284,21 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             dot.className = 'tl-dot';
             dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
             dot.title = `${A.title} – ${P.label}  ·  KF @ ${Math.round(k.scrollY)}px`;
-            dot.addEventListener('click', () => window.scrollTo({ top: k.scrollY, behavior: 'smooth' }));
+            // Hover ✕ for delete
+            const x = document.createElement('span');
+            x.className = 'tl-dot__x';
+            x.textContent = '✕';
+            x.title = 'Delete keyframe';
+            x.addEventListener('mousedown', e => e.stopPropagation()); // don't start scrub
+            x.addEventListener('click', e => {
+              e.stopPropagation();
+              window.__deleteKFAt?.(P.inputId, k.scrollY);
+            });
+            dot.appendChild(x);
+            dot.addEventListener('click', e => {
+              if (e.target === x) return;
+              window.scrollTo({ top: k.scrollY, behavior: 'smooth' });
+            });
             pLane.appendChild(dot);
           });
           lanes.appendChild(pLane);
