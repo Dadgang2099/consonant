@@ -2981,7 +2981,9 @@ body.tl-build-hidden .drv-overlay { opacity: 0; pointer-events: none; }
   position: relative;
   background: var(--tl-bg-alt);
   overflow: hidden;
+  cursor: ew-resize;
 }
+.tl-tracks--scrubbing { cursor: grabbing; }
 
 .tl-ruler {
   position: relative;

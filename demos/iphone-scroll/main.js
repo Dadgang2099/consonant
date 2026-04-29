@@ -4192,6 +4192,54 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   document.addEventListener('pw-kfs-changed', renderTimeline);
   window.addEventListener('resize', renderTimeline);
 
+  // ── Scrub: click + drag horizontally on the tracks area ───
+  // X position across the tracks pane maps linearly to window scrollY.
+  const tracksEl = document.getElementById('tlTracks');
+  if (tracksEl) {
+    let scrubbing = false;
+
+    function setScrollFromX(clientX) {
+      const rect = tracksEl.getBoundingClientRect();
+      const relX = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const max  = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      window.scrollTo({ top: relX * max, behavior: 'instant' });
+    }
+
+    tracksEl.addEventListener('mousedown', e => {
+      // Don't hijack clicks on dots — those have their own scroll-to handlers
+      if (e.target.classList.contains('tl-dot')) return;
+      e.preventDefault();
+      scrubbing = true;
+      tracksEl.classList.add('tl-tracks--scrubbing');
+      setScrollFromX(e.clientX);
+    });
+    window.addEventListener('mousemove', e => {
+      if (!scrubbing) return;
+      setScrollFromX(e.clientX);
+    });
+    window.addEventListener('mouseup', () => {
+      if (!scrubbing) return;
+      scrubbing = false;
+      tracksEl.classList.remove('tl-tracks--scrubbing');
+    });
+
+    // ── Hover + wheel on tracks: horizontal wheel pans page scroll
+    // Trackpad horizontal swipe or shift-scroll lands here as deltaX;
+    // a regular vertical wheel still works (deltaY → page scroll).
+    // Either way, prevent default so the body doesn't double-scroll.
+    tracksEl.addEventListener('wheel', e => {
+      const dx = e.deltaX;
+      const dy = e.deltaY;
+      // If mostly horizontal intent, route to page scroll (one-axis: vertical
+      // page scroll is the only "scrub" direction). Otherwise let the native
+      // vertical wheel through.
+      if (Math.abs(dx) > Math.abs(dy)) {
+        e.preventDefault();
+        window.scrollBy({ top: dx, behavior: 'instant' });
+      }
+    }, { passive: false });
+  }
+
   // ── Resize panel via top handle ──────────────────────────
   let resizing = false, startY = 0, startH = 0;
   handle?.addEventListener('mousedown', e => {
