@@ -3339,19 +3339,27 @@ body {
   border-color: rgba(0,0,0,0.65);
   z-index: 6;
 }
+/* Selected-state ✕ — small badge at the dot's top-right so the dot
+   body stays draggable. Click ✕ → delete. Click anywhere else on the
+   dot → drag to move. */
 .tl-dot__x {
   position: absolute;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
+  top: -10px;
+  right: -10px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255,80,80,0.95);
   color: #fff;
   font-size: 8px;
   font-weight: 800;
-  line-height: 1;
+  line-height: 14px;
+  text-align: center;
+  display: none;
   pointer-events: auto;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
-.tl-dot--selected .tl-dot__x { display: flex; }
+.tl-dot--selected .tl-dot__x { display: block; }
 
 /* Per-row + button (timeline tree side) */
 .tl-row-add {
@@ -3879,20 +3887,26 @@ body {
     0 0 16px rgba(255,80,80,0.55),
     0 0 4px rgba(0,0,0,0.5);
 }
+/* Same pattern on the build column: small ✕ badge top-right of the
+   selected dot. Body of the dot keeps drag-to-move behavior. */
 .drv-overlay__dot__x {
   position: absolute;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
+  top: -10px;
+  right: -10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,80,80,0.98);
   color: #fff;
-  font-size: 6.5px;
+  font-size: 7px;
   font-weight: 800;
-  line-height: 1;
+  line-height: 12px;
+  text-align: center;
+  display: none;
   pointer-events: auto;
-  transform-origin: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
-.drv-overlay__dot--kf-selected .drv-overlay__dot__x { display: flex; }
+.drv-overlay__dot--kf-selected .drv-overlay__dot__x { display: block; }
 .drv-overlay__dot--dragging {
   transform: translate(-50%, -50%) scale(2);
   box-shadow:
