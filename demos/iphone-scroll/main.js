@@ -3295,6 +3295,21 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
         dot.dataset.kfSy    = String(sy);
         dot.dataset.kfColX  = String(colCenter);
 
+        // Hover-✕ delete affordance — same pattern as the bottom timeline.
+        // Click the ✕ → remove just this metric's KF at this scrollY.
+        const xBtn = document.createElement('span');
+        xBtn.className = 'drv-overlay__dot__x';
+        xBtn.textContent = '✕';
+        xBtn.title = 'Delete keyframe';
+        xBtn.addEventListener('mousedown', e => e.stopPropagation());  // don't start drag
+        xBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          const inputId = dot.dataset.kfInput;
+          const ksy     = parseInt(dot.dataset.kfSy, 10);
+          if (inputId) window.__deleteKFAt?.(inputId, ksy);
+        });
+        dot.appendChild(xBtn);
+
         let didDrag = false;
 
         dot.addEventListener('mousedown', e => {
@@ -4159,7 +4174,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   function updatePlayhead() {
     const tracksEl = document.getElementById('tlTracks');
     if (!tracksEl) return;
-    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const max = Math.max(1, document.body.scrollHeight - window.innerHeight);
     const frac = Math.max(0, Math.min(1, window.scrollY / max));
     const w = tracksEl.clientWidth;
     playhead.style.transform = `translateX(${frac * w}px)`;
@@ -4228,7 +4243,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     }
     delete tree.dataset.empty;
 
-    const scrollMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
 
     assets.forEach(A => {
       const isOpen = expanded.has(A.panelId);
@@ -4421,7 +4436,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     function setScrollFromX(clientX) {
       const rect = tracksEl.getBoundingClientRect();
       const relX = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      const max  = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const max  = Math.max(1, document.body.scrollHeight - window.innerHeight);
       window.scrollTo({ top: relX * max, behavior: 'instant' });
     }
 

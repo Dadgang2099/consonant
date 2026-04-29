@@ -3847,11 +3847,27 @@ body {
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .drv-overlay__dot:hover {
-  transform: translate(-50%, -50%) scale(1.6);
+  /* Grow + turn red so the ✕ is legible inside the dot */
+  transform: translate(-50%, -50%) scale(1.8);
+  background: rgba(255,80,80,0.95);
   box-shadow:
-    0 0 16px var(--track-color, rgba(255,255,255,0.8)),
+    0 0 16px rgba(255,80,80,0.55),
     0 0 4px rgba(0,0,0,0.5);
 }
+.drv-overlay__dot__x {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 6.5px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: auto;
+  transform-origin: center;
+}
+.drv-overlay__dot:hover .drv-overlay__dot__x { display: flex; }
 .drv-overlay__dot--dragging {
   transform: translate(-50%, -50%) scale(2);
   box-shadow:
