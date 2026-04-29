@@ -2756,10 +2756,14 @@ body {
               opacity   0.18s ease,
               transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-/* Only clip the AI bar (its glass intentionally has overflow:hidden
-   for the morph). FX knob and timeline trigger keep visible overflow
-   for their decoration. */
-.app-dock > .ai-bar { overflow: hidden; }
+/* AI bar wrapper stays overflow:visible so its sparkle canvas can
+   extend past the 56px circle. The .ai-bar__glass keeps its own
+   overflow:hidden internally for the morph icon mask. */
+.app-dock > .ai-bar { overflow: visible; }
+.ai-bar__canvas {
+  overflow: visible;
+  pointer-events: none;
+}
 .app-dock--collapsed { gap: 0; }
 .app-dock--collapsed > :not(.panel-tog) {
   width: 0;
