@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iPhone 11 Pro Scroll Hero — User Guide</title>
+<style>
+/* ─── Reset & base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cyan:   #38d2ff;
+  --orange: #ff9f40;
+  --green:  #c4ff60;
+  --pink:   #ff5eb0;
+  --bg:     #07080d;
+  --bg2:    #0c0e18;
+  --line:   rgba(255,255,255,0.08);
+  --t1:     rgba(255,255,255,0.92);
+  --t2:     rgba(255,255,255,0.55);
+  --t3:     rgba(255,255,255,0.28);
+  --r: cubic-bezier(0.23,1,0.32,1);
+}
+html { scroll-snap-type: y mandatory; overflow-y: scroll; scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  font-family: -apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--t1);
+}
+
+/* ─── Slide shell ──────────────────────────────────────────── */
+.slide {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 60px 80px;
+}
+.slide + .slide { border-top: 0.5px solid var(--line); }
+
+/* ─── Nav dots ─────────────────────────────────────────────── */
+.nav {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nav__dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  border: none;
+}
+.nav__dot--active { background: var(--cyan); transform: scale(1.5); }
+
+/* ─── Typography ───────────────────────────────────────────── */
+.eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.22em;
+  color: var(--cyan); text-transform: uppercase; margin-bottom: 16px;
+  display: block;
+}
+h1 { font-size: clamp(48px, 6vw, 88px); font-weight: 700; line-height: 0.95; letter-spacing: -0.03em; }
+h2 { font-size: clamp(32px, 4vw, 56px); font-weight: 700; line-height: 1.0; letter-spacing: -0.02em; }
+h3 { font-size: 22px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+.body { font-size: 17px; line-height: 1.65; color: var(--t2); max-width: 480px; }
+.body strong { color: var(--t1); font-weight: 600; }
+.label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--t3);
+}
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(56,210,255,0.12); border: 0.5px solid rgba(56,210,255,0.30);
+  font-size: 12px; font-weight: 700; color: var(--cyan); flex-shrink: 0;
+}
+
+/* ─── Grid helpers ─────────────────────────────────────────── */
+.cols { display: grid; gap: 80px; width: 100%; max-width: 1200px; }
+.cols--2 { grid-template-columns: 1fr 1fr; align-items: center; }
+.cols--3 { grid-template-columns: 1fr 1fr 1fr; align-items: start; }
+.col-copy { display: flex; flex-direction: column; gap: 20px; }
+
+/* ─── Callout annotation ───────────────────────────────────── */
+.callout {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px; border-radius: 10px;
+  background: rgba(255,255,255,0.03); border: 0.5px solid var(--line);
+}
+.callout__dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.callout__text { font-size: 14px; line-height: 1.55; color: var(--t2); }
+.callout__text strong { color: var(--t1); }
+
+/* ─── Tag / pill ───────────────────────────────────────────── */
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 100px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  border: 0.5px solid; text-transform: uppercase;
+}
+.tag--cyan  { color: var(--cyan);   border-color: rgba(56,210,255,0.35);  background: rgba(56,210,255,0.07); }
+.tag--pink  { color: var(--pink);   border-color: rgba(255,94,176,0.35);  background: rgba(255,94,176,0.07); }
+.tag--green { color: var(--green);  border-color: rgba(196,255,96,0.35);  background: rgba(196,255,96,0.07); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ILLUSTRATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── iPhone outline ───────────────────────────────────────── */
+.iphone {
+  position: relative;
+  width: 160px; height: 320px;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  border-radius: 28px;
+  background: rgba(255,255,255,0.03);
+  flex-shrink: 0;
+}
+.iphone::before {
+  content: '';
+  position: absolute; top: 14px; left: 50%;
+  transform: translateX(-50%);
+  width: 40px; height: 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.12);
+}
+.iphone__screen {
+  position: absolute; inset: 14px 6px 10px;
+  border-radius: 22px; overflow: hidden;
+  background: var(--bg2);
+}
+.iphone__video-bar {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 55%; background: linear-gradient(180deg,#1a1a2e 0%,#0c0e18 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.iphone__phone-shape {
+  width: 38px; height: 74px; border-radius: 6px;
+  background: linear-gradient(145deg, #2a2a3a 0%,#1a1a2a 100%);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  position: relative;
+}
+.iphone__phone-shape::before {
+  content:''; position: absolute; top: 6px; left: 6px; width: 10px; height: 10px;
+  border-radius: 50%; background: rgba(255,255,255,0.25);
+  box-shadow: 0 0 8px rgba(56,210,255,0.4);
+}
+.iphone__scroll-bar {
+  position: absolute; right: 4px; top: 10%; height: 80%;
+  width: 2px; background: rgba(255,255,255,0.07); border-radius: 1px;
+}
+.iphone__scroll-thumb {
+  width: 2px; border-radius: 1px; background: var(--cyan);
+  position: absolute; top: 0; height: 30%;
+  animation: scrollThumb 3s ease-in-out infinite alternate;
+}
+@keyframes scrollThumb { 0%{ top:0 } 100%{ top:70% } }
+.iphone__progress {
+  position: absolute; bottom: 8px; left: 8px; right: 8px;
+  height: 2px; background: rgba(255,255,255,0.06); border-radius: 1px;
+}
+.iphone__progress-fill {
+  height: 100%; border-radius: 1px; background: var(--cyan);
+  animation: progressFill 3s ease-in-out infinite alternate;
+}
+@keyframes progressFill { 0%{ width:10% } 100%{ width:85% } }
+.iphone__phase-label {
+  position: absolute; top: 4px; left: 6px;
+  font-size: 5px; font-weight: 700; letter-spacing: 0.12em;
+  color: rgba(56,210,255,0.60); text-transform: uppercase;
+}
+
+/* ─── Panel illustrations ──────────────────────────────────── */
+.panel-card {
+  background: rgba(7,8,13,0.95);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 10px;
+  width: 200px;
+}
+.panel-card__hdr {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 12px 7px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+}
+.panel-card__ico {
+  width: 13px; height: 13px; color: rgba(255,255,255,0.40);
+}
+.panel-card__title {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.16em;
+  color: rgba(255,255,255,0.55); flex: 1; text-transform: uppercase;
+}
+.panel-card__body { padding: 8px 12px 10px; display: flex; flex-direction: column; gap: 5px; }
+.slider-row {
+  display: grid; grid-template-columns: 28px 1fr 28px;
+  align-items: center; gap: 6px;
+}
+.slider-row__label { font-size: 7px; font-weight: 700; letter-spacing: 0.10em; color: rgba(255,255,255,0.28); }
+.slider-row__track {
+  height: 2px; border-radius: 1px; background: rgba(255,255,255,0.10);
+  position: relative;
+}
+.slider-row__fill {
+  position: absolute; left: 0; top: 0; height: 100%;
+  border-radius: 1px; background: var(--cyan);
+}
+.slider-row__fill::after {
+  content:''; position: absolute; right: -4px; top: 50%;
+  transform: translateY(-50%);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(56,210,255,0.90);
+  box-shadow: 0 0 4px rgba(56,210,255,0.4);
+}
+.slider-row__val { font-size: 7px; color: rgba(255,255,255,0.35); text-align: right; }
+
+/* ─── Driver pill illustration ─────────────────────────────── */
+.drv-pill-il {
+  width: 26px; height: 56px;
+  border: 0.5px solid rgba(56,210,255,0.28);
+  border-left: none; border-radius: 0 10px 10px 0;
+  background: rgba(7,8,13,0.92);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.drv-panel-il {
+  width: 200px;
+  background: rgba(7,8,13,0.96);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-left: none; border-radius: 0 14px 14px 0;
+  overflow: hidden; font-size: 9px;
+}
+.drv-panel-il__hdr {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 12px 8px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.07);
+}
+.drv-panel-il__mode { font-size: 8px; font-weight: 700; letter-spacing: 0.18em; color: rgba(56,210,255,0.85); flex: 1; }
+.drv-panel-il__scroll { font-size: 8px; color: rgba(255,255,255,0.32); }
+.drv-panel-il__tracks { padding: 6px 10px; border-bottom: 0.5px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 2px; }
+.drv-track-il {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 6px; border-radius: 5px;
+}
+.drv-track-il--active { background: rgba(255,255,255,0.07); }
+.drv-track-il__dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.drv-track-il__label { font-size: 9px; color: rgba(255,255,255,0.50); flex:1; }
+.drv-track-il--active .drv-track-il__label { color: rgba(255,255,255,0.90); }
+.drv-track-il__count {
+  font-size: 7px; color: rgba(56,210,255,0.55);
+  background: rgba(56,210,255,0.08); border-radius: 8px; padding: 1px 5px;
+}
+.drv-panel-il__props { padding: 6px 10px; border-bottom: 0.5px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 4px; }
+.drv-panel-il__kfbar {
+  padding: 6px 10px; display: flex; gap: 5px; align-items: center;
+  border-bottom: 0.5px solid rgba(255,255,255,0.07);
+}
+.drv-kf-btn {
+  flex: 1; height: 22px; border-radius: 5px;
+  border: 0.5px solid rgba(56,210,255,0.35);
+  background: rgba(56,210,255,0.08);
+  color: rgba(56,210,255,0.90); font-size: 7px; font-weight: 700; letter-spacing: 0.10em;
+  display: flex; align-items: center; justify-content: center;
+}
+.drv-clear-btn {
+  height: 22px; padding: 0 8px; border-radius: 5px;
+  border: 0.5px solid rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.25); font-size: 7px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.drv-panel-il__kflist { padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 2px; }
+.drv-kf-il {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 5px; border-radius: 4px; background: rgba(255,255,255,0.025);
+}
+.drv-kf-il__dot { font-size: 6px; }
+.drv-kf-il__px { font-size: 8px; font-weight: 600; color: rgba(255,255,255,0.55); min-width: 36px; }
+.drv-kf-il__vals { font-size: 7px; color: rgba(255,255,255,0.28); flex:1; }
+
+/* ─── Balaclava icon ───────────────────────────────────────── */
+.balaclava-btn {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 0.5px solid rgba(255,255,255,0.14);
+  background: rgba(7,8,13,0.88);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+/* ─── Scroll diagram ───────────────────────────────────────── */
+.scroll-diagram {
+  position: relative; height: 280px; width: 80px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.scroll-spine {
+  width: 2px; flex: 1; background: rgba(255,255,255,0.07); border-radius: 1px;
+  position: relative; margin: 0 auto;
+}
+.scroll-spine__fill {
+  position: absolute; top: 0; left: 0; width: 100%;
+  border-radius: 1px; background: linear-gradient(180deg, var(--cyan) 0%, rgba(56,210,255,0.2) 100%);
+  animation: spineFill 3s ease-in-out infinite alternate;
+}
+@keyframes spineFill { 0%{ height: 10% } 100%{ height: 80% } }
+.scroll-spine__dot {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--cyan); box-shadow: 0 0 12px rgba(56,210,255,0.5);
+  animation: spineDot 3s ease-in-out infinite alternate;
+}
+@keyframes spineDot { 0%{ top: 10% } 100%{ top: 80% } }
+.scroll-label {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.30); text-transform: uppercase; margin: 8px 0;
+}
+
+/* ─── Keyframe timeline ────────────────────────────────────── */
+.kf-timeline {
+  display: flex; flex-direction: column; gap: 0;
+  width: 100%; max-width: 360px; position: relative;
+}
+.kf-timeline::before {
+  content: ''; position: absolute; left: 13px; top: 14px; bottom: 14px;
+  width: 1px; background: rgba(255,255,255,0.08);
+}
+.kf-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 10px 0; position: relative;
+}
+.kf-step__num {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(7,8,13,1); border: 0.5px solid rgba(56,210,255,0.30);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--cyan);
+  position: relative; z-index: 1;
+}
+.kf-step__num--action {
+  background: rgba(56,210,255,0.12); border-color: rgba(56,210,255,0.6);
+}
+.kf-step__body { flex: 1; }
+.kf-step__title { font-size: 13px; font-weight: 600; color: var(--t1); margin-bottom: 3px; }
+.kf-step__sub   { font-size: 12px; color: var(--t3); line-height: 1.5; }
+.kf-step__tag   { display: inline-block; margin-top: 5px; }
+
+/* ─── Track color cards ────────────────────────────────────── */
+.track-card {
+  padding: 16px; border-radius: 10px;
+  border: 0.5px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.025);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.track-card__dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.track-card__name { font-size: 12px; font-weight: 600; color: var(--t1); }
+.track-card__desc { font-size: 11px; color: var(--t3); line-height: 1.5; }
+
+/* ─── Slide-specific ───────────────────────────────────────── */
+
+/* Cover */
+#s-cover {
+  background: radial-gradient(ellipse at 30% 50%, rgba(56,210,255,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(255,94,176,0.03) 0%, transparent 50%),
+              var(--bg);
+  flex-direction: column; text-align: center; gap: 32px;
+}
+#s-cover .hero-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.28em; color: rgba(255,255,255,0.28);
+  text-transform: uppercase;
+}
+#s-cover h1 { background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.55) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+#s-cover .scroll-hint {
+  font-size: 11px; color: rgba(255,255,255,0.22); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-top: 16px;
+  animation: fadeUpDown 2s ease-in-out infinite;
+}
+@keyframes fadeUpDown { 0%,100%{opacity:0.3;transform:translateY(0)} 50%{opacity:0.7;transform:translateY(4px)} }
+
+/* Phase diagram */
+.phase-diagram {
+  display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 320px;
+}
+.phase-bar {
+  height: 40px; border-radius: 8px; display: flex; align-items: center; padding: 0 14px; gap: 10px;
+  border: 0.5px solid rgba(255,255,255,0.08);
+}
+.phase-bar__num {
+  width: 20px; height: 20px; border-radius: 50%; background: rgba(56,210,255,0.12);
+  border: 0.5px solid rgba(56,210,255,0.35); font-size: 9px; font-weight: 700;
+  color: var(--cyan); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.phase-bar__title { font-size: 11px; font-weight: 600; color: var(--t1); flex: 1; }
+.phase-bar__detail { font-size: 10px; color: var(--t3); }
+
+/* Panel grid */
+.panel-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 420px;
+}
+.panel-il {
+  background: rgba(7,8,13,0.90); border: 0.5px solid rgba(255,255,255,0.09);
+  border-radius: 10px; overflow: hidden;
+}
+.panel-il__hdr {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+}
+.panel-il__ico { color: rgba(255,255,255,0.35); }
+.panel-il__title { font-size: 8px; font-weight: 700; letter-spacing: 0.16em; color: rgba(255,255,255,0.50); text-transform: uppercase; flex: 1; }
+.panel-il__body { padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+
+/* Triptych diagram */
+.tri-diagram {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  height: 160px; width: 100%; max-width: 400px;
+  border-radius: 10px; overflow: hidden;
+  border: 0.5px solid rgba(255,255,255,0.10);
+}
+.tri-panel { position: relative; overflow: hidden; }
+.tri-panel + .tri-panel { border-left: 0.5px solid rgba(255,255,255,0.10); }
+.tri-panel img { width: 100%; height: 100%; object-fit: cover; object-position: center; filter: brightness(0.7); }
+.tri-panel__label {
+  position: absolute; bottom: 6px; left: 8px;
+  font-size: 7px; font-weight: 700; letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.60); text-transform: uppercase;
+}
+.tri-panel__dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 6px; height: 6px; border-radius: 50%;
+}
+
+/* ─── Scroll-driven property arrows ─────────────────────────── */
+.prop-arrow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.025); border: 0.5px solid var(--line);
+}
+.prop-arrow__from, .prop-arrow__to {
+  font-size: 13px; font-weight: 600; min-width: 60px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.prop-arrow__from { color: var(--t3); }
+.prop-arrow__to   { color: var(--t1); }
+.prop-arrow__line {
+  flex: 1; height: 1px; background: linear-gradient(90deg, rgba(56,210,255,0.15), rgba(56,210,255,0.60));
+  position: relative;
+}
+.prop-arrow__line::after {
+  content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  border: 4px solid transparent; border-left: 6px solid rgba(56,210,255,0.60);
+}
+.prop-arrow__ease {
+  font-size: 8px; color: var(--cyan); letter-spacing: 0.12em; font-weight: 700; text-transform: uppercase;
+}
+.prop-arrow__label { font-size: 9px; color: var(--t3); min-width: 38px; }
+
+/* ─── Hosting section ──────────────────────────────────────── */
+.file-list {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.file-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 14px; border-radius: 7px;
+  background: rgba(255,255,255,0.03); border: 0.5px solid var(--line);
+  font-size: 12px;
+}
+.file-row__icon { font-size: 14px; width: 22px; text-align: center; }
+.file-row__name { flex: 1; color: var(--t1); font-family: 'SF Mono',monospace; font-size: 11px; }
+.file-row__size { color: var(--t3); font-size: 10px; }
+
+/* ─── Orb animations ───────────────────────────────────────── */
+@keyframes kOrb1 { 0%,100%{transform:translate(-1.8px,0.5px)} 50%{transform:translate(1.2px,-0.8px)} }
+@keyframes kOrb2 { 0%,100%{transform:translate(1.5px,-0.5px)} 50%{transform:translate(-1px,1px)} }
+@keyframes kOrb3 { 0%,100%{transform:translate(0,1.2px)} 50%{transform:translate(0.5px,-1.5px)} }
+.kOrb1 { animation: kOrb1 2.8s ease-in-out infinite; }
+.kOrb2 { animation: kOrb2 3.3s ease-in-out infinite; }
+.kOrb3 { animation: kOrb3 2.1s ease-in-out infinite; }
+
+/* ─── Keyboard shortcut ────────────────────────────────────── */
+.kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px 7px; border-radius: 4px;
+  background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.14);
+  font-size: 10px; color: var(--t2); font-family: 'SF Mono',monospace;
+}
+
+/* ─── Info box ─────────────────────────────────────────────── */
+.info-box {
+  padding: 14px 16px; border-radius: 10px;
+  background: rgba(56,210,255,0.04); border: 0.5px solid rgba(56,210,255,0.18);
+  font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.55);
+}
+.info-box strong { color: var(--cyan); }
+
+/* ─── Footer ───────────────────────────────────────────────── */
+.slide-footer {
+  position: absolute; bottom: 28px; left: 80px; right: 80px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; color: rgba(255,255,255,0.18); letter-spacing: 0.10em;
+}
+.slide-num { font-variant-numeric: tabular-nums; }
+
+/* ─── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .slide { padding: 48px 40px; }
+  .cols--2 { grid-template-columns: 1fr; gap: 40px; }
+  .cols--3 { grid-template-columns: 1fr; gap: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Nav dots ──────────────────────────────────────────────── -->
+<nav class="nav" id="navDots" aria-label="Slide navigation"></nav>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 1 — COVER
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-cover" data-label="Cover">
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:28px;max-width:800px;">
+    <div class="hero-label">Design &amp; Interaction Guide</div>
+
+    <h1 style="text-align:center">iPhone 11 Pro<br>Scroll Hero</h1>
+
+    <p style="font-size:18px;line-height:1.6;color:rgba(255,255,255,0.45);text-align:center;max-width:520px;">
+      A scroll-scrubbed product page prototype with an embedded keyframe animation system. This guide covers every panel, control, and workflow.
+    </p>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+      <span class="tag tag--cyan">Scroll Scrubbing</span>
+      <span class="tag tag--pink">Keyframe Animation</span>
+      <span class="tag tag--green">Live Panels</span>
+    </div>
+
+    <!-- Three-orb icon -->
+    <div style="margin-top:20px;opacity:0.4">
+      <svg width="48" height="24" viewBox="0 0 48 24" fill="none" style="overflow:visible">
+        <circle class="kOrb1" cx="16" cy="12" r="7" fill="white" fill-opacity="1"/>
+        <circle class="kOrb2" cx="28" cy="12" r="7" fill="white" fill-opacity="0.5"/>
+        <circle class="kOrb3" cx="22" cy="12" r="7" fill="white" fill-opacity="0.25"/>
+      </svg>
+    </div>
+
+    <div class="scroll-hint">↓ Scroll to explore</div>
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">01 / 08</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 2 — HOW THE PAGE WORKS
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-overview" data-label="Overview">
+
+  <div class="cols cols--2">
+
+    <!-- Left: phone + scroll diagram -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:32px">
+
+      <div style="display:flex;align-items:flex-start;gap:24px">
+
+        <!-- iPhone -->
+        <div class="iphone">
+          <div class="iphone__screen">
+            <div class="iphone__phase-label">Phase 1</div>
+            <div class="iphone__video-bar">
+              <div class="iphone__phone-shape"></div>
+            </div>
+            <div style="position:absolute;bottom:8px;left:8px;right:8px;height:40%;background:linear-gradient(0deg,rgba(7,8,13,1) 0%,rgba(7,8,13,0) 100%);display:flex;align-items:flex-end;padding:4px 6px">
+              <span style="font-size:5px;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.35);text-transform:uppercase">Phase 2</span>
+            </div>
+          </div>
+          <div class="iphone__scroll-bar"><div class="iphone__scroll-thumb"></div></div>
+        </div>
+
+        <!-- Scroll spine -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:20px">
+          <span class="scroll-label">Scroll</span>
+          <div class="scroll-spine" style="height:220px">
+            <div class="scroll-spine__fill"></div>
+            <div class="scroll-spine__dot"></div>
+          </div>
+          <span class="scroll-label">↓</span>
+        </div>
+      </div>
+
+      <!-- Phase bars -->
+      <div class="phase-diagram">
+        <div class="phase-bar" style="background:rgba(56,210,255,0.04)">
+          <div class="phase-bar__num">1</div>
+          <div class="phase-bar__title">Video Scrub</div>
+          <div class="phase-bar__detail">hero.mp4 → scroll position</div>
+        </div>
+        <div style="width:2px;height:12px;background:rgba(255,255,255,0.06);margin:0 auto"></div>
+        <div class="phase-bar" style="background:rgba(255,94,176,0.04)">
+          <div class="phase-bar__num" style="background:rgba(255,94,176,0.12);border-color:rgba(255,94,176,0.35);color:var(--pink)">2</div>
+          <div class="phase-bar__title">Static Overlay</div>
+          <div class="phase-bar__detail">phone_endframe.jpg → garage door</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: copy -->
+    <div class="col-copy">
+      <span class="eyebrow">How it works</span>
+      <h2>Two-phase<br>scroll experience</h2>
+
+      <div class="body">
+        <p><strong>Phase 1</strong> scrubs a 4K video using <kbd class="kbd">currentTime</kbd> set directly from <kbd class="kbd">window.scrollY</kbd>. As you scroll down, the phone rotates through its hero animation frame by frame.</p>
+      </div>
+
+      <div class="body" style="margin-top:4px">
+        <p><strong>Phase 2</strong> begins when the video reaches its last frame. A static photo crossfades in, pixel-locked to the video, then the phone slides upward (the "garage door") as the next content section reveals beneath it.</p>
+      </div>
+
+      <div class="info-box" style="margin-top:8px">
+        <strong>Key formula:</strong> <code>S = Math.max(W / VIDEO_W, H / VIDEO_H)</code><br>
+        Every asset is scaled by S so it covers the viewport at all sizes. Change one number, everything stays aligned.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">02 / 08</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 3 — DESIGN PANELS
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-panels" data-label="Panels">
+
+  <div class="cols cols--2">
+
+    <!-- Left: panel grid illustration -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:24px">
+
+      <!-- Balaclava button -->
+      <div style="display:flex;align-items:center;gap:16px">
+        <div class="balaclava-btn">
+          <svg width="14" height="18" viewBox="0 0 22 28" fill="none">
+            <path fill-rule="evenodd" fill="white"
+              d="M11 1C5 1 1 5 1 10.5L1 17C1 21 3.5 23.5 6.5 24.5L6.5 27L15.5 27L15.5 24.5C18.5 23.5 21 21 21 17L21 10.5C21 5 17 1 11 1Z
+                 M5.5 10C5.5 8.6 6.4 7.8 7.5 7.8C8.6 7.8 9.5 8.6 9.5 10C9.5 11.4 8.6 12.2 7.5 12.2C6.4 12.2 5.5 11.4 5.5 10Z
+                 M12.5 10C12.5 8.6 13.4 7.8 14.5 7.8C15.6 7.8 16.5 8.6 16.5 10C16.5 11.4 15.6 12.2 14.5 12.2C13.4 12.2 12.5 11.4 12.5 10Z
+                 M9 18.5C9 16.8 9.9 15.5 11 15.5C12.1 15.5 13 16.8 13 18.5C13 20.2 12.1 21.5 11 21.5C9.9 21.5 9 20.2 9 18.5Z"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--t1)">Panel Toggle</div>
+          <div style="font-size:11px;color:var(--t3)">Bottom-left corner</div>
+        </div>
+      </div>
+
+      <!-- Four panels -->
+      <div class="panel-grid">
+
+        <!-- Shadow -->
+        <div class="panel-il">
+          <div class="panel-il__hdr">
+            <svg class="panel-il__ico" width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="5.5" r="3.5" stroke="currentColor" stroke-width="1.1"/><ellipse cx="6.5" cy="10.5" rx="3.8" ry="1.1" fill="currentColor" opacity="0.38"/></svg>
+            <span class="panel-il__title">Shadow</span>
+          </div>
+          <div class="panel-il__body">
+            <div class="slider-row"><span class="slider-row__label">Blur</span><div class="slider-row__track"><div class="slider-row__fill" style="width:62%"></div></div><span class="slider-row__val">62</span></div>
+            <div class="slider-row"><span class="slider-row__label">Y</span><div class="slider-row__track"><div class="slider-row__fill" style="width:48%;background:var(--pink)"></div></div><span class="slider-row__val">48</span></div>
+            <div class="slider-row"><span class="slider-row__label">Opac</span><div class="slider-row__track"><div class="slider-row__fill" style="width:72%;background:rgba(255,255,255,0.5)"></div></div><span class="slider-row__val">72</span></div>
+          </div>
+        </div>
+
+        <!-- Sequence -->
+        <div class="panel-il">
+          <div class="panel-il__hdr">
+            <svg class="panel-il__ico" width="11" height="11" viewBox="0 0 13 13" fill="none"><rect x="1" y="2" width="11" height="8.5" rx="1.4" stroke="currentColor" stroke-width="1.1"/><path d="M5 4.8L9 6.5L5 8.2V4.8Z" fill="currentColor"/></svg>
+            <span class="panel-il__title">Sequence</span>
+          </div>
+          <div class="panel-il__body">
+            <div class="slider-row"><span class="slider-row__label">Speed</span><div class="slider-row__track"><div class="slider-row__fill" style="width:50%;background:var(--orange)"></div></div><span class="slider-row__val">3.0×</span></div>
+            <div style="font-size:7px;color:rgba(255,255,255,0.25);padding:2px 0">Scrub velocity multiplier</div>
+          </div>
+        </div>
+
+        <!-- Alignment -->
+        <div class="panel-il">
+          <div class="panel-il__hdr">
+            <svg class="panel-il__ico" width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.1"/><path d="M6.5 1v2.2M6.5 10.8V13M1 6.5h2.2M10.8 6.5H13" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <span class="panel-il__title">Alignment</span>
+          </div>
+          <div class="panel-il__body">
+            <div class="slider-row"><span class="slider-row__label">Scale</span><div class="slider-row__track"><div class="slider-row__fill" style="width:55%;background:var(--green)"></div></div><span class="slider-row__val">72</span></div>
+            <div class="slider-row"><span class="slider-row__label">Y Ref</span><div class="slider-row__track"><div class="slider-row__fill" style="width:40%;background:var(--green)"></div></div><span class="slider-row__val">791</span></div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="panel-il">
+          <div class="panel-il__hdr">
+            <svg class="panel-il__ico" width="11" height="11" viewBox="0 0 13 13" fill="none"><path d="M2 3.5h9M2 6.5h6.5M2 9.5h7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="panel-il__title">Content</span>
+          </div>
+          <div class="panel-il__body">
+            <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;width:80%"></div>
+            <div style="height:6px;background:rgba(255,255,255,0.04);border-radius:3px;width:55%"></div>
+            <div style="height:6px;background:rgba(255,255,255,0.04);border-radius:3px;width:68%"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right: copy -->
+    <div class="col-copy">
+      <span class="eyebrow">Design Panels</span>
+      <h2>Four live<br>design controls</h2>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="callout">
+          <div class="callout__dot" style="background:rgba(255,255,255,0.35)"></div>
+          <div class="callout__text"><strong>Shadow</strong> — Tune the drop shadow's blur radius, vertical offset, color, and opacity. Changes render in real time on the hero phone.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:var(--orange)"></div>
+          <div class="callout__text"><strong>Sequence</strong> — Adjust the video scrub speed multiplier (1× to 6×). Higher values make the animation feel snappier.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:var(--green)"></div>
+          <div class="callout__text"><strong>Alignment</strong> — Scale the phone and shift its Y reference. Use this to pixel-lock the static overlay to the video's last frame.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:rgba(255,255,255,0.20)"></div>
+          <div class="callout__text"><strong>Content</strong> — Edit the hero headline, subhead, and CTA label without touching the HTML.</div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top:4px">
+        Click the <strong>balaclava icon</strong> (bottom-left) to toggle all panels on and off.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">03 / 08</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 4 — ANIMATE DRIVER OVERVIEW
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-driver" data-label="Driver">
+
+  <div class="cols cols--2">
+
+    <!-- Left: driver illustration -->
+    <div style="display:flex;align-items:stretch;gap:0;justify-content:center">
+
+      <!-- Pill tab -->
+      <div style="display:flex;flex-direction:column;justify-content:center">
+        <div class="drv-pill-il">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="overflow:visible">
+            <circle class="kOrb1" cx="8"  cy="10" r="3" fill="white" fill-opacity="1"/>
+            <circle class="kOrb2" cx="12" cy="10" r="3" fill="white" fill-opacity="0.5"/>
+            <circle class="kOrb3" cx="10" cy="10" r="3" fill="white" fill-opacity="0.25"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Panel -->
+      <div class="drv-panel-il">
+        <div class="drv-panel-il__hdr">
+          <span class="drv-panel-il__mode">ANIMATE</span>
+          <span class="drv-panel-il__scroll">4820 px</span>
+        </div>
+
+        <div class="drv-panel-il__tracks">
+          <div class="drv-track-il drv-track-il--active">
+            <div class="drv-track-il__dot" style="background:#38d2ff"></div>
+            <span class="drv-track-il__label">Panel A</span>
+            <span class="drv-track-il__count">2</span>
+          </div>
+          <div class="drv-track-il">
+            <div class="drv-track-il__dot" style="background:#ff9f40"></div>
+            <span class="drv-track-il__label">Panel B</span>
+            <span class="drv-track-il__count">0</span>
+          </div>
+          <div class="drv-track-il">
+            <div class="drv-track-il__dot" style="background:#c4ff60"></div>
+            <span class="drv-track-il__label">Panel C</span>
+            <span class="drv-track-il__count">1</span>
+          </div>
+          <div class="drv-track-il">
+            <div class="drv-track-il__dot" style="background:#ff5eb0"></div>
+            <span class="drv-track-il__label">Closer Photo</span>
+            <span class="drv-track-il__count">0</span>
+          </div>
+        </div>
+
+        <div class="drv-panel-il__props">
+          <div class="slider-row">
+            <span class="slider-row__label" style="font-size:7px">X</span>
+            <div class="slider-row__track"><div class="slider-row__fill" style="width:55%"></div></div>
+            <span class="slider-row__val" style="font-size:7px">−40px</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-row__label" style="font-size:7px">Y</span>
+            <div class="slider-row__track"><div class="slider-row__fill" style="width:50%"></div></div>
+            <span class="slider-row__val" style="font-size:7px">0px</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-row__label" style="font-size:7px">S</span>
+            <div class="slider-row__track"><div class="slider-row__fill" style="width:30%;background:var(--orange)"></div></div>
+            <span class="slider-row__val" style="font-size:7px">1.80</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-row__label" style="font-size:7px">R</span>
+            <div class="slider-row__track"><div class="slider-row__fill" style="width:50%;background:var(--pink)"></div></div>
+            <span class="slider-row__val" style="font-size:7px">0°</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-row__label" style="font-size:7px">O</span>
+            <div class="slider-row__track"><div class="slider-row__fill" style="width:100%;background:var(--green)"></div></div>
+            <span class="slider-row__val" style="font-size:7px">1.00</span>
+          </div>
+        </div>
+
+        <div class="drv-panel-il__kfbar">
+          <div class="drv-kf-btn">◆ SET KF</div>
+          <div class="drv-clear-btn">CLEAR ALL</div>
+        </div>
+
+        <div class="drv-panel-il__kflist">
+          <div class="drv-kf-il">
+            <span class="drv-kf-il__dot" style="color:#38d2ff">◆</span>
+            <span class="drv-kf-il__px">2400px</span>
+            <span class="drv-kf-il__vals">s:2.60 x:0 y:0</span>
+          </div>
+          <div class="drv-kf-il">
+            <span class="drv-kf-il__dot" style="color:#38d2ff">◆</span>
+            <span class="drv-kf-il__px">5800px</span>
+            <span class="drv-kf-il__vals">s:1.80 x:−40 y:0</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: copy -->
+    <div class="col-copy">
+      <span class="eyebrow">ANIMATE Driver</span>
+      <h2>Principle-for-Mac<br>light</h2>
+
+      <div class="body">
+        <p>The Driver lets you animate any element over scroll — without touching code. Set a value at one scroll position, set another at a different position, and the system interpolates smoothly between them.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+        <div class="callout">
+          <div class="callout__dot" style="background:rgba(56,210,255,0.6)"></div>
+          <div class="callout__text"><strong>Scroll position</strong> shown in px at top right of panel. This is the key: keyframes are stored at exact pixel positions.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:rgba(255,255,255,0.35)"></div>
+          <div class="callout__text"><strong>Track selector</strong> — pick which element to animate. The count badge shows how many KFs that track has.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:rgba(255,255,255,0.20)"></div>
+          <div class="callout__text"><strong>Sliders</strong> — X, Y, Scale, Rotate, Opacity. Drag to preview live, then hit SET KF to record that state at the current scroll position.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">04 / 08</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 5 — KEYFRAME WORKFLOW
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-workflow" data-label="Workflow">
+
+  <div class="cols cols--2">
+
+    <!-- Left: step-by-step -->
+    <div>
+      <span class="eyebrow">Keyframe Workflow</span>
+      <h2 style="margin-bottom:28px">Six steps,<br>smooth animation</h2>
+
+      <div class="kf-timeline">
+        <div class="kf-step">
+          <div class="kf-step__num">1</div>
+          <div class="kf-step__body">
+            <div class="kf-step__title">Click the circles pill</div>
+            <div class="kf-step__sub">Left edge of screen — panel slides in. You're now in Animate mode.</div>
+          </div>
+        </div>
+        <div class="kf-step">
+          <div class="kf-step__num">2</div>
+          <div class="kf-step__body">
+            <div class="kf-step__title">Select a track</div>
+            <div class="kf-step__sub">Panel A, B, C, or Closer Photo. Each track is independent.</div>
+          </div>
+        </div>
+        <div class="kf-step">
+          <div class="kf-step__num">3</div>
+          <div class="kf-step__body">
+            <div class="kf-step__title">Scroll to start position</div>
+            <div class="kf-step__sub">e.g. <span class="kbd">2400px</span> where the triptych first enters view. Adjust sliders to the starting state you want.</div>
+          </div>
+        </div>
+        <div class="kf-step">
+          <div class="kf-step__num kf-step__num--action">4</div>
+          <div class="kf-step__body">
+            <div class="kf-step__title">Hit ◆ SET KF</div>
+            <div class="kf-step__sub">Button flashes cyan. Keyframe recorded at current scrollY.</div>
+            <span class="kf-step__tag"><span class="tag tag--cyan">Saved to localStorage</span></span>
+          </div>
+        </div>
+        <div class="kf-step">
+          <div class="kf-step__num">5</div>
+          <div class="kf-step__body">
+            <div class="kf-step__title">Scroll to end position</div>
+            <div class="kf-step__sub">e.g. <span class="kbd">5800px</span>. Move sliders to the end state.</div>
+          </div>
+        </div>
+        <div class="kf-step">
+          <div class="kf-step__num kf-step__num--action">6</div>
+          <div class="kf-step__body">
+            <div class="kf-step__title">Hit ◆ SET KF again</div>
+            <div class="kf-step__sub">Now scroll between the two positions — the element animates smoothly with easeInOut cubic.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: interpolation diagram -->
+    <div style="display:flex;flex-direction:column;gap:24px">
+
+      <div>
+        <div class="label" style="margin-bottom:14px">What gets interpolated</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+
+          <div class="prop-arrow">
+            <span class="prop-arrow__label" style="font-size:8px;color:var(--t3)">X</span>
+            <span class="prop-arrow__from">0 px</span>
+            <div class="prop-arrow__line"></div>
+            <span class="prop-arrow__ease" style="font-size:7px;white-space:nowrap">easeInOut</span>
+            <div class="prop-arrow__line" style="background:linear-gradient(90deg,rgba(56,210,255,0.60),rgba(56,210,255,0.15))"></div>
+            <span class="prop-arrow__to">−40 px</span>
+          </div>
+
+          <div class="prop-arrow">
+            <span class="prop-arrow__label" style="font-size:8px;color:var(--t3)">Scale</span>
+            <span class="prop-arrow__from">2.60</span>
+            <div class="prop-arrow__line"></div>
+            <span class="prop-arrow__ease" style="font-size:7px;white-space:nowrap">easeInOut</span>
+            <div class="prop-arrow__line" style="background:linear-gradient(90deg,rgba(56,210,255,0.60),rgba(56,210,255,0.15))"></div>
+            <span class="prop-arrow__to">1.80</span>
+          </div>
+
+          <div class="prop-arrow">
+            <span class="prop-arrow__label" style="font-size:8px;color:var(--t3)">Rotate</span>
+            <span class="prop-arrow__from">0°</span>
+            <div class="prop-arrow__line"></div>
+            <span class="prop-arrow__ease" style="font-size:7px;white-space:nowrap">easeInOut</span>
+            <div class="prop-arrow__line" style="background:linear-gradient(90deg,rgba(56,210,255,0.60),rgba(56,210,255,0.15))"></div>
+            <span class="prop-arrow__to">90°</span>
+          </div>
+
+          <div class="prop-arrow">
+            <span class="prop-arrow__label" style="font-size:8px;color:var(--t3)">Opacity</span>
+            <span class="prop-arrow__from">1.00</span>
+            <div class="prop-arrow__line"></div>
+            <span class="prop-arrow__ease" style="font-size:7px;white-space:nowrap">easeInOut</span>
+            <div class="prop-arrow__line" style="background:linear-gradient(90deg,rgba(56,210,255,0.60),rgba(56,210,255,0.15))"></div>
+            <span class="prop-arrow__to">0.40</span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>Before first KF:</strong> holds first keyframe's values.<br>
+        <strong>After last KF:</strong> holds last keyframe's values.<br>
+        <strong>Between KFs:</strong> easeInOut cubic — slow start, fast middle, slow end.<br>
+        <strong>No KFs set:</strong> uses the track's defaults.
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="label" style="margin-bottom:4px">Pro tips</div>
+        <div style="font-size:13px;color:var(--t2);line-height:1.6;">
+          <span style="color:var(--cyan)">→</span> Click a KF row in the list to jump sliders to that exact state.<br>
+          <span style="color:var(--cyan)">→</span> Add 3+ keyframes per track for complex multi-step motion.<br>
+          <span style="color:var(--cyan)">→</span> KFs survive page refresh (stored in <span class="kbd">localStorage</span> as <span class="kbd">drvKFs3</span>).
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">05 / 08</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 6 — TRACKS
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-tracks" data-label="Tracks">
+
+  <div style="display:flex;flex-direction:column;gap:48px;width:100%;max-width:1100px">
+
+    <div>
+      <span class="eyebrow">Animatable Tracks</span>
+      <h2>Four elements,<br>infinite combinations</h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px">
+
+      <!-- Panel A -->
+      <div class="track-card" style="border-color:rgba(56,210,255,0.18)">
+        <div class="track-card__dot" style="background:#38d2ff;box-shadow:0 0 8px rgba(56,210,255,0.4)"></div>
+        <div class="track-card__name">Panel A</div>
+        <div style="font-size:10px;color:rgba(56,210,255,0.55);letter-spacing:0.10em;font-weight:600">.lp-tri__panel--a</div>
+        <div class="track-card__desc">Left triptych panel. Default: zoomed into camera bump area, <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">scale 2.6</code>. Transform origin at <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">23% 28%</code>.</div>
+        <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">S</span><div class="slider-row__track"><div class="slider-row__fill" style="width:35%;background:#38d2ff"></div></div><span class="slider-row__val" style="font-size:7px">2.60</span></div>
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">X</span><div class="slider-row__track"><div class="slider-row__fill" style="width:50%;background:#38d2ff"></div></div><span class="slider-row__val" style="font-size:7px">0px</span></div>
+        </div>
+      </div>
+
+      <!-- Panel B -->
+      <div class="track-card" style="border-color:rgba(255,159,64,0.18)">
+        <div class="track-card__dot" style="background:#ff9f40;box-shadow:0 0 8px rgba(255,159,64,0.4)"></div>
+        <div class="track-card__name">Panel B</div>
+        <div style="font-size:10px;color:rgba(255,159,64,0.55);letter-spacing:0.10em;font-weight:600">.lp-tri__panel--b</div>
+        <div class="track-card__desc">Center triptych panel. Default: full-height phone back view, <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">scale 1.06</code>. Transform origin at <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">50% 42%</code>.</div>
+        <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">S</span><div class="slider-row__track"><div class="slider-row__fill" style="width:12%;background:#ff9f40"></div></div><span class="slider-row__val" style="font-size:7px">1.06</span></div>
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">Y</span><div class="slider-row__track"><div class="slider-row__fill" style="width:50%;background:#ff9f40"></div></div><span class="slider-row__val" style="font-size:7px">0px</span></div>
+        </div>
+      </div>
+
+      <!-- Panel C -->
+      <div class="track-card" style="border-color:rgba(196,255,96,0.18)">
+        <div class="track-card__dot" style="background:#c4ff60;box-shadow:0 0 8px rgba(196,255,96,0.4)"></div>
+        <div class="track-card__name">Panel C</div>
+        <div style="font-size:10px;color:rgba(196,255,96,0.55);letter-spacing:0.10em;font-weight:600">.lp-tri__panel--c</div>
+        <div class="track-card__desc">Right triptych panel. Default: maximum zoom into top-left detail, <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">scale 4.8</code>. Transform origin at <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">34% 12%</code>.</div>
+        <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">S</span><div class="slider-row__track"><div class="slider-row__fill" style="width:55%;background:#c4ff60"></div></div><span class="slider-row__val" style="font-size:7px">4.80</span></div>
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">R</span><div class="slider-row__track"><div class="slider-row__fill" style="width:50%;background:#c4ff60"></div></div><span class="slider-row__val" style="font-size:7px">0°</span></div>
+        </div>
+      </div>
+
+      <!-- Closer Photo -->
+      <div class="track-card" style="border-color:rgba(255,94,176,0.18)">
+        <div class="track-card__dot" style="background:#ff5eb0;box-shadow:0 0 8px rgba(255,94,176,0.4)"></div>
+        <div class="track-card__name">Closer Photo</div>
+        <div style="font-size:10px;color:rgba(255,94,176,0.55);letter-spacing:0.10em;font-weight:600">.lp-closer__img</div>
+        <div class="track-card__desc">The full-bleed photo in the "Take a closer look" section. Default: <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">scale 2.2</code> at the camera bump. Transform origin at <code style="font-size:10px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px">24% 16%</code>.</div>
+        <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">S</span><div class="slider-row__track"><div class="slider-row__fill" style="width:28%;background:#ff5eb0"></div></div><span class="slider-row__val" style="font-size:7px">2.20</span></div>
+          <div class="slider-row"><span class="slider-row__label" style="font-size:7px">O</span><div class="slider-row__track"><div class="slider-row__fill" style="width:100%;background:#ff5eb0"></div></div><span class="slider-row__val" style="font-size:7px">1.00</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="info-box" style="max-width:700px">
+      Each track's <strong>transform-origin</strong> is the zoom anchor — the point the image scales toward/away from. Default origins are tuned to the camera bump area of the iPhone 11 Pro image. Change X and Y to shift which detail is centered when you increase scale.
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">06 / 08</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 7 — BELOW-HERO CONTENT
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-content" data-label="Content">
+
+  <div class="cols cols--2">
+
+    <!-- Left: triptych + closer diagram -->
+    <div style="display:flex;flex-direction:column;gap:24px;align-items:center">
+
+      <div>
+        <div class="label" style="margin-bottom:10px">Triptych — Three Panels</div>
+        <div class="tri-diagram">
+          <div class="tri-panel" style="background:#0c0e1a">
+            <img src="assets/phone_endframe.jpg" style="object-position:23% 28%" alt="">
+            <div class="tri-panel__dot" style="background:#38d2ff"></div>
+            <div class="tri-panel__label">Panel A</div>
+          </div>
+          <div class="tri-panel" style="background:#0c0e1a">
+            <img src="assets/phone_endframe.jpg" style="object-position:50% 42%" alt="">
+            <div class="tri-panel__dot" style="background:#ff9f40"></div>
+            <div class="tri-panel__label">Panel B</div>
+          </div>
+          <div class="tri-panel" style="background:#0c0e1a">
+            <img src="assets/phone_endframe.jpg" style="object-position:34% 12%" alt="">
+            <div class="tri-panel__dot" style="background:#c4ff60"></div>
+            <div class="tri-panel__label">Panel C</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:100%;max-width:400px">
+        <div class="label" style="margin-bottom:10px">Closer Photo Section</div>
+        <div style="height:100px;border-radius:10px;overflow:hidden;border:0.5px solid rgba(255,255,255,0.10);display:grid;grid-template-columns:1fr 1fr">
+          <div style="padding:16px 14px;background:rgba(7,8,13,1);display:flex;flex-direction:column;justify-content:center;gap:4px;border-right:0.5px solid rgba(255,255,255,0.07)">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.80);line-height:1.2">Take a<br>closer look.</div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.30)">Two sizes. Four finishes.</div>
+          </div>
+          <div style="position:relative;overflow:hidden;background:#0c0e1a">
+            <img src="assets/phone_endframe.jpg" style="width:100%;height:100%;object-fit:cover;object-position:24% 16%;filter:brightness(0.7)" alt="">
+            <div class="tri-panel__dot" style="background:#ff5eb0;top:6px;right:6px;position:absolute"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: copy -->
+    <div class="col-copy">
+      <span class="eyebrow">Below-Hero Content</span>
+      <h2>Three panels,<br>one image</h2>
+
+      <div class="body">
+        <p>All four animatable elements share a single source image — <strong>phone_endframe.jpg</strong>. Each panel uses a different <kbd class="kbd">object-position</kbd> and <kbd class="kbd">transform-origin</kbd> to show a distinct crop, so the triptych reads as three unique shots.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+        <div class="callout">
+          <div class="callout__dot" style="background:#38d2ff"></div>
+          <div class="callout__text"><strong>Panel A</strong> — Camera bump detail. Origin <code>23% 28%</code>, default scale 2.6×. Zoomed deep into the triple-lens cluster.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:#ff9f40"></div>
+          <div class="callout__text"><strong>Panel B</strong> — Full phone back, nearly 1:1. Origin <code>50% 42%</code>, scale 1.06×. Serves as the "establishing shot" of the three.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:#c4ff60"></div>
+          <div class="callout__text"><strong>Panel C</strong> — Extreme close-up into the upper-left corner of the device. Origin <code>34% 12%</code>, scale 4.8×.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:#ff5eb0"></div>
+          <div class="callout__text"><strong>Closer Photo</strong> — Full-bleed in the adjacent section. Default scale 2.2×. Animate this track independently from the triptych panels.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">07 / 08</span>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 8 — HOSTING & DEPLOYMENT
+     ════════════════════════════════════════════════════════════ -->
+<section class="slide" id="s-hosting" data-label="Hosting">
+
+  <div class="cols cols--2">
+
+    <!-- Left: file list -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div class="label" style="margin-bottom:12px">Files to upload</div>
+        <div class="file-list">
+          <div class="file-row">
+            <span class="file-row__icon">📄</span>
+            <span class="file-row__name">index.html</span>
+            <span class="file-row__size">root page</span>
+          </div>
+          <div class="file-row">
+            <span class="file-row__icon">⚙️</span>
+            <span class="file-row__name">main.js</span>
+            <span class="file-row__size">~2900 lines</span>
+          </div>
+          <div class="file-row">
+            <span class="file-row__icon">🎨</span>
+            <span class="file-row__name">styles.css</span>
+            <span class="file-row__size">~2900 lines</span>
+          </div>
+          <div class="file-row" style="border-color:rgba(56,210,255,0.18)">
+            <span class="file-row__icon">📁</span>
+            <span class="file-row__name">assets/</span>
+            <span class="file-row__size">folder</span>
+          </div>
+          <div class="file-row" style="padding-left:32px">
+            <span class="file-row__icon">🎬</span>
+            <span class="file-row__name">assets/hero.mp4</span>
+            <span class="file-row__size">largest file</span>
+          </div>
+          <div class="file-row" style="padding-left:32px">
+            <span class="file-row__icon">🖼</span>
+            <span class="file-row__name">assets/phone_endframe.jpg</span>
+            <span class="file-row__size"></span>
+          </div>
+          <div class="file-row" style="padding-left:32px">
+            <span class="file-row__icon">🎭</span>
+            <span class="file-row__name">assets/phone_endframe_mask.svg</span>
+            <span class="file-row__size"></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="label" style="margin-bottom:10px">GoDaddy file manager</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="step-num" style="width:22px;height:22px;font-size:10px">1</div>
+            <span style="font-size:13px;color:var(--t2)">Log in → My Products → Hosting → Manage</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="step-num" style="width:22px;height:22px;font-size:10px">2</div>
+            <span style="font-size:13px;color:var(--t2)">cPanel → File Manager → <kbd class="kbd">public_html/</kbd></span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="step-num" style="width:22px;height:22px;font-size:10px">3</div>
+            <span style="font-size:13px;color:var(--t2)">Upload all files, preserving the <kbd class="kbd">assets/</kbd> folder structure</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="step-num" style="width:22px;height:22px;font-size:10px">4</div>
+            <span style="font-size:13px;color:var(--t2)">Visit <kbd class="kbd">justus.agency</kbd> to verify</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: copy + tips -->
+    <div class="col-copy">
+      <span class="eyebrow">Deployment</span>
+      <h2>100% static.<br>No server needed.</h2>
+
+      <div class="body">
+        <p>The entire demo is plain HTML + CSS + JavaScript — no build step, no npm, no server. Upload the files directly via FTP or a file manager and it runs immediately.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+        <div class="callout">
+          <div class="callout__dot" style="background:rgba(255,200,40,0.7)"></div>
+          <div class="callout__text"><strong>hero.mp4 is the largest file.</strong> Make sure your host allows large file uploads (GoDaddy shared hosting: 500MB limit). The video should stream from the same server without a CDN for local testing.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:var(--cyan)"></div>
+          <div class="callout__text"><strong>No .htaccess needed.</strong> All links are relative. <code style="font-size:11px">assets/hero.mp4</code> will resolve correctly as long as the folder structure is preserved.</div>
+        </div>
+        <div class="callout">
+          <div class="callout__dot" style="background:var(--green)"></div>
+          <div class="callout__text"><strong>Keyframes are client-side only.</strong> <code style="font-size:11px">localStorage</code> data is per-browser. Share your KF config by exporting it as JSON from the browser console: <code style="font-size:11px">localStorage.getItem('drvKFs3')</code>.</div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top:4px">
+        <strong>Performance tip:</strong> serve hero.mp4 with the <strong>Content-Range</strong> header enabled (most shared hosts do this by default). This allows Safari to scrub video without downloading the entire file first.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="slide-footer">
+    <span>iPhone 11 Pro Scroll Hero</span>
+    <span class="slide-num">08 / 08</span>
+  </div>
+</section>
+
+
+<!-- ── Nav dots script ────────────────────────────────────── -->
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const nav    = document.getElementById('navDots');
+
+  slides.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className   = 'nav__dot' + (i === 0 ? ' nav__dot--active' : '');
+    btn.title       = s.dataset.label || `Slide ${i + 1}`;
+    btn.setAttribute('aria-label', s.dataset.label || `Slide ${i + 1}`);
+    btn.addEventListener('click', () => s.scrollIntoView({ behavior: 'smooth' }));
+    nav.appendChild(btn);
+  });
+
+  const dots = nav.querySelectorAll('.nav__dot');
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting && e.intersectionRatio >= 0.5) {
+        const idx = Array.from(slides).indexOf(e.target);
+        dots.forEach((d, i) => d.classList.toggle('nav__dot--active', i === idx));
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(s => io.observe(s));
+}());
+</script>
+
+</body>
+</html>

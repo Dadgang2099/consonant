@@ -16,12 +16,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   if (!video || !lensMask) return;
 
   // ── Tweak panel defaults ──────────────────────────────────
-  const POS_CACHE = 'pw_pos_v2';
   let tweakScale = 71.9;
   let tweakYRef  = 789;
   let tweakXOff  = 2;
-
-  // Position values are restored from the live payload on load — not auto-persisted
 
   const scaleInput = document.getElementById('scaleInput');
   const yRefInput  = document.getElementById('yRefInput');
@@ -35,10 +32,6 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     if (sv) sv.textContent = (+tweakScale).toFixed(1);
     if (yv) yv.textContent = Math.round(tweakYRef);
     if (xv) xv.textContent = Math.round(tweakXOff);
-  }
-
-  function savePosCache() {
-    try { localStorage.setItem(POS_CACHE, JSON.stringify({ scale: tweakScale, yRef: tweakYRef, xOff: tweakXOff })); } catch(_) {}
   }
 
   if (scaleInput) {
@@ -300,12 +293,29 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   function updateTrack(input) {
     const panel = input.closest('.pw-panel');
     const dark  = !panel?.classList.contains('pw-panel--newb');
-    const fill  = dark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.42)';
-    const track = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+    const fill  = dark ? 'rgba(255,255,255,0.60)' : 'rgba(0,0,0,0.42)';
+    const fill0 = dark ? 'rgba(255,255,255,0)'    : 'rgba(0,0,0,0)';
     const min = +input.min, max = +input.max, val = +input.value;
-    const pct = ((val - min) / (max - min) * 100).toFixed(1);
-    input.style.backgroundImage =
-      `linear-gradient(to right, ${fill} ${pct}%, ${track} ${pct}%)`;
+    const ratio = Math.max(0, Math.min(1, (val - min) / (max - min)));
+
+    // True thumb-center in element-% space (WebKit insets thumb by half its
+    // width from each track edge, so raw ratio ≠ visual center position).
+    const w   = input.offsetWidth || 200;
+    const tW  = 20;       // must match CSS thumb width
+    const capR = tW / 2;  // 10 px
+    const cx  = capR + (w - tW) * ratio;
+    const tp  = (cx / w * 100).toFixed(3);
+
+    // Cap dome: round right end of the fill bar.
+    const cap = `radial-gradient(circle ${capR}px at ${tp}% 50%, ${fill} 80%, ${fill0} 100%)`;
+    // Bar: solid fill that softly fades over the full thumb diameter so there
+    // is never a hard edge visible at any thumb opacity during hover/rolloff.
+    const bar = `linear-gradient(to right, ${fill} calc(${tp}% - ${capR}px), ${fill0} calc(${tp}% + ${capR}px))`;
+
+    input.style.backgroundImage    = `${cap}, ${bar}`;
+    input.style.backgroundSize     = '';
+    input.style.backgroundPosition = '';
+    input.style.backgroundRepeat   = '';
   }
   document.querySelectorAll('.pw-range').forEach(r => {
     updateTrack(r);
@@ -497,40 +507,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   }
 
-  // ── Panel resize + corner marks ──────────────────────────
-  function makeResizable(panel) {
-    // Bottom-right resize handle (panelAnimSystem adds --left / --right later)
-    const handle = document.createElement('div');
-    handle.className = 'pw-panel__resize';
-    panel.appendChild(handle);
-
-    let resizing = false, sx = 0, sw = 0;
-    handle.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return;
-      e.preventDefault();
-      e.stopPropagation();
-      resizing = true;
-      sx = e.clientX;
-      sw = panel.offsetWidth;
-
-      function onMove(e) {
-        if (!resizing) return;
-        panel.style.width = Math.max(220, Math.min(520, sw + e.clientX - sx)) + 'px';
-      }
-      function onUp() {
-        resizing = false;
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup',   onUp);
-      }
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup',   onUp);
-    });
-  }
-
   [seqPanel, shadowPanel, tweakPanel, contentPanel].forEach(p => {
     if (!p) return;
     makeDraggable(p);
-    makeResizable(p);
   });
 
   // ── Mouse glow on AI callouts — paints through letter masks ─
@@ -1269,10 +1248,13 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   const OPEN_EASE   = 'cubic-bezier(0.16,1,0.3,1)';
 
   const chromeEls = () => [
+    document.getElementById('backBtn'),
+    document.getElementById('undoBtn'),
     document.getElementById('aiBar'),
     document.getElementById('fxKnob'),
     document.getElementById('pubCluster'),
     document.getElementById('modeToggle'),
+    document.querySelector('.drv-overlay'),
   ].filter(Boolean);
 
   function hidePanels() {
@@ -1280,8 +1262,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     panelsVisible = false;
     panelTogBtn?.classList.add('panel-tog--panels-hidden');
 
-    // Fade all chrome
-    chromeEls().forEach((el, i) => {
+    // Fade all chrome (including the KF/drv overlay)
+    const allChrome = chromeEls();
+    allChrome.forEach((el, i) => {
       setTimeout(() => {
         el.style.transition    = `opacity 0.26s ${CLOSE_EASE}`;
         el.style.opacity       = '0';
@@ -1317,8 +1300,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     if (panelsVisible) return;
     panelTogBtn?.classList.remove('panel-tog--panels-hidden');
 
-    // Restore chrome
-    chromeEls().forEach((el, i) => {
+    // Restore chrome (including the KF/drv overlay)
+    const allChrome = chromeEls();
+    allChrome.forEach((el, i) => {
       setTimeout(() => {
         el.style.transition    = `opacity 0.38s ${OPEN_EASE}`;
         el.style.opacity       = '';
@@ -1351,7 +1335,10 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   }
 
-  // Start with all panels hidden — user presses the toggle to bring them up
+  // Hide everything immediately on load — panelAnimSystem will hide its own overlay after building it
+  initHidePanels();
+
+  // Start with all panels hidden — only the eye button is visible
   function initHidePanels() {
     panelTogBtn?.classList.add('panel-tog--panels-hidden');
     chromeEls().forEach(el => {
@@ -1375,8 +1362,10 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       copy:       { headline: document.getElementById('hlText')?.textContent.trim(), body: document.getElementById('bdText')?.textContent.trim(), cta1: document.getElementById('cta1El')?.textContent.trim(), cta2: document.getElementById('cta2El')?.textContent.trim() },
       typography: { hlSize: document.getElementById('hlSize')?.value, hlLineH: document.getElementById('hlLineH')?.value, hlTracking: document.getElementById('hlTracking')?.value, hlWeight: document.getElementById('hlWeight')?.value, bdSize: document.getElementById('bdSize')?.value, bdLineH: document.getElementById('bdLineH')?.value, bdTracking: document.getElementById('bdTracking')?.value, bdWeight: document.getElementById('bdWeight')?.value },
       layout:     { lockupTop: document.getElementById('lockupTop')?.value, lockupMaxW: document.getElementById('lockupMaxW')?.value, lockupPad: document.getElementById('lockupPad')?.value, lockupGap: document.getElementById('lockupGap')?.value, lockupScale: document.getElementById('lockupScale')?.value, ctaGap: document.getElementById('ctaGap')?.value, scale: document.getElementById('scaleInput')?.value, yRef: document.getElementById('yRefInput')?.value, xOff: document.getElementById('xOffInput')?.value },
+      kfs:        window.__getKFs ? window.__getKFs() : null,
     };
   }
+  window.__buildPayload = buildPayload;
 
   let pubFlashing = false;
   publishBtn?.addEventListener('click', () => {
@@ -1432,17 +1421,16 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       .then(r => r.json())
       .then(data => {
         if (data.ok) {
-          // Also bake to localStorage as fallback
-          try { localStorage.setItem('pw_live', JSON.stringify(payload)); } catch(_) {}
+          // Draft is now committed — clear it so refresh shows the live state cleanly
+          try { sessionStorage.removeItem('pw_kf_draft'); } catch(_) {}
+          document.getElementById('kfDraftBanner')?.remove();
           flashPushLive('pushlive-btn--live', 'LIVE ✓', 2200);
         } else {
           flashPushLive('pushlive-btn--error', 'ERROR', 2000);
         }
       })
       .catch(() => {
-        // Server not running — fall back to localStorage only
-        try { localStorage.setItem('pw_live', JSON.stringify(payload)); } catch(_) {}
-        flashPushLive('pushlive-btn--live', 'LOCAL ✓', 2000);
+        flashPushLive('pushlive-btn--error', 'NO SERVER', 2000);
       });
   });
 }());
@@ -1772,6 +1760,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
   function applyPayload(p) {
     if (!p) return;
+    window.__liveApplying = true;
     const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
     if (p.typography) { ['hlSize','hlLineH','hlTracking','bdSize','bdLineH','bdTracking'].forEach(k => set(k, p.typography[k])); }
     if (p.layout)     { ['lockupTop','lockupMaxW','lockupPad','lockupGap','lockupScale','ctaGap'].forEach(k => set(k, p.layout[k])); }
@@ -1786,19 +1775,117 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       const c2=document.getElementById('cta2El'); if(c2&&p.copy.cta2)c2.textContent=p.copy.cta2;
     }
     if (p.scroll && window._scrollCfg) { Object.assign(window._scrollCfg, p.scroll); window.dispatchEvent(new Event('scroll')); }
+    window.__liveApplying = false;
+    if (p.kfs && window.__applyKFs) window.__applyKFs(p.kfs);
   }
 
   window.addEventListener('pw:publish', updateCount);
 
-  // Apply live state on page load — server live.json wins over localStorage fallback
+  // ── Undo stack (20 steps, session-only) ──────────────────
+  const undoStack = [];
+  const UNDO_MAX  = 20;
+  let   _preSnap  = null;
+  const undoBtn   = document.getElementById('undoBtn');
+
+  function setUndoBtn() {
+    if (!undoBtn) return;
+    undoBtn.disabled = undoStack.length === 0;
+  }
+
+  function pushUndo(snap) {
+    undoStack.push(snap);
+    if (undoStack.length > UNDO_MAX) undoStack.shift();
+    setUndoBtn();
+  }
+
+  function doUndo() {
+    if (!undoStack.length) return;
+    const snap = undoStack.pop();
+    applyPayload(snap);
+    if (snap.kfs && window.__applyKFs) window.__applyKFs(snap.kfs);
+    setUndoBtn();
+  }
+
+  // Snapshot before any panel interaction begins
+  document.addEventListener('mousedown', e => {
+    if (e.target.closest('.pw-panel') && window.__buildPayload) {
+      _preSnap = window.__buildPayload();
+    }
+  }, true);
+
+  // Commit snapshot after a value actually changes
+  document.addEventListener('change', e => {
+    if (e.target.closest('.pw-panel') && _preSnap) {
+      pushUndo(_preSnap);
+      _preSnap = null;
+    }
+  }, true);
+
+  // Segment controls fire click not change
+  document.addEventListener('click', e => {
+    if (e.target.closest('.pw-seg__btn') && e.target.closest('.pw-panel') && _preSnap) {
+      pushUndo(_preSnap);
+      _preSnap = null;
+    }
+  }, true);
+
+  undoBtn?.addEventListener('click', doUndo);
+
+  document.getElementById('backBtn')?.addEventListener('click', () => {
+    if (window.history.length > 1) history.back();
+    else window.close();
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      doUndo();
+    }
+  });
+
+  // Clear any stale pw_live localStorage from old sessions
+  try { localStorage.removeItem('pw_live'); } catch(_) {}
+
+  // ── KF Draft banner ──────────────────────────────────────
+  // Shows after page load when sessionStorage has unsaved KF work.
+  // Refresh reverts to live.json; this banner lets the user decide
+  // whether to restore their draft or discard it.
+  function showKFDraftBanner() {
+    if (document.getElementById('kfDraftBanner')) return;
+    let draft;
+    try { draft = JSON.parse(sessionStorage.getItem('pw_kf_draft') || 'null'); } catch(_) {}
+    if (!draft || !Object.keys(draft).length) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'kfDraftBanner';
+    banner.className = 'kf-draft-banner';
+    banner.innerHTML =
+      '<span class="kf-draft-banner__label">◆ KF DRAFT</span>'
+      + '<button class="kf-draft-banner__load" id="kfDraftLoad">Load</button>'
+      + '<button class="kf-draft-banner__discard" id="kfDraftDiscard">✕</button>';
+    document.body.appendChild(banner);
+
+    document.getElementById('kfDraftLoad')?.addEventListener('click', () => {
+      if (window.__restoreKFDraft) window.__restoreKFDraft();
+      banner.remove();
+    });
+    document.getElementById('kfDraftDiscard')?.addEventListener('click', () => {
+      if (window.__clearKFDraft) window.__clearKFDraft();
+      banner.remove();
+    });
+  }
+
+  // Apply live state on page load — only from server live.json, never localStorage
   fetch('/live.json')
     .then(r => r.ok ? r.json() : null)
-    .then(live => { if (live) applyPayload(live); })
+    .then(live => {
+      if (live) applyPayload(live);
+      setTimeout(showKFDraftBanner, 0);  // after all IIFEs have run
+    })
     .catch(() => {
-      try {
-        const live = JSON.parse(localStorage.getItem('pw_live') || 'null');
-        if (live) applyPayload(live);
-      } catch(_) {}
+      setTimeout(showKFDraftBanner, 0);
     });
 }());
 
@@ -1949,8 +2036,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
   // ── Panel resize — drag lower-right or lower-left corner ──
   document.querySelectorAll('.pw-panel').forEach(panel => {
-    const scrollBody = panel.querySelector('.pw-panel__body--scroll') ||
-                       panel.querySelector('.pw-panel__body');
+    const scrollBody = panel.querySelector('.pw-panel__body--scroll');
 
     ['right','left'].forEach(side => {
       const handle = document.createElement('div');
@@ -1960,21 +2046,20 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
       handle.addEventListener('mousedown', e => {
         e.preventDefault();
-        const startX     = e.clientX;
-        const startY     = e.clientY;
-        const startW     = panel.offsetWidth;
-        const startH     = scrollBody ? scrollBody.offsetHeight : 0;
+        const startX   = e.clientX;
+        const startY   = e.clientY;
+        const startW   = panel.offsetWidth;
+        const startH   = panel.offsetHeight;
+        const hdrH     = panel.querySelector('.pw-panel__hdr')?.offsetHeight ?? 46;
 
         function onMove(ev) {
           const dx = ev.clientX - startX;
           const dy = ev.clientY - startY;
-          // Right-anchored panel: dragging left = wider (dx negative = wider)
           const newW = Math.max(220, Math.min(600, side === 'left' ? startW - dx : startW + dx));
-          panel.style.width = `${newW}px`;
-          if (scrollBody && startH) {
-            const newH = Math.max(120, Math.min(window.innerHeight - 120, startH + dy));
-            scrollBody.style.maxHeight = `${newH}px`;
-          }
+          const newH = Math.max(120, Math.min(window.innerHeight - 80, startH + dy));
+          panel.style.width  = `${newW}px`;
+          panel.style.height = `${newH}px`;
+          if (scrollBody) scrollBody.style.maxHeight = `${Math.max(60, newH - hdrH - 8)}px`;
         }
 
         function onUp() {
@@ -2017,11 +2102,11 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     const RANGE_DEG  = 300;
     const TRAIL_LIFE = 1400;
 
-    // Cascade lines — 12 radial spokes extending beyond button edge
-    const CASCADE_N     = 12;
+    // Cascade lines — radial spokes extending beyond button edge
+    const CASCADE_N     = 24;
     const CASCADE_R_IN  = 32;   // starts just outside the button rim
     const CASCADE_R_OUT = 50;   // maximum extension length
-    const CASCADE_STAGGER = 70; // ms between each line in hover burst
+    const CASCADE_STAGGER = 36; // ms between each line in hover burst
 
     const trail = [];
     // Per-line cascade animation state: t (0-1 normalized progress), active
@@ -2075,13 +2160,34 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
           burstAlpha = (1 - c.t) * 0.92;
         }
 
-        // Sustained glow while hovering after burst completes
-        const hoverAlpha = cascHovering && c.t >= 1 ? 0.38 : 0;
-        const totalAlpha = Math.max(burstAlpha, hoverAlpha);
+        // Normalize both angles to [0, 2π] before computing angular distance
+        const TAU     = Math.PI * 2;
+        const normCur = ((curRad % TAU) + TAU) % TAU;
+        const normAng = ((angle  % TAU) + TAU) % TAU;
+        const rawDiff = Math.abs(normAng - normCur);
+        const angDist = Math.min(rawDiff, TAU - rawDiff); // 0 → π
+
+        // Sustained hover glow: proximity to dot, no extension
+        let hoverAlpha = 0;
+        if (cascHovering && c.t >= 1) {
+          const ARC  = Math.PI * 0.55;
+          hoverAlpha = Math.max(0, 0.42 * Math.pow(1 - Math.min(1, angDist / ARC), 2));
+        }
+
+        // Drag extension: lines near the dot extend outward, fading with angular distance
+        let dragLen = 0, dragAlpha = 0;
+        if (kDragging) {
+          const ARC  = Math.PI * 0.45;              // ±81° arc around dot
+          const prox = Math.max(0, 1 - Math.pow(Math.min(1, angDist / ARC), 1.8));
+          dragLen    = prox;
+          dragAlpha  = 0.70 * prox;
+        }
+
+        const totalAlpha = Math.max(burstAlpha, hoverAlpha, dragAlpha);
         if (totalAlpha < 0.01) continue;
 
         const rIn  = CASCADE_R_IN;
-        const rOut = CASCADE_R_IN + (CASCADE_R_OUT - CASCADE_R_IN) * burstLen;
+        const rOut = CASCADE_R_IN + (CASCADE_R_OUT - CASCADE_R_IN) * Math.max(burstLen, dragLen);
 
         const x1 = KCX + Math.cos(angle) * rIn;
         const y1 = KCY + Math.sin(angle) * rIn;
@@ -2091,8 +2197,8 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         kCtx.beginPath();
         kCtx.moveTo(x1, y1);
         kCtx.lineTo(x2, y2);
-        kCtx.strokeStyle = `rgba(56,210,255,${totalAlpha})`;
-        kCtx.lineWidth   = 1.5;
+        kCtx.strokeStyle = `rgba(120,185,210,${totalAlpha})`;
+        kCtx.lineWidth   = 0.7;
         kCtx.lineCap     = 'round';
         kCtx.stroke();
       }
@@ -2107,22 +2213,22 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         const dy = KCY + Math.sin(dot.angle) * DOT_R;
         kCtx.beginPath();
         kCtx.arc(dx, dy, 1.4, 0, Math.PI * 2);
-        kCtx.fillStyle = `rgba(56,210,255,${t * 0.55})`;
+        kCtx.fillStyle = `rgba(120,185,210,${t * 0.55})`;
         kCtx.fill();
       }
 
-      // ── Blue dot on outermost ring ───────────────────────
+      // ── Position dot on outermost ring ───────────────────
       const dotX = KCX + Math.cos(curRad) * DOT_R;
       const dotY = KCY + Math.sin(curRad) * DOT_R;
       // Glow halo
       kCtx.beginPath();
       kCtx.arc(dotX, dotY, 4.5, 0, Math.PI * 2);
-      kCtx.fillStyle = 'rgba(56,210,255,0.18)';
+      kCtx.fillStyle = 'rgba(120,185,210,0.18)';
       kCtx.fill();
       // Core dot
       kCtx.beginPath();
       kCtx.arc(dotX, dotY, 2.5, 0, Math.PI * 2);
-      kCtx.fillStyle = 'rgba(56,210,255,0.95)';
+      kCtx.fillStyle = 'rgba(140,195,218,0.92)';
       kCtx.fill();
 
       requestAnimationFrame(ts => kDraw(ts));
@@ -2736,8 +2842,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 (function panelAnimSystem() {
   'use strict';
 
-  const STORE_KEY  = 'pwKFs2';
-  const STORE_MIGR = 'pwKFs2_migr1'; // one-time migration flag
   const PANEL_COLORS = {
     shadowPanel:  '#38d2ff',
     seqPanel:     '#ff9f40',
@@ -2751,9 +2855,112 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   let applying   = false; // re-entry guard — prevents seqSpeed dispatch loop
   let kfEnabled  = true;  // global KF playback toggle — false = bypass all KFs
 
-  const KF_BLOCKLIST = new Set([]);
+  const KF_BLOCKLIST = new Set(['scaleInput', 'yRefInput', 'xOffInput']);
   let overlayEl  = null;
   let animBtn    = null;
+
+  // ── Sparkle particle system ───────────────────────────
+  let sparkCanvas = null;
+  let sparkCtx    = null;
+  let sparkParts  = [];    // {x,y,vx,vy,life,maxLife,r,color,startY,midY}
+  let sparkRaf    = null;
+  let sparkSrc    = null;  // {x,y,midY,color} while dragging; null = inactive
+  let dragState   = null;  // {selSnap, scrollMax, deltaSY} — drives canvas line during drag
+
+  function sizeSparkCanvas() {
+    if (!sparkCanvas || !overlayEl) return;
+    const dpr = window.devicePixelRatio || 1;
+    const cw  = Math.round(overlayEl.offsetWidth  * dpr);
+    const ch  = Math.round(overlayEl.offsetHeight * dpr);
+    if (sparkCanvas.width !== cw || sparkCanvas.height !== ch) {
+      sparkCanvas.width  = cw;
+      sparkCanvas.height = ch;
+    }
+  }
+
+  function tickSpark() {
+    if (!sparkCanvas || !sparkCtx) { sparkRaf = null; return; }
+    sizeSparkCanvas();
+    const dpr = window.devicePixelRatio || 1;
+    const W   = sparkCanvas.width  / dpr;
+    const H   = sparkCanvas.height / dpr;
+    sparkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sparkCtx.clearRect(0, 0, W, H);
+
+    // ── Canvas connecting-line during drag (replaces the div line) ──────────
+    if (dragState) {
+      const { selSnap: sel, scrollMax: sm, deltaSY: dSY } = dragState;
+      const panelKeys = Object.keys(PANEL_COLORS);
+      new Set(sel.map(s => s.panelId)).forEach(pid => {
+        const allDots = [...overlayEl.querySelectorAll(`[data-kf-pan="${pid}"]`)];
+        if (allDots.length < 2) return;
+        const pidIdx = panelKeys.indexOf(pid);
+        const colX   = Math.round((pidIdx + 0.5) * (48 / panelKeys.length));
+        const color  = PANEL_COLORS[pid] || '#ffffff';
+        const dotYs  = allDots.map(d => {
+          const dSY_val = parseInt(d.dataset.kfSy, 10);
+          const isSel   = sel.some(s => s.panelId === pid && Math.abs(s.sy - dSY_val) <= KF_SNAP_RADIUS);
+          const finalSY = Math.max(0, Math.min(sm, isSel ? dSY_val + dSY : dSY_val));
+          return finalSY / sm * H;
+        }).sort((a, b) => a - b);
+        sparkCtx.save();
+        sparkCtx.globalAlpha = 0.85;
+        sparkCtx.strokeStyle = color;
+        sparkCtx.lineWidth   = 2;
+        sparkCtx.lineCap     = 'round';
+        sparkCtx.beginPath();
+        sparkCtx.moveTo(colX, dotYs[0]);
+        for (let i = 1; i < dotYs.length; i++) sparkCtx.lineTo(colX, dotYs[i]);
+        sparkCtx.stroke();
+        sparkCtx.restore();
+      });
+    }
+
+    if (sparkSrc) {
+      for (let i = 0; i < 4; i++) {
+        sparkParts.push({
+          x:       sparkSrc.x + (Math.random() - 0.5) * 3,
+          y:       sparkSrc.y - Math.random() * 2,
+          vx:      (Math.random() - 0.5) * 0.9,
+          vy:      -(2.0 + Math.random() * 1.8),
+          life:    0,
+          maxLife: 22 + Math.random() * 22,
+          r:       1.5 + Math.random() * 1.5,
+          color:   sparkSrc.color,
+          startY:  sparkSrc.y,
+          midY:    sparkSrc.midY,
+        });
+      }
+    }
+
+    sparkParts = sparkParts.filter(p => {
+      p.x    += p.vx;
+      p.y    += p.vy;
+      p.life += 1;
+      const lifeFade = 1 - p.life / p.maxLife;
+      // particles rise upward; midY is ABOVE startY — fade to 0 as they reach midY
+      const range    = Math.max(1, p.startY - p.midY);
+      const distFade = 1 - Math.min(1, Math.max(0, (p.startY - p.y) / range));
+      const a = lifeFade * distFade * 0.90;
+      if (a < 0.01 || p.life >= p.maxLife) return false;
+      sparkCtx.globalAlpha = a;
+      sparkCtx.fillStyle   = p.color;
+      sparkCtx.beginPath();
+      sparkCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      sparkCtx.fill();
+      return true;
+    });
+
+    sparkCtx.globalAlpha = 1;
+
+    if (sparkSrc || sparkParts.length > 0 || dragState) {
+      sparkRaf = requestAnimationFrame(tickSpark);
+    } else {
+      sparkRaf = null;
+      sparkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sparkCtx.clearRect(0, 0, W, H);
+    }
+  }
 
   const lerp   = (a, b, t) => a + (b - a) * t;
   const easeIO = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
@@ -2772,15 +2979,19 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     return rgbToHex(ar+(br-ar)*t, ag+(bg-ag)*t, ab+(bb-ab)*t);
   }
 
-  // ── Persistence ───────────────────────────────────────
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORE_KEY);
-      kfStore = raw ? JSON.parse(raw) : {};
-    } catch(_) { kfStore = {}; }
-  }
+  // ── Persistence — KF draft in sessionStorage ─────────
+  // KFs auto-save to sessionStorage as a draft.
+  // Refresh loads live.json only (reverts to last Push Live state).
+  // The draft banner lets the user explicitly restore their work.
+  function load() { kfStore = {}; }
   function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(kfStore)); } catch(_) {}
+    try {
+      if (Object.keys(kfStore).length > 0) {
+        sessionStorage.setItem('pw_kf_draft', JSON.stringify(kfStore));
+      } else {
+        sessionStorage.removeItem('pw_kf_draft');
+      }
+    } catch(_) {}
   }
 
   let _lastCapturedSY = -1; // track most recent capture scroll for dot pulse
@@ -2796,6 +3007,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     updateBadges();
     refreshSnapButtons();
     buildOverlayLines();
+    applyAllKFs(window.scrollY);
   }
 
   // ── Helper: color for an input based on its panel ─────
@@ -2815,6 +3027,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     playback = true;
     for (const [inputId, kfs] of Object.entries(kfStore)) {
       if (KF_BLOCKLIST.has(inputId)) continue;  // never animate position calibration
+      // seqSpeed changes the scroll-driver height → clamps window.scrollY mid-drag
+      if (dragState && inputId === 'seqSpeed') continue;
       if (kfs.length < 2) continue;  // need ≥2 KFs to interpolate
       const sorted = kfs.slice().sort((a, b) => a.scrollY - b.scrollY);
       // Only active between first and last keyframe
@@ -2855,14 +3069,24 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   // ── KF sidebar — modern right-edge track ─────────────
   function buildOverlay() {
     if (overlayEl) overlayEl.remove();
+    sparkCanvas = null; sparkCtx = null; sparkParts = [];
+    if (sparkRaf) { cancelAnimationFrame(sparkRaf); sparkRaf = null; }
+    sparkSrc = null;
+
     overlayEl = document.createElement('div');
     overlayEl.className = 'drv-overlay';
     document.body.appendChild(overlayEl);
+
+    sparkCanvas = document.createElement('canvas');
+    sparkCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6;';
+    overlayEl.appendChild(sparkCanvas);
+    sparkCtx = sparkCanvas.getContext('2d');
   }
 
   function buildOverlayLines() {
     if (!overlayEl) return;
-    overlayEl.innerHTML = '';
+    // Remove all children except the sparkle canvas
+    [...overlayEl.children].forEach(c => { if (c !== sparkCanvas) c.remove(); });
 
     const totalKFs = Object.values(kfStore).reduce((n, kfs) => n + kfs.length, 0);
     overlayEl.classList.toggle('drv-overlay--has-kfs', totalKFs > 0);
@@ -2890,13 +3114,15 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
       // Clear-all button
       const clearBtn = document.createElement('button');
-      clearBtn.className = 'drv-overlay__clear';
-      clearBtn.title = 'Clear all keyframes';
-      clearBtn.textContent = '×';
+      clearBtn.className = 'drv-overlay__bypass drv-overlay__bypass--clear';
+      clearBtn.title = 'Delete all keyframes';
+      clearBtn.textContent = '✕ KFs';
       clearBtn.addEventListener('click', () => {
-        if (!confirm('Clear all keyframes?')) return;
         kfStore = {};
-        save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
+        save();
+        buildOverlayLines();
+        updateBadges();
+        refreshSnapButtons();
       });
       overlayEl.appendChild(clearBtn);
     }
@@ -2925,48 +3151,138 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       col.style.left = `${colCenter - 1}px`;
       overlayEl.appendChild(col);
 
-      // Connecting line between first and last KF
-      if (sorted.length >= 2) {
+      // Dim full-height track — always visible when panel has any KFs
+      const track = document.createElement('div');
+      track.className = 'drv-overlay__track';
+      col.appendChild(track);
+
+      // Segment lines between every consecutive pair of KFs
+      for (let i = 0; i < sorted.length - 1; i++) {
         const line = document.createElement('div');
         line.className = 'drv-overlay__line';
-        const topPct  = (sorted[0] / scrollMax) * 100;
-        const botPct  = (sorted[sorted.length - 1] / scrollMax) * 100;
+        const topPct = (sorted[i]     / scrollMax) * 100;
+        const botPct = (sorted[i + 1] / scrollMax) * 100;
         line.style.top    = `${topPct}%`;
-        line.style.height = `${Math.max(0.4, botPct - topPct)}%`;
+        line.style.height = `${Math.max(0.5, botPct - topPct)}%`;
+        line.dataset.kfLinePan = panelId;
         col.appendChild(line);
       }
 
-      // Dot at each KF scroll position — click to scroll/delete, drag to move
+      // Dot at each KF scroll position — click to scroll/delete, shift-click to multi-select, drag to move
       sorted.forEach(sy => {
+        const key = `${panelId}:${sy}`;
+        const isNew = Math.abs(sy - _lastCapturedSY) <= KF_SNAP_RADIUS;
+        const isSel = kfSel.has(key);
         const dot = document.createElement('div');
-        dot.className = 'drv-overlay__dot' + (Math.abs(sy - _lastCapturedSY) <= KF_SNAP_RADIUS ? ' drv-overlay__dot--new' : '');
-        dot.style.top  = `${(sy / scrollMax) * 100}%`;
-        dot.title      = `KF @ ${Math.round(sy)}px — click here to delete, drag to move`;
+        dot.className = 'drv-overlay__dot'
+          + (isNew ? ' drv-overlay__dot--new' : '')
+          + (isSel ? ' drv-overlay__dot--selected' : '');
+        dot.style.top = `${(sy / scrollMax) * 100}%`;
+        dot.title = `KF @ ${Math.round(sy)}px — drag to move, shift-click to multi-select`;
         dot.style.pointerEvents = 'auto';
+        dot.dataset.kfPan = panelId;
+        dot.dataset.kfSy  = String(sy);
+        dot.dataset.kfColX = String(colCenter);
+
         let didDrag = false;
 
         dot.addEventListener('mousedown', e => {
           e.preventDefault();
           e.stopPropagation();
+
+          if (e.shiftKey) {
+            if (kfSel.has(key)) kfSel.delete(key);
+            else kfSel.add(key);
+            dot.classList.toggle('drv-overlay__dot--selected', kfSel.has(key));
+            return;
+          }
+
+          // Clear selection if clicking an unselected dot
+          if (!kfSel.has(key)) kfSel.clear();
+          kfSel.add(key);
+
           didDrag = false;
-          const rect = overlayEl.getBoundingClientRect();
-          const oldSY = sy;
-          const panelEl2 = document.getElementById(panelId);
+          const oldSY        = sy;
+          const startMouseY  = e.clientY;
+          window.scrollTo(0, oldSY);
+          const startScrollY = oldSY;
+
+          // Snapshot all currently selected {panelId, sy} for delta-move
+          const selSnap = [...kfSel].map(k => {
+            const colonIdx = k.lastIndexOf(':');
+            return { key: k, panelId: k.slice(0, colonIdx), sy: parseInt(k.slice(colonIdx + 1)) };
+          });
 
           dot.classList.add('drv-overlay__dot--dragging');
+          overlayEl.classList.add('drv-overlay--dragging');
+          dragState = { selSnap, scrollMax, deltaSY: 0 };
+          if (!sparkRaf) sparkRaf = requestAnimationFrame(tickSpark);
+          // Seed the rAF scroll loop at the snap position, then start the loop
+          kfDragTargetSY = oldSY;
+          requestAnimationFrame(kfDragScrollLoop);
+
+          // currentSY passed directly — no dependency on window.scrollY settling
+          function updateKFVisuals(currentSY) {
+            const deltaSY = Math.round(currentSY - startScrollY);
+            selSnap.forEach(({ panelId: pid, sy: sSY }) => {
+              const el = overlayEl.querySelector(`[data-kf-pan="${pid}"][data-kf-sy="${sSY}"]`);
+              if (el) el.style.top = `${Math.max(0, Math.min(100, ((sSY + deltaSY) / scrollMax) * 100))}%`;
+            });
+            if (dragState) dragState.deltaSY = deltaSY;
+
+            // Sparkles
+            if (selSnap.length > 0) {
+              const primary  = selSnap[0];
+              const colX     = parseInt(dot.dataset.kfColX || '24');
+              const overlayH = overlayEl.offsetHeight || window.innerHeight;
+              const dotY     = Math.max(0, Math.min(100, (primary.sy + deltaSY) / scrollMax * 100)) / 100 * overlayH;
+              let midY = dotY - 70;
+              const panelDots = [...overlayEl.querySelectorAll(`[data-kf-pan="${primary.panelId}"]`)];
+              const otherYs = panelDots.map(d => {
+                const dSY_val = parseInt(d.dataset.kfSy, 10);
+                const isSel   = selSnap.some(s => s.panelId === primary.panelId && Math.abs(s.sy - dSY_val) <= KF_SNAP_RADIUS);
+                const fSY     = Math.max(0, Math.min(scrollMax, isSel ? dSY_val + deltaSY : dSY_val));
+                return fSY / scrollMax * overlayH;
+              }).filter(y => Math.abs(y - dotY) > 5);
+              if (otherYs.length > 0) {
+                const topY = Math.min(...otherYs);
+                midY = dotY > topY ? dotY - Math.max(40, (dotY - topY) * 0.5) : dotY - 70;
+              }
+              const sparkColor = PANEL_COLORS[primary.panelId] || '#ffffff';
+              if (!sparkSrc) {
+                sparkSrc = { x: colX, y: dotY, midY, color: sparkColor };
+                if (!sparkRaf) sparkRaf = requestAnimationFrame(tickSpark);
+              } else {
+                sparkSrc.x = colX; sparkSrc.y = dotY; sparkSrc.midY = midY;
+              }
+            }
+          }
 
           function onMove(e2) {
-            didDrag = true;
-            const frac = Math.max(0, Math.min(1, (e2.clientY - rect.top) / rect.height));
-            dot.style.top = `${frac * 100}%`;
+            if (!didDrag && Math.abs(e2.clientY - startMouseY) > 3) didDrag = true;
+            if (!didDrag) return;
+
+            const rect  = overlayEl.getBoundingClientRect();
+            const relY  = Math.max(0, Math.min(rect.height, e2.clientY - rect.top));
+            const newSY = Math.round((relY / rect.height) * scrollMax);
+
+            updateKFVisuals(newSY);
+            window.scrollTo(0, newSY);  // immediate; 2-arg form works in every browser
+            kfDragTargetSY = newSY;     // rAF loop holds the position each frame
           }
+
           function onUp(e2) {
+            if (edgeRaf) { cancelAnimationFrame(edgeRaf); edgeRaf = null; }
+            sparkSrc  = null; // stop emitting; existing particles fade out naturally
+            const finalDeltaSY = dragState ? dragState.deltaSY : Math.round(window.scrollY - startScrollY);
+            dragState = null; // stop canvas line; div line takes back over after rebuild
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup',   onUp);
             dot.classList.remove('drv-overlay__dot--dragging');
+            overlayEl.classList.remove('drv-overlay--dragging');
 
             if (!didDrag) {
-              // Click: if already at this position, delete; otherwise scroll here
+              kfSel.clear();
               if (Math.abs(window.scrollY - oldSY) <= KF_SNAP_RADIUS) {
                 deleteKFsAtScroll(panelId, oldSY);
               } else {
@@ -2975,18 +3291,30 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
               return;
             }
 
-            // Drag released — move all KFs at oldSY to newSY
-            const frac  = Math.max(0, Math.min(1, (e2.clientY - rect.top) / rect.height));
-            const newSY = Math.round(frac * scrollMax);
-            for (const [inputId, kfs] of Object.entries(kfStore)) {
-              if (!panelEl2?.querySelector(`#${inputId}`)) continue;
-              kfs.forEach(kf => {
-                if (Math.abs(kf.scrollY - oldSY) <= KF_SNAP_RADIUS) kf.scrollY = newSY;
-              });
-              kfs.sort((a, b) => a.scrollY - b.scrollY);
-            }
+            const deltaSY = finalDeltaSY;
+            selSnap.forEach(({ panelId: pid, sy: sSY }) => {
+              const targetSY = Math.max(0, sSY + deltaSY);
+              for (const [inputId, kfs] of Object.entries(kfStore)) {
+                const pe = document.getElementById(pid);
+                if (!pe?.querySelector(`#${inputId}`)) continue;
+                kfs.forEach(kf => {
+                  if (Math.abs(kf.scrollY - sSY) <= KF_SNAP_RADIUS) kf.scrollY = targetSY;
+                });
+                kfs.sort((a, b) => a.scrollY - b.scrollY);
+              }
+            });
+
+            // Update selection keys to reflect new positions
+            kfSel.clear();
+            selSnap.forEach(({ panelId: pid, sy: sSY }) => {
+              kfSel.add(`${pid}:${Math.max(0, sSY + deltaSY)}`);
+            });
+
             save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
+            // dragState is already null — sync visuals to final resting scroll position
+            applyAllKFs(window.scrollY);
           }
+
           document.addEventListener('mousemove', onMove);
           document.addEventListener('mouseup',   onUp);
         });
@@ -3052,8 +3380,15 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       const badge = document.getElementById(`kwBadge_${panelId}`);
       if (!badge) continue;
       const panel  = document.getElementById(panelId);
-      const inputs = panel ? [...panel.querySelectorAll('input[type=range]')] : [];
-      const count  = inputs.filter(inp => inp.id && (kfStore[inp.id]||[]).length).length;
+      const panelEl = panel || null;
+      const positions = new Set();
+      if (panelEl) {
+        Object.entries(kfStore).forEach(([inputId, kfs]) => {
+          if (KF_BLOCKLIST.has(inputId)) return;
+          if (panelEl.querySelector(`#${inputId}`)) kfs.forEach(kf => positions.add(kf.scrollY));
+        });
+      }
+      const count = positions.size;
       badge.textContent = count > 0 ? `◆ ${count}` : '◆';
       badge.classList.toggle('pw-anim-badge--active', count > 0);
     }
@@ -3135,6 +3470,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   const KF_ICON = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
     <path d="M5 1L9 5L5 9L1 5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
   </svg>`;
+  const DEL_ICON = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+    <path d="M1.5 1.5L7.5 7.5M7.5 1.5L1.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`;
+
+  const kfSel = new Set(); // Set of `${panelId}:${sy}` — multi-select for sidebar drag
 
   // ── ◆ Snap-KF button on every row type ───────────────
   function addKFSnapButtons() {
@@ -3191,63 +3531,87 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
   function attachKFBtn(row, inputId, getVal) {
     if (row.querySelector(`.pw-kf-snap[data-input="${inputId}"]`)) return; // dedup
+
+    // ✕ Delete button — visible only when a KF exists at current scroll
+    const delBtn = document.createElement('button');
+    delBtn.className = 'pw-kf-del';
+    delBtn.dataset.input = inputId;
+    delBtn.innerHTML = DEL_ICON;
+    delBtn.title = 'Delete keyframe';
+    delBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const kfId = delBtn.dataset.kfId;
+      if (kfId) {
+        kfStore[inputId] = (kfStore[inputId] || []).filter(k => String(k.id) !== kfId);
+      } else {
+        const existing = kfAtScroll(inputId, Math.round(window.scrollY));
+        if (!existing) return;
+        kfStore[inputId] = (kfStore[inputId] || []).filter(k => k.id !== existing.id);
+      }
+      if (!(kfStore[inputId] || []).length) delete kfStore[inputId];
+      save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
+    });
+
+    // ◆ Diamond button — always adds/updates KF at current scroll
     const btn = document.createElement('button');
     btn.className = 'pw-kf-snap';
     btn.dataset.input = inputId;
     btn.innerHTML = KF_ICON;
-
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const sy      = Math.round(window.scrollY);
-      const existing = kfAtScroll(inputId, sy);
-      if (existing) {
-        // Already on a KF — delete it
-        kfStore[inputId] = (kfStore[inputId] || []).filter(k => k.id !== existing.id);
-        if (!kfStore[inputId].length) delete kfStore[inputId];
-        save(); updateBadges(); refreshSnapButtons(); buildOverlayLines();
-        btn.classList.add('pw-kf-snap--delete');
-        setTimeout(() => btn.classList.remove('pw-kf-snap--delete'), 400);
-      } else {
-        // No KF here — create one
-        captureInputKF(inputId, sy, getVal());
-        btn.classList.add('pw-kf-snap--flash');
-        setTimeout(() => btn.classList.remove('pw-kf-snap--flash'), 500);
-      }
+      const sy = Math.round(window.scrollY);
+      captureInputKF(inputId, sy, getVal());
+      btn.classList.add('pw-kf-snap--flash');
+      setTimeout(() => btn.classList.remove('pw-kf-snap--flash'), 500);
     });
 
+    row.appendChild(delBtn);
     row.appendChild(btn);
   }
 
-  // Update snap buttons: --has = has any KF, --here = sitting on a KF at current scroll
+  // Update snap + delete buttons: --has = has any KF, --here = sitting on a KF at current scroll
   function refreshSnapButtons() {
     const sy = Math.round(window.scrollY);
     document.querySelectorAll('.pw-kf-snap').forEach(btn => {
-      const id  = btn.dataset.input;
-      const has = !!(kfStore[id] && kfStore[id].length);
+      const id   = btn.dataset.input;
+      const has  = !!(kfStore[id] && kfStore[id].length);
       const here = !!kfAtScroll(id, sy);
       btn.classList.toggle('pw-kf-snap--has',  has);
       btn.classList.toggle('pw-kf-snap--here', here);
-      btn.title = here ? 'Delete keyframe here' : 'Add keyframe here';
+      btn.title = 'Set keyframe';
+    });
+    document.querySelectorAll('.pw-kf-del').forEach(del => {
+      const id   = del.dataset.input;
+      const here = kfAtScroll(id, sy);
+      del.classList.toggle('pw-kf-del--visible', !!here);
+      if (here) del.dataset.kfId = String(here.id);
+      else delete del.dataset.kfId;
     });
   }
 
-  // ── Auto-capture ALL panel values when REC is active ────
+  // ── Auto-capture on value change ─────────────────────────
+  // REC mode: capture entire panel. Otherwise: if this input already has ≥1 KF,
+  // auto-set a KF at the current scroll when its value changes.
   function bindAutoCapture() {
     function capture(e) {
-      if (!animMode || playback) return;
+      if (playback || window.__liveApplying) return;
       const inp = e.target;
       if (!inp.id) return;
       if (KF_BLOCKLIST.has(inp.id)) return;
 
-      // Find which panel this input belongs to
       const panelId = Object.keys(PANEL_COLORS).find(id => {
         const p = document.getElementById(id);
         return p && p.contains(inp);
       });
       if (!panelId) return;
 
-      // Capture ALL values in the panel, not just the changed input
-      captureAllPanelKFs(panelId);
+      if (animMode) {
+        captureAllPanelKFs(panelId);
+      } else if (kfStore[inp.id] && kfStore[inp.id].length >= 1) {
+        // Auto-KF: input already has keyframes — capture this one input
+        const val = inp.type === 'range' ? parseFloat(inp.value) : inp.value;
+        captureInputKF(inp.id, Math.round(window.scrollY), val);
+      }
     }
 
     document.addEventListener('input',  capture, true);
@@ -3255,6 +3619,17 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   }
 
   // ── Scroll ────────────────────────────────────────────
+  let kfDragTargetSY = 0; // updated by onMove; consumed by kfDragScrollLoop
+
+  // Runs every rAF frame while a KF dot is being dragged.
+  // Continuously writing scrollTop overrides any browser clamping
+  // that would otherwise reset the position we just set.
+  function kfDragScrollLoop() {
+    if (!dragState) return; // drag ended — stop naturally
+    window.scrollTo(0, kfDragTargetSY);
+    requestAnimationFrame(kfDragScrollLoop);
+  }
+
   function onScroll() {
     const sy = window.scrollY;
     applyAllKFs(sy);  // updateKFSidebar called inside applyAllKFs
@@ -3262,32 +3637,51 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   }
 
   function buildCornerHatches() {
+    // Corner hatches removed — strip any that exist on panels in case stale
+    // markup got persisted into the DOM from earlier sessions.
     for (const panelId of Object.keys(PANEL_COLORS)) {
       const panel = document.getElementById(panelId);
       if (!panel) continue;
-      ['tl','tr','bl','br'].forEach(pos => {
-        if (panel.querySelector(`.pw-corner--${pos}`)) return;
-        const c = document.createElement('span');
-        c.className = `pw-corner pw-corner--${pos}`;
-        c.setAttribute('aria-hidden', 'true');
-        panel.appendChild(c);
-      });
+      panel.querySelectorAll('.pw-corner').forEach(el => el.remove());
     }
   }
 
+  // ── Globals for cross-IIFE KF persistence ────────────
+  window.__getKFs   = () => JSON.parse(JSON.stringify(kfStore));
+  window.__applyKFs = kfs => {
+    if (!kfs || typeof kfs !== 'object') return;
+    kfStore = kfs;
+    // Strip position-calibration inputs that must never animate
+    KF_BLOCKLIST.forEach(id => delete kfStore[id]);
+    buildOverlayLines();
+    updateBadges();
+    refreshSnapButtons();
+  };
+  window.__clearKFDraft   = () => { try { sessionStorage.removeItem('pw_kf_draft'); } catch(_) {} };
+  window.__restoreKFDraft = () => {
+    try {
+      const raw = sessionStorage.getItem('pw_kf_draft');
+      if (raw && window.__applyKFs) window.__applyKFs(JSON.parse(raw));
+    } catch(_) {}
+  };
+
   // ── Init ─────────────────────────────────────────────
   function init() {
-    load();
+    load(); // kfStore = {} — always starts empty; Push Live restores via applyPayload
     buildAnimateButton();
     buildCornerHatches();
     buildOverlay();
+    // Mirror the PanelSystem's initial hidden state onto the freshly-built overlay
+    if (document.getElementById('panelTog')?.classList.contains('panel-tog--panels-hidden')) {
+      overlayEl.style.opacity       = '0';
+      overlayEl.style.pointerEvents = 'none';
+    }
     buildOverlayLines();   // render any persisted KF tracks immediately
     addBadges();
     addKFSnapButtons();
     refreshSnapButtons();
     bindAutoCapture();
     window.addEventListener('scroll', onScroll, { passive: true });
-    initHidePanels();
   }
 
   if (document.readyState === 'loading') {
@@ -3295,5 +3689,166 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   } else {
     init();
   }
+
+  // ── Scroll Ruler ───────────────────────────────────────────
+  (function initRuler() {
+    const cvs = document.createElement('canvas');
+    cvs.id = 'pw-ruler-cvs';
+    Object.assign(cvs.style, {
+      position: 'fixed', left: '0', top: '0',
+      width: '100vw', height: '100vh',
+      pointerEvents: 'none', zIndex: '9000',
+    });
+    document.body.appendChild(cvs);
+
+    const ball = document.createElement('div');
+    ball.id = 'pw-ruler-ball';
+    Object.assign(ball.style, {
+      position: 'fixed', top: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: '9px', height: '9px',
+      borderRadius: '50%',
+      background: 'rgba(255,255,255,0.90)',
+      boxShadow: '0 0 8px rgba(255,255,255,0.45), 0 0 3px rgba(255,255,255,0.70)',
+      pointerEvents: 'auto', cursor: 'ew-resize',
+      zIndex: '9001', opacity: '0',
+      transition: 'opacity 0.18s ease',
+    });
+    document.body.appendChild(ball);
+
+    const MIN_W    = 5;
+    const INIT_W   = 22;  // visible at rest; user can drag to collapse
+    const maxW     = () => window.innerWidth;
+    let   targetW  = INIT_W;
+    let   currentW = INIT_W;
+
+    // Cascade bands — each band lerps at its own rate (center leads, edges lag)
+    const N_BANDS    = 60;
+    const bandW      = new Float32Array(N_BANDS).fill(INIT_W);
+    const CTR_IDX    = (N_BANDS - 1) / 2;
+
+    function tickBands() {
+      for (let i = 0; i < N_BANDS; i++) {
+        const dist = Math.abs(i - CTR_IDX) / CTR_IDX; // 0..1
+        const rate = 0.20 * (1 - dist * 0.72);
+        bandW[i] += (targetW - bandW[i]) * rate;
+      }
+    }
+
+    function getBandW(screenY, h) {
+      const idx = Math.max(0, Math.min(N_BANDS - 1, Math.floor((screenY / h) * N_BANDS)));
+      return bandW[idx];
+    }
+
+    function resizeCvs() {
+      cvs.width  = window.innerWidth;
+      cvs.height = window.innerHeight;
+    }
+    resizeCvs();
+    window.addEventListener('resize', resizeCvs);
+
+    // Show ball when mouse is near the right tip of the center line
+    let ballVis  = false;
+    let dragging = false;
+    let dragStartX, dragStartW;
+
+    document.addEventListener('mousemove', ev => {
+      if (dragging) return;
+      const cy      = window.innerHeight / 2;
+      const nearCtr = Math.abs(ev.clientY - cy) < 12;
+      const nearTip = Math.abs(ev.clientX - currentW) < 18 && ev.clientX > 0;
+      const show    = nearCtr && nearTip;
+      if (show !== ballVis) {
+        ballVis = show;
+        ball.style.opacity = show ? '1' : '0';
+      }
+    });
+
+    ball.addEventListener('mousedown', ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      dragging   = true;
+      dragStartX = ev.clientX;
+      dragStartW = currentW;
+      ball.style.opacity = '1';
+
+      function onMove(e2) {
+        targetW = Math.max(MIN_W, Math.min(maxW(), dragStartW + (e2.clientX - dragStartX)));
+      }
+      function onUp() {
+        dragging = false;
+        ball.style.opacity = ballVis ? '1' : '0';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+
+    const TICK_STEP = 40;
+    let   lastRafT  = null;
+
+    function drawRuler(ts) {
+      requestAnimationFrame(drawRuler);
+
+      const dt = lastRafT ? Math.min(ts - lastRafT, 64) : 16;
+      lastRafT = ts;
+      void dt; // dt reserved for future rate-adjust; bands tick per-frame
+
+      // Lerp main width (drives ball position)
+      currentW += (targetW - currentW) * 0.15;
+      if (Math.abs(currentW - targetW) < 0.2) currentW = targetW;
+
+      // Cascade: center-out bands
+      tickBands();
+
+      ball.style.left = `${Math.round(currentW)}px`;
+
+      const ctx     = cvs.getContext('2d');
+      const W       = cvs.width;
+      const H       = cvs.height;
+      const scrollY = window.scrollY;
+      const centerY = H / 2;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Scrolling tick marks
+      const first = Math.floor((scrollY - H) / TICK_STEP) - 1;
+      const last  = Math.ceil((scrollY + H) / TICK_STEP) + 1;
+
+      for (let i = first; i <= last; i++) {
+        const tickSY  = i * TICK_STEP;
+        const screenY = centerY + (tickSY - scrollY);
+
+        if (screenY < -2 || screenY > H + 2) continue;
+        if (Math.abs(screenY - centerY) < 0.8) continue; // center line drawn separately
+
+        const isMajor  = i % 10 === 0;
+        const isMedium = i % 5  === 0;
+        const alpha    = isMajor ? 0.20 : isMedium ? 0.13 : 0.07;
+        const frac     = isMajor ? 0.58 : isMedium ? 0.36 : 0.22;
+        const bW       = getBandW(screenY, H);
+        const lineLen  = Math.max(0, bW * frac);
+        if (lineLen < 0.5) continue;
+
+        ctx.beginPath();
+        ctx.moveTo(0, Math.round(screenY) + 0.5);
+        ctx.lineTo(lineLen, Math.round(screenY) + 0.5);
+        ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Fixed center line — full currentW, brightest
+      ctx.beginPath();
+      ctx.moveTo(0, centerY + 0.5);
+      ctx.lineTo(currentW, centerY + 0.5);
+      ctx.strokeStyle = 'rgba(255,255,255,0.50)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(drawRuler);
+  })();
 
 }());

@@ -59,3 +59,4 @@ apps/s2a-ds-mcp/
 .codex/
 .cursor/
 .playwright-mcp/
+.vercel
