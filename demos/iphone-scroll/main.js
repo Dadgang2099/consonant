@@ -352,8 +352,22 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     const body = document.getElementById(bodyId);
     if (!btn || !body) return;
     btn.addEventListener('click', () => {
+      const panel = btn.closest('.pw-panel');
+      // Capture parent's bottom edge BEFORE collapse so we can compute the
+      // delta and slide any stacked-under followers up to keep contact.
+      const beforeBottom = panel ? panel.offsetTop + panel.offsetHeight : 0;
       const hidden = body.classList.toggle('hidden');
       btn.textContent = hidden ? '+' : '−';
+      if (panel) {
+        const afterBottom = panel.offsetTop + panel.offsetHeight;
+        const delta = afterBottom - beforeBottom;
+        if (delta !== 0) {
+          document.querySelectorAll(`[data-stacked-under="${panel.id}"]`).forEach(f => {
+            const ft = parseFloat(f.style.top) || f.offsetTop || 0;
+            f.style.top = (ft + delta) + 'px';
+          });
+        }
+      }
     });
   }
   bindToggle('tweakToggle',   'tweakBody');
@@ -395,6 +409,8 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         el.style.top   = (tweakBottom + 12) + 'px';
         el.style.right = 'auto';
         el.dataset.draggable = '1';
+        // Mark as stacked beneath tweak so dragging tweak carries it along
+        el.dataset.stackedUnder = 'tweakPanel';
       } else if (sharedPanelPos) {
         el.style.left  = sharedPanelPos.left + 'px';
         el.style.top   = sharedPanelPos.top  + 'px';
@@ -476,10 +492,16 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     const header = panel.querySelector('.pw-panel__hdr');
     if (!header) return;
     let dragging = false, ox = 0, oy = 0, pl = 0, pt = 0;
+    // Panels that are stacked underneath this one — carried along during drag
+    let followers = [];
 
     header.addEventListener('mousedown', (e) => {
       if (e.button !== 0 || e.target.closest('.pw-icon-btn')) return;
       e.preventDefault();
+
+      // If the user is dragging this panel directly, break any stacked-under
+      // relationship it had so it doesn't get yanked back during a parent drag.
+      if (panel.dataset.stackedUnder) delete panel.dataset.stackedUnder;
 
       if (!panel.dataset.draggable) {
         const r = panel.getBoundingClientRect();
@@ -501,12 +523,31 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       pt = parseFloat(panel.style.top)  || 0;
       header.style.cursor = 'grabbing';
 
+      // Snapshot followers (panels stacked under this one) so they translate
+      // by the same delta and stay glued to the parent.
+      followers = [...document.querySelectorAll(`[data-stacked-under="${panel.id}"]`)]
+        .map(el => ({
+          el,
+          pl: parseFloat(el.style.left) || el.offsetLeft || 0,
+          pt: parseFloat(el.style.top)  || el.offsetTop  || 0,
+        }));
+
       function onMove(e) {
         if (!dragging) return;
-        const newL = Math.max(0, Math.min(window.innerWidth  - 60, pl + e.clientX - ox));
-        const newT = Math.max(0, Math.min(window.innerHeight - 40, pt + e.clientY - oy));
+        const dx = e.clientX - ox;
+        const dy = e.clientY - oy;
+        const newL = Math.max(0, Math.min(window.innerWidth  - 60, pl + dx));
+        const newT = Math.max(0, Math.min(window.innerHeight - 40, pt + dy));
         panel.style.left = newL + 'px';
         panel.style.top  = newT + 'px';
+        // Drag followers by the same delta the parent actually traveled
+        // (not raw cursor delta — that decouples after edge clamps)
+        const realDx = newL - pl;
+        const realDy = newT - pt;
+        followers.forEach(f => {
+          f.el.style.left = (f.pl + realDx) + 'px';
+          f.el.style.top  = (f.pt + realDy) + 'px';
+        });
         // Propagate position to subsequent panels (not shadow panel)
         if (panel !== shadowPanel) sharedPanelPos = { left: newL, top: newT };
       }
