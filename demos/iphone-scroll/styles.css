@@ -442,6 +442,20 @@ body {
 #tweakBody .pw-actions {
   margin-top: 6px;
 }
+/* Content panel uses .pw-panel__body--scroll which doesn't carry the
+   horizontal/vertical padding the alignment body has, so the bottom
+   actions row needs its own padding to inset matching the other rows. */
+#ctrlBody .pw-actions {
+  padding: 8px 14px 14px;
+  margin-top: 6px;
+}
+/* Shadow + Sequence panel bodies also need the actions row inset to
+   match the alignment panel's spacing pattern. */
+#shadowBody .pw-actions,
+#seqBody .pw-actions {
+  padding: 8px 14px 14px;
+  margin-top: 6px;
+}
 
 /* Scrollable content panel body */
 .pw-panel__body--scroll {
