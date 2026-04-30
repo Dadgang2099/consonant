@@ -4675,6 +4675,72 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   document.addEventListener('pw-kfs-changed', renderTimeline);
   window.addEventListener('resize', renderTimeline);
 
+  // ── Undo / Redo for keyframe operations (10-deep) ─────────
+  // Snapshots the kfStore on every mutation so the user can step
+  // back/forward through their last 10 keyframe changes. Cmd/Ctrl+Z
+  // undoes; Cmd/Ctrl+Shift+Z (or Cmd/Ctrl+Y) redoes.
+  const HISTORY_MAX = 10;
+  const kfPast      = [];
+  const kfFuture    = [];
+  let   kfApplyingHistory = false;
+  let   kfPrevSnapshot    = JSON.parse(JSON.stringify(window.__getKFs?.() || {}));
+  const undoBtn = document.getElementById('tlUndo');
+  const redoBtn = document.getElementById('tlRedo');
+
+  function refreshHistoryButtons() {
+    if (undoBtn) undoBtn.disabled = kfPast.length === 0;
+    if (redoBtn) redoBtn.disabled = kfFuture.length === 0;
+  }
+  function recordKFChange() {
+    if (kfApplyingHistory) return;
+    const cur = window.__getKFs?.();
+    if (!cur) return;
+    kfPast.push(kfPrevSnapshot);
+    if (kfPast.length > HISTORY_MAX) kfPast.shift();
+    kfFuture.length = 0;
+    kfPrevSnapshot = JSON.parse(JSON.stringify(cur));
+    refreshHistoryButtons();
+  }
+  document.addEventListener('pw-kfs-changed', recordKFChange);
+
+  function undoKF() {
+    if (!kfPast.length) return;
+    const target = kfPast.pop();
+    kfFuture.push(kfPrevSnapshot);
+    kfPrevSnapshot = JSON.parse(JSON.stringify(target));
+    kfApplyingHistory = true;
+    window.__applyKFs?.(target);
+    kfApplyingHistory = false;
+    refreshHistoryButtons();
+  }
+  function redoKF() {
+    if (!kfFuture.length) return;
+    const target = kfFuture.pop();
+    kfPast.push(kfPrevSnapshot);
+    kfPrevSnapshot = JSON.parse(JSON.stringify(target));
+    kfApplyingHistory = true;
+    window.__applyKFs?.(target);
+    kfApplyingHistory = false;
+    refreshHistoryButtons();
+  }
+  undoBtn?.addEventListener('click', undoKF);
+  redoBtn?.addEventListener('click', redoKF);
+
+  document.addEventListener('keydown', e => {
+    const t = document.activeElement?.tagName?.toLowerCase();
+    if (t === 'input' || t === 'textarea' || document.activeElement?.isContentEditable) return;
+    const meta = e.metaKey || e.ctrlKey;
+    if (!meta) return;
+    if (e.key === 'z' || e.key === 'Z') {
+      e.preventDefault();
+      e.shiftKey ? redoKF() : undoKF();
+    } else if (e.key === 'y' || e.key === 'Y') {
+      e.preventDefault();
+      redoKF();
+    }
+  });
+  refreshHistoryButtons();
+
   // Lock tree + lanes vertical scroll together so rows can never drift
   // out of alignment. Whichever side the user scrolls, the other follows.
   let syncing = false;
