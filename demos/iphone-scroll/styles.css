@@ -17,12 +17,6 @@
   --dur-cinematic: 800ms;
 }
 
-html, body {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;            /* lock horizontal scroll/drag */
-  overscroll-behavior-x: none;
-}
 html { scroll-behavior: auto; }
 
 body {
@@ -30,6 +24,12 @@ body {
   color: #fff;
   font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-x: none;
+  /* Don't use overflow-x: hidden on html/body — it breaks
+     position:sticky on every descendant (the scroll-driver stage
+     relies on sticky for the iPhone scrub). Lock horizontal drag at
+     the document root via touch-action instead. */
+  touch-action: pan-y;
 }
 
 /* ── Scroll driver: tall container that pins the stage ─── */
@@ -2711,15 +2711,13 @@ body {
    it's open, so the tools never disappear behind it.
    ═══════════════════════════════════════════════════════════ */
 .app-dock {
-  /* Dock now lives INSIDE .tl-panel__tag — no fixed position, no
-     bottom offset. The whole timeline (tag + body) is one shape;
-     the tag stays at the top of the panel, the body extends below.
-     Welded together via the panel's translateY animation. */
+  /* Dock lives INSIDE .tl-panel__tag. Tighter spacing so the bump
+     can hug the four circles without extra padding around them. */
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px;
+  gap: 6px;
+  padding: 0;
   border-radius: 999px;
   z-index: 1;
   overflow: visible;
@@ -2992,74 +2990,70 @@ body {
 
 /* ── Bottom slide-up timeline panel ───────────────────────── */
 .tl-panel {
-  --tl-tag-h: 76px;        /* always-visible tag area — holds the dock */
+  --tl-tag-h: 76px;
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
   height: 320px;
-  min-height: calc(var(--tl-tag-h) + 60px);
+  min-height: 120px;
   max-height: 50vh;
-  /* Closed (default): only the bump pseudo is visible; the rest of
-     the panel has no fill, so the user just sees the dock-shaped tab.
-     Open: panel takes on its full frosted-glass fill below. */
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  border-radius: 18px 18px 0 0;
-  transform: translateY(calc(100% - var(--tl-tag-h)));
-  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1),
-              background 0.30s ease,
-              border-color 0.30s ease,
-              box-shadow 0.30s ease;
+  background: rgba(13, 13, 20, 0.78);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  /* Top stroke runs across the header level. The bump pseudo above
+     extends the same stroke up and over the dock as one continuous
+     line — bump bottom shares this border so the two never read
+     as separate planes. */
+  border-top: 1px solid var(--tl-border);
+  box-shadow: 0 -16px 48px rgba(0,0,0,0.55);
+  /* Closed: panel fully off-screen below the viewport; only the tag
+     (which lives ABOVE the panel via top: -tag-h on .tl-panel__tag)
+     is visible. Open: panel translates to translateY(0). */
+  transform: translateY(100%);
+  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 9999;
   display: flex;
   flex-direction: column;
   font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
   color: var(--tl-value);
 }
-.tl-panel--open {
-  transform: translateY(0);
-  background: rgba(13, 13, 20, 0.78);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border: none;        /* no border anywhere — seamless blend with bump */
-  box-shadow: 0 -16px 48px rgba(0,0,0,0.55);
-}
+.tl-panel--open { transform: translateY(0); }
 
-/* Tag bump — a wide rounded shape that encases the four dock circles.
-   Tall enough that the circles sit fully inside it; rises above the
-   panel's natural top edge to read as the panel's top "lifting up
-   and over" the dock. Stays at the same dimensions whether the
-   timeline is open or closed. */
-.tl-panel::after {
+/* The bump — a wide rounded extension of the panel that lives ABOVE
+   the panel's top stroke. Shares the panel's fill and stroke so the
+   border line runs flat across the header level, then arches up and
+   over the dock circles in the middle, then back down to flat. ONE
+   line, never two planes. */
+.tl-panel::before {
   content: '';
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: -28px;
-  width: 340px;
-  height: 104px;
-  /* EXACT same fill as the panel — no border, no separate filter,
-     no separate shadow. Bump and panel become one continuous plane
-     with no visible seam between them. */
+  top: calc(-1 * var(--tl-tag-h));
+  width: 290px;                       /* hugs the dock + small breathing room */
+  height: var(--tl-tag-h);
   background: rgba(13, 13, 20, 0.78);
-  border: none;
-  border-radius: 52px 52px 0 0;
+  border: 1px solid var(--tl-border);
+  border-bottom: none;
+  border-radius: 38px 38px 0 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 .tl-panel[hidden] { display: flex; }   /* still rendered, just translated off */
 .tl-panel--open   { transform: translateY(0); }
 
-/* Tag area — the always-visible top region of the timeline that
-   holds the dock circles. Drag anywhere on this area (outside the
-   circles themselves) to resize the timeline. */
+/* Tag area — absolute-positioned ABOVE the panel so the panel's
+   top border can run flat across the header row. The tag holds the
+   dock and lives in the bump's geometry. */
 .tl-panel__tag {
-  position: relative;
-  z-index: 3;                /* above .tl-panel::after bump */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(-1 * var(--tl-tag-h, 76px));
+  width: 280px;              /* matches bump interior */
   height: var(--tl-tag-h, 76px);
-  flex-shrink: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
