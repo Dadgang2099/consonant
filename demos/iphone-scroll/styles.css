@@ -3015,12 +3015,12 @@ body {
   left: 50%;
   transform: translateX(-50%);
   top: calc(-1 * var(--tl-tag-h));
-  width: 280px;                       /* dock + ~14px each side */
+  width: 268px;                       /* dock + ~10px each side */
   height: var(--tl-tag-h);
   background: rgba(13, 13, 20, 0.78);
   border: 1px solid var(--tl-border);
   border-bottom: none;
-  border-radius: 36px 36px 0 0;
+  border-radius: 34px 34px 0 0;
   pointer-events: none;
   z-index: 1;
   /* Spring the bump width when the dock collapses so the bounding
