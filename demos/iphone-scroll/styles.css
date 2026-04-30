@@ -3018,27 +3018,27 @@ body {
 }
 .tl-panel--open { transform: translateY(0); }
 
-/* Tag bump — same fill as the panel; arches UP and OVER the four
-   dock circles so the panel's top edge geometrically wraps around
-   them. Centered behind the dock; rises above the panel and extends
-   down through the tag area so the circles are encased. */
+/* Tag bump — a shallow lift in the panel's top edge that arches
+   up and over the four dock circles. Height is close to the header
+   row (38px) so it reads as a subtle bump rather than a tall pedestal.
+   Same fill as the panel so it merges seamlessly with the timeline. */
 .tl-panel::after {
   content: '';
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: -32px;
-  width: 320px;
-  height: 108px;          /* covers full tag area + 32px above */
+  top: -28px;             /* rises ~28px above panel's natural top */
+  width: 308px;
+  height: 50px;           /* close to header height — gentle lift */
   background: rgba(13, 13, 20, 0.78);
   border: 1px solid var(--tl-border);
   border-bottom: none;
-  border-radius: 38px 38px 0 0;
+  border-radius: 25px 25px 0 0;
   backdrop-filter: blur(28px) saturate(1.6);
   -webkit-backdrop-filter: blur(28px) saturate(1.6);
   box-shadow:
     0 0 0 0.5px rgba(110,140,255,0.10),
-    0 -10px 24px rgba(0,0,0,0.40);
+    0 -8px 20px rgba(0,0,0,0.36);
   pointer-events: none;
   z-index: 0;
 }
