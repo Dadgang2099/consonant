@@ -2800,12 +2800,19 @@ body {
 /* AI bar width tiers — collapsed circle (default), expanded chat,
    eye-collapsed (0). Specificity high enough that the chat-mode
    sibling-shrink rules above don't override the expanded width. */
-.app-dock > .ai-bar              { width: 56px;  max-width: 56px; }
+.app-dock > .ai-bar              { width: 56px;  max-width: 56px; height: 56px; }
 .app-dock > .ai-bar.ai-bar--expanded {
   width:     min(820px, calc(100vw - 64px));
   max-width: min(820px, calc(100vw - 64px));
+  height:    44px;     /* fixed height inside dock so the inner glass
+                          can never exceed the outer pill on hover/grow */
 }
 .app-dock--collapsed > .ai-bar   { width: 0;     max-width: 0; }
+/* Glass tracks the wrapper exactly when expanded — no auto growth. */
+.app-dock > .ai-bar.ai-bar--expanded .ai-bar__glass {
+  width: 100%;
+  height: 100%;
+}
 
 /* ── Shared glass-circle base — panel-tog + fx-knob ──── */
 .panel-tog,
