@@ -3739,18 +3739,28 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       if (!inp.id) return;
       if (KF_BLOCKLIST.has(inp.id)) return;
 
-      const panelId = Object.keys(PANEL_COLORS).find(id => {
+      let panelId = Object.keys(PANEL_COLORS).find(id => {
         const p = document.getElementById(id);
         return p && p.contains(inp);
       });
+      // Fallback: pickers and popovers may live outside their panel's
+      // DOM tree (e.g. shadowCPickerHex sits in #shadowCPicker, a body-
+      // level sibling of #shadowPanel). Match by id prefix instead.
+      if (!panelId) {
+        panelId = Object.keys(PANEL_COLORS).find(id => {
+          const stem = id.replace(/Panel$/, '');
+          return inp.id.startsWith(stem);
+        });
+      }
       if (!panelId) return;
 
       if (animMode) {
         captureAllPanelKFs(panelId);
-      } else {
-        // Auto-KF: every value change captures a keyframe at the current
-        // scroll position. The first change creates the first KF; subsequent
-        // changes either update the existing KF here or add a new one.
+      } else if (kfStore[inp.id] && kfStore[inp.id].length >= 1) {
+        // Auto-KF gated on "≥1 KF already exists". Without that rule
+        // every casual slider tweak would land a keyframe — the user
+        // explicitly wants the first KF to come from + or ◆, then
+        // any subsequent change captures a new KF either side of it.
         const val = inp.type === 'range' ? parseFloat(inp.value) : inp.value;
         captureInputKF(inp.id, Math.round(window.scrollY), val);
       }
