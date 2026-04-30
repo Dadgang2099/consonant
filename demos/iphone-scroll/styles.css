@@ -2995,11 +2995,17 @@ body {
   height: 320px;
   min-height: calc(var(--tl-tag-h) + 60px);
   max-height: 50vh;
-  /* Dark frosted glass: semi-transparent fill + heavy backdrop blur so
-     page content behind the timeline frosts out. */
-  background: transparent;        /* fill is on .tl-panel__skin so we
-                                    can clip it cleanly without losing
-                                    the dock circles' bleed. */
+  /* Dark frosted glass: semi-transparent fill + heavy backdrop blur. */
+  background: rgba(13, 13, 20, 0.78);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border: 1px solid var(--tl-border);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  box-shadow:
+    0 0 0 0.5px rgba(110,140,255,0.10),
+    0 -16px 48px rgba(0,0,0,0.55),
+    inset 0 0.5px 0 rgba(255,255,255,0.06);
   /* Closed: only the tag at the top is visible; body slid below.
      Open: full panel visible. */
   transform: translateY(calc(100% - var(--tl-tag-h)));
@@ -3009,33 +3015,31 @@ body {
   flex-direction: column;
   font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
   color: var(--tl-value);
-  pointer-events: none;       /* re-enabled on the inner skin */
 }
 .tl-panel--open { transform: translateY(0); }
 
-/* The skin is the visible glass shape. Its top is the rounded tag area
-   that wraps over the dock; the rest is the timeline body. One geometric
-   element — the tag and body share the same fill, border, and shadow,
-   so the four circles sit IN the timeline rather than on a separate
-   plane behind it. */
-.tl-panel::before {
+/* Tag bump — same fill as the panel; arches UP and OVER the four
+   dock circles so the panel's top edge geometrically wraps around
+   them. Centered behind the dock; rises above the panel and extends
+   down through the tag area so the circles are encased. */
+.tl-panel::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -32px;
+  width: 320px;
+  height: 108px;          /* covers full tag area + 32px above */
   background: rgba(13, 13, 20, 0.78);
   border: 1px solid var(--tl-border);
   border-bottom: none;
-  border-radius: 18px 18px 0 0;
+  border-radius: 38px 38px 0 0;
   backdrop-filter: blur(28px) saturate(1.6);
   -webkit-backdrop-filter: blur(28px) saturate(1.6);
   box-shadow:
     0 0 0 0.5px rgba(110,140,255,0.10),
-    0 -16px 48px rgba(0,0,0,0.55),
-    inset 0 0.5px 0 rgba(255,255,255,0.06);
-  pointer-events: auto;
+    0 -10px 24px rgba(0,0,0,0.40);
+  pointer-events: none;
   z-index: 0;
 }
 .tl-panel[hidden] { display: flex; }   /* still rendered, just translated off */
@@ -3046,6 +3050,7 @@ body {
    circles themselves) to resize the timeline. */
 .tl-panel__tag {
   position: relative;
+  z-index: 3;                /* above .tl-panel::after bump */
   height: var(--tl-tag-h, 76px);
   flex-shrink: 0;
   display: flex;
@@ -3053,13 +3058,14 @@ body {
   justify-content: center;
   cursor: ns-resize;
   pointer-events: auto;
-  z-index: 1;
 }
 /* Existing tl-panel__handle kept as a no-op alias in case other code
    targets it; the tag itself handles the resize gesture now. */
 
 /* Header ──────────────────────────────────────────────── */
 .tl-panel__hdr {
+  position: relative;        /* lifts above .tl-panel::after bump */
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3168,6 +3174,8 @@ body {
 
 /* Body: tree | tracks ───────────────────────────────────── */
 .tl-panel__body {
+  position: relative;
+  z-index: 2;
   flex: 1;
   display: grid;
   grid-template-columns: 220px 1fr;
