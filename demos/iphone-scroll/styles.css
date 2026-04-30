@@ -2270,9 +2270,10 @@ body {
   color: #fff;
   background: rgba(255,80,80,0.18);
 }
-/* Add left padding to expanded glass so input text doesn't slide under the X */
+/* Expanded chat bar: tighten vertical padding so buttons sit centered
+   inside the 44px bar, and reserve left room for the close X. */
 .ai-bar--expanded .ai-bar__glass {
-  padding-left: 50px;
+  padding: 6px 8px 6px 46px;
 }
 
 .ai-bar__glass {
@@ -2401,8 +2402,8 @@ body {
 
 .ai-bar__send {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: rgba(255,255,255,0.10);
   border: 0.5px solid rgba(255,255,255,0.16);
