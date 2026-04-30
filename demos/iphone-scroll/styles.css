@@ -2995,50 +2995,59 @@ body {
   height: 320px;
   min-height: calc(var(--tl-tag-h) + 60px);
   max-height: 50vh;
-  /* Dark frosted glass: semi-transparent fill + heavy backdrop blur. */
-  background: rgba(13, 13, 20, 0.78);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border: 1px solid var(--tl-border);
-  border-bottom: none;
+  /* Closed (default): only the bump pseudo is visible; the rest of
+     the panel has no fill, so the user just sees the dock-shaped tab.
+     Open: panel takes on its full frosted-glass fill below. */
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 18px 18px 0 0;
-  box-shadow:
-    0 0 0 0.5px rgba(110,140,255,0.10),
-    0 -16px 48px rgba(0,0,0,0.55),
-    inset 0 0.5px 0 rgba(255,255,255,0.06);
-  /* Closed: only the tag at the top is visible; body slid below.
-     Open: full panel visible. */
   transform: translateY(calc(100% - var(--tl-tag-h)));
-  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.30s ease,
+              border-color 0.30s ease,
+              box-shadow 0.30s ease;
   z-index: 9999;
   display: flex;
   flex-direction: column;
   font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
   color: var(--tl-value);
 }
-.tl-panel--open { transform: translateY(0); }
+.tl-panel--open {
+  transform: translateY(0);
+  background: rgba(13, 13, 20, 0.78);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border: 1px solid var(--tl-border);
+  border-bottom: none;
+  box-shadow:
+    0 0 0 0.5px rgba(110,140,255,0.10),
+    0 -16px 48px rgba(0,0,0,0.55),
+    inset 0 0.5px 0 rgba(255,255,255,0.06);
+}
 
-/* Tag bump — a shallow lift in the panel's top edge that arches
-   up and over the four dock circles. Height is close to the header
-   row (38px) so it reads as a subtle bump rather than a tall pedestal.
-   Same fill as the panel so it merges seamlessly with the timeline. */
+/* Tag bump — a wide rounded shape that encases the four dock circles.
+   Tall enough that the circles sit fully inside it; rises above the
+   panel's natural top edge to read as the panel's top "lifting up
+   and over" the dock. Stays at the same dimensions whether the
+   timeline is open or closed. */
 .tl-panel::after {
   content: '';
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: -28px;             /* rises ~28px above panel's natural top */
-  width: 308px;
-  height: 50px;           /* close to header height — gentle lift */
-  background: rgba(13, 13, 20, 0.78);
+  top: -28px;             /* rises 28px above panel */
+  width: 340px;
+  height: 104px;          /* covers from -28 to +76 — full circle area */
+  background: rgba(13, 13, 20, 0.82);
   border: 1px solid var(--tl-border);
   border-bottom: none;
-  border-radius: 25px 25px 0 0;
+  border-radius: 52px 52px 0 0;     /* generous arc that wraps the dock */
   backdrop-filter: blur(28px) saturate(1.6);
   -webkit-backdrop-filter: blur(28px) saturate(1.6);
   box-shadow:
-    0 0 0 0.5px rgba(110,140,255,0.10),
-    0 -8px 20px rgba(0,0,0,0.36);
+    0 0 0 0.5px rgba(110,140,255,0.12),
+    0 -10px 24px rgba(0,0,0,0.45);
   pointer-events: none;
   z-index: 0;
 }
