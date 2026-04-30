@@ -17,6 +17,12 @@
   --dur-cinematic: 800ms;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;            /* lock horizontal scroll/drag */
+  overscroll-behavior-x: none;
+}
 html { scroll-behavior: auto; }
 
 body {
@@ -24,7 +30,6 @@ body {
   color: #fff;
   font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
-  overscroll-behavior-x: none;
 }
 
 /* ── Scroll driver: tall container that pins the stage ─── */
@@ -3018,12 +3023,8 @@ body {
   background: rgba(13, 13, 20, 0.78);
   backdrop-filter: blur(28px) saturate(1.6);
   -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border: 1px solid var(--tl-border);
-  border-bottom: none;
-  box-shadow:
-    0 0 0 0.5px rgba(110,140,255,0.10),
-    0 -16px 48px rgba(0,0,0,0.55),
-    inset 0 0.5px 0 rgba(255,255,255,0.06);
+  border: none;        /* no border anywhere — seamless blend with bump */
+  box-shadow: 0 -16px 48px rgba(0,0,0,0.55);
 }
 
 /* Tag bump — a wide rounded shape that encases the four dock circles.
@@ -3036,18 +3037,15 @@ body {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: -28px;             /* rises 28px above panel */
+  top: -28px;
   width: 340px;
-  height: 104px;          /* covers from -28 to +76 — full circle area */
-  background: rgba(13, 13, 20, 0.82);
-  border: 1px solid var(--tl-border);
-  border-bottom: none;
-  border-radius: 52px 52px 0 0;     /* generous arc that wraps the dock */
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  box-shadow:
-    0 0 0 0.5px rgba(110,140,255,0.12),
-    0 -10px 24px rgba(0,0,0,0.45);
+  height: 104px;
+  /* EXACT same fill as the panel — no border, no separate filter,
+     no separate shadow. Bump and panel become one continuous plane
+     with no visible seam between them. */
+  background: rgba(13, 13, 20, 0.78);
+  border: none;
+  border-radius: 52px 52px 0 0;
   pointer-events: none;
   z-index: 0;
 }
