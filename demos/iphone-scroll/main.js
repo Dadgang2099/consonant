@@ -4164,9 +4164,16 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     window.__deleteKFAt?.(selectedKF.inputId, selectedKF.scrollY);
     selectedKF = null;
   });
-  // Click anywhere outside a KF dot clears the selection
+  // Click anywhere outside a KF dot clears the selection — but ALSO
+  // preserve it for clicks anywhere inside the timeline panel or the
+  // right-edge build overlay, so the row's red ✕ delete button can
+  // actually fire its handler against the selected KF before the
+  // mousedown clears it.
   document.addEventListener('mousedown', e => {
     if (e.target.closest('.tl-dot') || e.target.closest('.drv-overlay__dot')) return;
+    if (e.target.closest('.tl-panel') || e.target.closest('.drv-overlay')) return;
+    // Per-row ✕ inside the panel slider also targets the selected KF
+    if (e.target.closest('.pw-kf-del') || e.target.closest('.pw-panel')) return;
     if (!selectedKF) return;
     clearKFSelection();
   }, true);
