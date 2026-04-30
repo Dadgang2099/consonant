@@ -25,11 +25,9 @@ body {
   font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-x: none;
-  /* Don't use overflow-x: hidden on html/body — it breaks
-     position:sticky on every descendant (the scroll-driver stage
-     relies on sticky for the iPhone scrub). Lock horizontal drag at
-     the document root via touch-action instead. */
-  touch-action: pan-y;
+  /* Don't use overflow-x:hidden or touch-action restrictions on
+     html/body — both break position:sticky descendants, which the
+     scroll-driver stage relies on for the iPhone scrub. */
 }
 
 /* ── Scroll driver: tall container that pins the stage ─── */
