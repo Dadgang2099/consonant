@@ -3190,6 +3190,11 @@ body {
   border-right: 1px solid var(--tl-rule);
   overflow-y: auto;
   background: rgba(13, 13, 20, 0.18);   /* tint over the frosted parent */
+  /* Match the 24px ruler height in the tracks pane so tree rows
+     and lane rows start at the same y. Without this every dot
+     appears one row lower than its label. */
+  padding-top: 24px;
+  box-sizing: border-box;
 }
 
 .tl-tracks {
