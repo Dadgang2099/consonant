@@ -768,9 +768,11 @@
 </div>
 
 <!-- ─── Bottom Timeline Panel ────────────────────────────────
-     Slides up from the bottom; design tokens match panel system. -->
+     Slides up from the bottom; design tokens match panel system.
+     The dock circles get welded into .tl-panel__tag at runtime so
+     the tag and the timeline body are one geometric element. -->
 <aside class="tl-panel" id="tlPanel" aria-label="Keyframe timeline" hidden>
-  <div class="tl-panel__handle" id="tlPanelHandle" title="Drag to resize"></div>
+  <div class="tl-panel__tag" id="tlPanelTag" title="Drag to resize"></div>
   <header class="tl-panel__hdr">
     <div class="tl-panel__hdr-left">
       <div class="tl-axis" role="tablist" aria-label="Scroll axis">

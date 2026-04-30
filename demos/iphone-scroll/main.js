@@ -4097,10 +4097,17 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   const tog       = document.getElementById('tlTog');
   const panel     = document.getElementById('tlPanel');
   const playhead  = document.getElementById('tlPlayhead');
-  const handle    = document.getElementById('tlPanelHandle');
+  const tagArea   = document.getElementById('tlPanelTag');
   const tree      = document.getElementById('tlTree');
   const lanes     = document.getElementById('tlLanes');
   if (!tog || !panel) return;
+  // Weld the dock INTO the timeline's tag area so they animate as
+  // one element. The dock keeps its own ID + handlers; only the
+  // DOM parent changes.
+  const dockEl = document.getElementById('appDock');
+  if (dockEl && tagArea && dockEl.parentElement !== tagArea) {
+    tagArea.appendChild(dockEl);
+  }
 
   // Kept in sync with PANEL_COLORS in panelAnimSystem
   const ASSET_COLORS = {
@@ -4253,21 +4260,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   // ── Open / close ─────────────────────────────────────────
   let open = false;
   const dock = document.getElementById('appDock');
-  function syncDockOffset() {
-    if (!dock) return;
-    if (open) {
-      dock.style.setProperty('--tl-h', panel.offsetHeight + 'px');
-      dock.classList.add('app-dock--tl-open');
-    } else {
-      dock.classList.remove('app-dock--tl-open');
-    }
-  }
   function setOpen(next) {
     open = next;
     panel.classList.toggle('tl-panel--open', open);
     tog.classList.toggle('tl-tog--on', open);
     panel.hidden = false; // keep mounted; just translate off
-    syncDockOffset();
   }
   tog.addEventListener('click', () => setOpen(!open));
 
@@ -4803,7 +4800,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     }, { passive: false });
   }
 
-  // ── Resize panel via top handle OR by grabbing the dock-as-tab ─
+  // ── Resize the timeline by grabbing the tag area or empty dock space ─
   let resizing = false, startY = 0, startH = 0;
   function startResize(e) {
     e.preventDefault();
@@ -4812,13 +4809,15 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     startH = panel.offsetHeight;
     document.body.style.cursor = 'ns-resize';
   }
-  handle?.addEventListener('mousedown', startResize);
-
-  // While the timeline is open, dragging anywhere on the dock body
-  // that ISN'T one of the 4 circles also resizes the timeline.
-  dock?.addEventListener('mousedown', e => {
-    if (!dock.classList.contains('app-dock--tl-open')) return;
+  // Mousedown on the tag area itself (excluding the four dock circles)
+  // begins a resize drag. Whether timeline is open or closed.
+  tagArea?.addEventListener('mousedown', e => {
     if (e.target.closest('.panel-tog, .ai-bar, .fx-knob, .tl-tog')) return;
+    if (!open) {
+      // If the panel is closed, the first downward gesture opens it
+      // first; subsequent drag continues to size it.
+      setOpen(true);
+    }
     startResize(e);
   });
   window.addEventListener('mousemove', e => {
@@ -4828,7 +4827,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     const max = Math.floor(window.innerHeight * 0.5);
     panel.style.height = Math.max(min, Math.min(max, startH + dy)) + 'px';
     updatePlayhead();
-    syncDockOffset();
   });
   window.addEventListener('mouseup', () => {
     if (!resizing) return;

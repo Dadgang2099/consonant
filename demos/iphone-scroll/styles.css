@@ -2706,20 +2706,19 @@ body {
    it's open, so the tools never disappear behind it.
    ═══════════════════════════════════════════════════════════ */
 .app-dock {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
+  /* Dock now lives INSIDE .tl-panel__tag — no fixed position, no
+     bottom offset. The whole timeline (tag + body) is one shape;
+     the tag stays at the top of the panel, the body extends below.
+     Welded together via the panel's translateY animation. */
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 6px;
   border-radius: 999px;
-  z-index: 9997;
-  overflow: visible;     /* sparkle canvas extends well past dock bounds */
-  /* Snap-spring: positive overshoot on close, settles back on expand */
-  transition: bottom 0.30s cubic-bezier(0.4, 0, 0.2, 1),
-              gap    0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+  overflow: visible;
+  transition: gap 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 /* Explicit overflow:visible on every dock child so nothing clips the
    AI bar's sparkle canvas, which extends 80px past the bar edge. */
@@ -2747,42 +2746,8 @@ body {
   z-index: -1;
   pointer-events: none;
 }
-/* The tag — a rounded backing pseudo always visible behind the dock.
-   Reads as "the four circles are sitting ON a tag." When the timeline
-   opens, the dock + tag rise together, and the timeline panel slides
-   up from below to dock against the bottom of the tag. */
-.app-dock::after {
-  content: '';
-  position: absolute;
-  left: -28px;
-  right: -28px;
-  top: -8px;
-  bottom: -16px;
-  background: rgba(13, 13, 20, 0.82);
-  border: 1px solid var(--tl-border, rgba(255,255,255,0.08));
-  border-bottom: none;
-  border-radius: 22px 22px 8px 8px;
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.55);
-  z-index: -2;
-  pointer-events: none;
-  transition: bottom 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
-              border-radius 0.30s ease;
-}
-/* When timeline is open, dock sits directly on the timeline's top edge.
-   Tag's bottom radius collapses so it merges into the timeline panel
-   without a visible seam. Drag anywhere on the dock body (outside the
-   four circles) resizes the timeline. */
-.app-dock--tl-open {
-  bottom: calc(var(--tl-h, 260px) - 6px);
-  cursor: ns-resize;
-}
-.app-dock--tl-open::after {
-  bottom: -22px;
-  border-radius: 22px 22px 0 0;
-  border-bottom: none;
-}
+/* No more pseudo backing on the dock — the timeline's own tag
+   element provides the rounded shape that wraps around the dock. */
 
 /* Snap collapse: non-eye children animate to width 0 with a spring
    easing while fading + scaling. The pill auto-shrinks around the
@@ -3022,51 +2987,76 @@ body {
 
 /* ── Bottom slide-up timeline panel ───────────────────────── */
 .tl-panel {
+  --tl-tag-h: 76px;        /* always-visible tag area — holds the dock */
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 260px;
-  min-height: 120px;
+  height: 320px;
+  min-height: calc(var(--tl-tag-h) + 60px);
   max-height: 50vh;
   /* Dark frosted glass: semi-transparent fill + heavy backdrop blur so
-     page content behind the timeline frosts out instead of disappearing. */
-  background: rgba(13, 13, 20, 0.74);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border-top: 1px solid var(--tl-border);
-  border-radius: 12px 12px 0 0;
-  box-shadow:
-    0 0 0 0.5px rgba(110,140,255,0.10),
-    0 -16px 48px rgba(0,0,0,0.55),
-    inset 0 0.5px 0 rgba(255,255,255,0.06);
-  transform: translateY(100%);
-  transition: transform 0.30s cubic-bezier(0.4, 0, 0.2, 1);
+     page content behind the timeline frosts out. */
+  background: transparent;        /* fill is on .tl-panel__skin so we
+                                    can clip it cleanly without losing
+                                    the dock circles' bleed. */
+  /* Closed: only the tag at the top is visible; body slid below.
+     Open: full panel visible. */
+  transform: translateY(calc(100% - var(--tl-tag-h)));
+  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 9999;
   display: flex;
   flex-direction: column;
   font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
   color: var(--tl-value);
+  pointer-events: none;       /* re-enabled on the inner skin */
+}
+.tl-panel--open { transform: translateY(0); }
+
+/* The skin is the visible glass shape. Its top is the rounded tag area
+   that wraps over the dock; the rest is the timeline body. One geometric
+   element — the tag and body share the same fill, border, and shadow,
+   so the four circles sit IN the timeline rather than on a separate
+   plane behind it. */
+.tl-panel::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(13, 13, 20, 0.78);
+  border: 1px solid var(--tl-border);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  box-shadow:
+    0 0 0 0.5px rgba(110,140,255,0.10),
+    0 -16px 48px rgba(0,0,0,0.55),
+    inset 0 0.5px 0 rgba(255,255,255,0.06);
+  pointer-events: auto;
+  z-index: 0;
 }
 .tl-panel[hidden] { display: flex; }   /* still rendered, just translated off */
 .tl-panel--open   { transform: translateY(0); }
 
-.tl-panel__handle {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 6px;
+/* Tag area — the always-visible top region of the timeline that
+   holds the dock circles. Drag anywhere on this area (outside the
+   circles themselves) to resize the timeline. */
+.tl-panel__tag {
+  position: relative;
+  height: var(--tl-tag-h, 76px);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: ns-resize;
-  z-index: 2;
+  pointer-events: auto;
+  z-index: 1;
 }
-.tl-panel__handle::before {
-  content: '';
-  position: absolute;
-  top: 2px; left: 50%;
-  transform: translateX(-50%);
-  width: 36px; height: 2px;
-  border-radius: 1px;
-  background: rgba(255,255,255,0.16);
-}
+/* Existing tl-panel__handle kept as a no-op alias in case other code
+   targets it; the tag itself handles the resize gesture now. */
 
 /* Header ──────────────────────────────────────────────── */
 .tl-panel__hdr {
