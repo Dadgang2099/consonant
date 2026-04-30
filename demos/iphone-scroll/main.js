@@ -3228,7 +3228,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
     const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
     const OVERLAY_W  = 48;
-    const panelIds   = Object.keys(PANEL_COLORS);
+    // Match the timeline tree order so the build column reads the same
+    // top→bottom: HERO COPY > IPHONE HERO > SCROLL VIDEO > PHONE SHADOW.
+    const panelIds   = ['contentPanel', 'tweakPanel', 'seqPanel', 'shadowPanel'];
 
     // Scrubber hairline — always visible
     const hair = document.createElement('div');
@@ -4389,7 +4391,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
   function gatherTracks() {
     const store = window.__getKFs ? window.__getKFs() : {};
-    const panelIds = Object.keys(ASSET_COLORS);
+    // Photoshop / AE layer rule: top of the timeline = frontmost on the
+    // page. Page z-order front→back is HERO COPY (text) > IPHONE HERO >
+    // SCROLL VIDEO > PHONE SHADOW. Iterate that order so the topmost
+    // tree row is the topmost rendered element.
+    const panelIds = ['contentPanel', 'tweakPanel', 'seqPanel', 'shadowPanel'];
     // assets: [{ panelId, title, props: [{ inputId, label, kfs, isColor }] }]
     // Walk every metric row in every panel — sliders, selects, text inputs,
     // segmented controls AND color rows so the timeline mirrors the panel
