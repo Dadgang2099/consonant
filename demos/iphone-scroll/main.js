@@ -639,16 +639,59 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   });
 
   // ── Alignment panel copy-all ─────────────────────────────
+  function flashCopied(id) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const old = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = old; }, 1400);
+  }
   document.getElementById('tweakCopy')?.addEventListener('click', () => {
     const scaleEl = document.getElementById('scaleInput');
     const yEl     = document.getElementById('yRefInput');
     const xEl     = document.getElementById('xOffInput');
     const txt = `scale:${(+scaleEl?.value).toFixed(1)}  yRef:${yEl?.value}px  xOff:${xEl?.value}px`;
     navigator.clipboard?.writeText(txt);
-    const btn = document.getElementById('tweakCopy');
-    const old = btn.textContent;
-    btn.textContent = 'Copied';
-    setTimeout(() => { btn.textContent = old; }, 1400);
+    flashCopied('tweakCopy');
+  });
+
+  // ── Shadow panel reset + copy-all ────────────────────────
+  document.getElementById('shadowReset')?.addEventListener('click', () => {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+    set('shadowBlur',    96);
+    set('shadowOpacity', 0.60);
+    set('shadowY',       48);
+    set('shadowX',       0);
+    window.__applyKFs?.({});
+  });
+  document.getElementById('shadowCopy')?.addEventListener('click', () => {
+    const blur = document.getElementById('shadowBlur')?.value;
+    const opa  = document.getElementById('shadowOpacity')?.value;
+    const yL   = document.getElementById('shadowY')?.value;
+    const xS   = document.getElementById('shadowX')?.value;
+    const hex  = document.getElementById('shadowCPickerHex')?.value || '000000';
+    const txt = `shadow blur:${blur}px  opacity:${opa}  yLift:${yL}px  xShift:${xS}px  color:#${hex}`;
+    navigator.clipboard?.writeText(txt);
+    flashCopied('shadowCopy');
+  });
+
+  // ── Sequence panel reset + copy-all ──────────────────────
+  document.getElementById('seqReset')?.addEventListener('click', () => {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+    set('seqSpeed',    3);
+    set('seqLensIn',   0.20);
+    set('seqLensOut',  0.80);
+    set('seqLensPeak', 0.97);
+    window.__applyKFs?.({});
+  });
+  document.getElementById('seqCopy')?.addEventListener('click', () => {
+    const sp = document.getElementById('seqSpeed')?.value;
+    const li = document.getElementById('seqLensIn')?.value;
+    const lo = document.getElementById('seqLensOut')?.value;
+    const lp = document.getElementById('seqLensPeak')?.value;
+    const txt = `seq speed:${sp}×  lensIn:${Math.round(+li*100)}%  lensOut:${Math.round(+lo*100)}%  vignette:${lp}`;
+    navigator.clipboard?.writeText(txt);
+    flashCopied('seqCopy');
   });
 
   // ── Section accordion ────────────────────────────────────
