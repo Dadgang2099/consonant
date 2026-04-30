@@ -3305,6 +3305,19 @@ body {
   border-radius: 2px;
   pointer-events: none;
 }
+/* Per-metric segment line between consecutive KFs in a property lane.
+   Tinted with the parent asset color so the connection reads at a
+   glance (cyan = shadow, pink = content, etc.). */
+.tl-lane__seg {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: var(--tl-asset-color, rgba(255,255,255,0.40));
+  opacity: 0.55;
+  border-radius: 1px;
+  pointer-events: none;
+}
 
 /* KF dot in the timeline track */
 .tl-dot {

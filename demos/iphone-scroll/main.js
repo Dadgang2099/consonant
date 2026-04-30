@@ -4499,6 +4499,18 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           pLane.className = 'tl-lane tl-lane--prop';
           pLane.style.display = 'block';
           pLane.style.setProperty('--tl-asset-color', ASSET_COLORS[A.panelId] || 'var(--tl-dot)');
+          // Connecting line between consecutive KFs on this metric.
+          // Same pattern the build's per-metric column uses.
+          const sortedKFs = [...P.kfs].sort((a, b) => a.scrollY - b.scrollY);
+          for (let i = 0; i < sortedKFs.length - 1; i++) {
+            const seg = document.createElement('div');
+            seg.className = 'tl-lane__seg';
+            const a = (sortedKFs[i].scrollY     / scrollMax) * 100;
+            const b = (sortedKFs[i + 1].scrollY / scrollMax) * 100;
+            seg.style.left  = `${a}%`;
+            seg.style.width = `${Math.max(0.3, b - a)}%`;
+            pLane.appendChild(seg);
+          }
           P.kfs.forEach(k => {
             const dot = document.createElement('div');
             dot.className = 'tl-dot';
