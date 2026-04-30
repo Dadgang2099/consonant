@@ -2731,24 +2731,10 @@ body {
    and the inner pill background. */
 .ai-bar__glass { overflow: hidden; }
 /* Outer glass tray — subtle but clearly readable behind the 4 circles */
-.app-dock::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgba(7, 8, 13, 0.78);
-  border: 0.5px solid rgba(255,255,255,0.10);
-  box-shadow:
-    0 0 0 0.5px rgba(110,140,255,0.14),
-    0 12px 40px rgba(0,0,0,0.55),
-    inset 0 0.5px 0 rgba(255,255,255,0.10);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  z-index: -1;
-  pointer-events: none;
-}
-/* No more pseudo backing on the dock — the timeline's own tag
-   element provides the rounded shape that wraps around the dock. */
+/* No backing on the dock — the timeline's bump pseudo provides the
+   single rounded shape that wraps around the four circles. The
+   .app-dock element is invisible itself (no bg, no border, no
+   pseudo). Just a flex layout container. */
 
 /* Snap collapse: non-eye children animate to width 0 with a spring
    easing while fading + scaling. The pill auto-shrinks around the
@@ -3029,12 +3015,12 @@ body {
   left: 50%;
   transform: translateX(-50%);
   top: calc(-1 * var(--tl-tag-h));
-  width: 290px;                       /* hugs the dock + small breathing room */
+  width: 254px;                       /* tighter hug — dock + 6px each side */
   height: var(--tl-tag-h);
   background: rgba(13, 13, 20, 0.78);
   border: 1px solid var(--tl-border);
   border-bottom: none;
-  border-radius: 38px 38px 0 0;
+  border-radius: 32px 32px 0 0;
   pointer-events: none;
   z-index: 1;
 }
@@ -3049,7 +3035,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   top: calc(-1 * var(--tl-tag-h, 76px));
-  width: 280px;              /* matches bump interior */
+  width: 248px;              /* matches bump interior — hugs circles */
   height: var(--tl-tag-h, 76px);
   z-index: 3;
   display: flex;
