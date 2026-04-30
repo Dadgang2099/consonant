@@ -4451,9 +4451,61 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           seen.add(k.scrollY);
           const dot = document.createElement('div');
           dot.className = 'tl-dot';
-          dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
-          dot.title = `${A.title} · KF @ ${Math.round(k.scrollY)}px`;
-          dot.addEventListener('click', () => window.scrollTo(0, k.scrollY));
+          const dotSY = k.scrollY;
+          dot.style.left = `${(dotSY / scrollMax) * 100}%`;
+          dot.title = `${A.title} · KF @ ${Math.round(dotSY)}px  ·  drag to move all metrics at this scroll`;
+
+          // Aggregate drag: moves EVERY input's KF at this scrollY in
+          // this asset together. Page scrolls live during the drag so
+          // the build mirrors the move. Click without drag still
+          // scroll-jumps to the KF.
+          let dragging = false, didDrag = false, startX = 0;
+          const originalSY = dotSY;
+          // Capture which (inputId, scrollY) pairs sit on this aggregate
+          // dot so we can move them as a group on release.
+          const targets = [];
+          A.props.forEach(pp => pp.kfs.forEach(kk => {
+            if (Math.abs(kk.scrollY - originalSY) <= 30) {
+              targets.push({ inputId: pp.inputId, sy: kk.scrollY });
+            }
+          }));
+
+          dot.addEventListener('mousedown', ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            dragging = true;
+            didDrag = false;
+            startX = ev.clientX;
+            function onMove(e2) {
+              if (!dragging) return;
+              const dx = e2.clientX - startX;
+              if (!didDrag && Math.abs(dx) < 3) return;
+              didDrag = true;
+              const lanesEl = document.getElementById('tlLanes');
+              const lanesW  = lanesEl?.clientWidth || 1;
+              const max = Math.max(1, document.body.scrollHeight - window.innerHeight);
+              const newSY = Math.max(0, Math.min(max, originalSY + (dx / lanesW) * max));
+              dot.style.left = `${(newSY / max) * 100}%`;
+              window.scrollTo(0, newSY);
+              dot.dataset.dragSY = String(Math.round(newSY));
+            }
+            function onUp() {
+              if (!dragging) return;
+              dragging = false;
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup',   onUp);
+              if (!didDrag) {
+                window.scrollTo(0, originalSY);
+                return;
+              }
+              const newSY = parseInt(dot.dataset.dragSY, 10);
+              if (!Number.isNaN(newSY) && newSY !== originalSY) {
+                targets.forEach(t => window.__moveKF?.(t.inputId, t.sy, newSY));
+              }
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup',   onUp);
+          });
           aLane.appendChild(dot);
         }));
       }
