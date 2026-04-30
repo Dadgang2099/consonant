@@ -4737,14 +4737,23 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     }, { passive: false });
   }
 
-  // ── Resize panel via top handle ──────────────────────────
+  // ── Resize panel via top handle OR by grabbing the dock-as-tab ─
   let resizing = false, startY = 0, startH = 0;
-  handle?.addEventListener('mousedown', e => {
+  function startResize(e) {
     e.preventDefault();
     resizing = true;
     startY = e.clientY;
     startH = panel.offsetHeight;
     document.body.style.cursor = 'ns-resize';
+  }
+  handle?.addEventListener('mousedown', startResize);
+
+  // While the timeline is open, dragging anywhere on the dock body
+  // that ISN'T one of the 4 circles also resizes the timeline.
+  dock?.addEventListener('mousedown', e => {
+    if (!dock.classList.contains('app-dock--tl-open')) return;
+    if (e.target.closest('.panel-tog, .ai-bar, .fx-knob, .tl-tog')) return;
+    startResize(e);
   });
   window.addEventListener('mousemove', e => {
     if (!resizing) return;

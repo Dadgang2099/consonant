@@ -2747,10 +2747,38 @@ body {
   z-index: -1;
   pointer-events: none;
 }
-/* When timeline is open, dock floats up just above it so the chrome
-   stays reachable. --tl-h is set by JS to the live timeline height. */
+/* When timeline is open, dock sits directly on top of the timeline
+   like a tab — its bottom edge meets the timeline's top edge with a
+   small overlap so the rounded "tab notch" pseudo-element below the
+   dock can swoop up and embrace it. Drag anywhere on the dock body
+   (outside the four circles) to resize the timeline. */
 .app-dock--tl-open {
-  bottom: calc(var(--tl-h, 260px) + 16px);
+  bottom: calc(var(--tl-h, 260px) - 6px);  /* sits ON the timeline edge */
+  cursor: ns-resize;                        /* drag = resize timeline */
+}
+/* The notch — a curved hatched cap that lives BELOW the dock and
+   blends into the timeline panel's frosted glass. Same fill as the
+   timeline so the four circles read as a tag rooted in the timeline. */
+.app-dock--tl-open::after {
+  content: '';
+  position: absolute;
+  left: -28px;
+  right: -28px;
+  bottom: -18px;
+  height: 26px;
+  background: rgba(13, 13, 20, 0.78);
+  border-top: 1px solid var(--tl-border, rgba(255,255,255,0.08));
+  border-radius: 18px 18px 0 0;
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  z-index: -2;
+  pointer-events: none;
+  /* Animate up over the dock when timeline opens */
+  animation: tab-rise 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tab-rise {
+  0%   { transform: translateY(28px); opacity: 0.4; }
+  100% { transform: translateY(0);    opacity: 1; }
 }
 
 /* Snap collapse: non-eye children animate to width 0 with a spring
