@@ -3756,11 +3756,13 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
       if (animMode) {
         captureAllPanelKFs(panelId);
-      } else if (kfStore[inp.id] && kfStore[inp.id].length >= 1) {
-        // Auto-KF gated on "≥1 KF already exists". Without that rule
-        // every casual slider tweak would land a keyframe — the user
-        // explicitly wants the first KF to come from + or ◆, then
-        // any subsequent change captures a new KF either side of it.
+      } else {
+        // Auto-KF on any value change. The 'change' (not 'input')
+        // listener guarantees exactly one fire per gesture (slider
+        // release / picker close / select choice / text blur), so
+        // spam from a single drag isn't a concern. First change
+        // creates the first KF; subsequent changes create new ones
+        // either side of existing keyframes.
         const val = inp.type === 'range' ? parseFloat(inp.value) : inp.value;
         captureInputKF(inp.id, Math.round(window.scrollY), val);
       }
