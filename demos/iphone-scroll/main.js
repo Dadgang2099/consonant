@@ -4430,30 +4430,33 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       });
       tree.appendChild(aRow);
 
-      // Lanes: matching asset lane (aggregate dots + bar)
+      // Lanes: matching asset lane. Aggregate dots + bar are only
+      // rendered when the asset is COLLAPSED (no per-property rows
+      // are visible). When expanded, each metric has its own lane,
+      // so showing the aggregate would duplicate the same dots.
       const aLane = document.createElement('div');
       aLane.className = 'tl-lane tl-lane--asset';
       aLane.style.setProperty('--tl-asset-color', ASSET_COLORS[A.panelId] || 'var(--tl-dot)');
-      // Aggregate bar: earliest..latest across all props
-      if (totalKFs >= 2 && maxSY > minSY) {
-        const bar = document.createElement('div');
-        bar.className = 'tl-lane__bar';
-        bar.style.left  = `${(minSY / scrollMax) * 100}%`;
-        bar.style.width = `${((maxSY - minSY) / scrollMax) * 100}%`;
-        aLane.appendChild(bar);
+      if (!isOpen) {
+        if (totalKFs >= 2 && maxSY > minSY) {
+          const bar = document.createElement('div');
+          bar.className = 'tl-lane__bar';
+          bar.style.left  = `${(minSY / scrollMax) * 100}%`;
+          bar.style.width = `${((maxSY - minSY) / scrollMax) * 100}%`;
+          aLane.appendChild(bar);
+        }
+        const seen = new Set();
+        A.props.forEach(p => p.kfs.forEach(k => {
+          if (seen.has(k.scrollY)) return;
+          seen.add(k.scrollY);
+          const dot = document.createElement('div');
+          dot.className = 'tl-dot';
+          dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
+          dot.title = `${A.title} · KF @ ${Math.round(k.scrollY)}px`;
+          dot.addEventListener('click', () => window.scrollTo(0, k.scrollY));
+          aLane.appendChild(dot);
+        }));
       }
-      // Aggregate dots — one per unique scrollY across the asset
-      const seen = new Set();
-      A.props.forEach(p => p.kfs.forEach(k => {
-        if (seen.has(k.scrollY)) return;
-        seen.add(k.scrollY);
-        const dot = document.createElement('div');
-        dot.className = 'tl-dot';
-        dot.style.left = `${(k.scrollY / scrollMax) * 100}%`;
-        dot.title = `${A.title} · KF @ ${Math.round(k.scrollY)}px`;
-        dot.addEventListener('click', () => window.scrollTo({ top: k.scrollY, behavior: 'smooth' }));
-        aLane.appendChild(dot);
-      }));
       lanes.appendChild(aLane);
 
       // Property sub-rows (only when asset is expanded)
