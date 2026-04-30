@@ -3018,6 +3018,11 @@ body {
   width: 268px;                       /* dock + ~10px each side */
   height: var(--tl-tag-h);
   background: rgba(13, 13, 20, 0.78);
+  /* Same backdrop-filter as the panel so the frosted color matches.
+     Without this the bump shows the raw page behind it (iPhone hero)
+     and reads darker than the panel below. */
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
   border: 1px solid var(--tl-border);
   border-bottom: none;
   border-radius: 34px 34px 0 0;
