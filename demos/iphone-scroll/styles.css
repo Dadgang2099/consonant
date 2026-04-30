@@ -442,18 +442,14 @@ body {
 #tweakBody .pw-actions {
   margin-top: 6px;
 }
-/* Content panel uses .pw-panel__body--scroll which doesn't carry the
-   horizontal/vertical padding the alignment body has, so the bottom
-   actions row needs its own padding to inset matching the other rows. */
-#ctrlBody .pw-actions {
-  padding: 8px 14px 14px;
-  margin-top: 6px;
-}
-/* Shadow + Sequence panel bodies also need the actions row inset to
-   match the alignment panel's spacing pattern. */
+/* Non-alignment panel bodies don't carry horizontal padding. The
+   actions row gets its own inset matching the row content above —
+   8px on each side so the Reset/Copy pair has the same width
+   proportionality as the rest of the panel rows. */
+#ctrlBody .pw-actions,
 #shadowBody .pw-actions,
 #seqBody .pw-actions {
-  padding: 8px 14px 14px;
+  padding: 6px 8px 12px;
   margin-top: 6px;
 }
 
@@ -3023,6 +3019,15 @@ body {
   color: var(--tl-value);
 }
 .tl-panel--open { transform: translateY(0); }
+
+/* When the chat send/close button is hovered, grow --tl-tag-h so the
+   bump pseudo AND the tag area both grow vertically in lockstep with
+   the bar's own height bump. The base plate keeps fully encasing the
+   chat bar at every moment, never gets bypassed. */
+.tl-panel:has(.ai-bar__send:hover:not(:disabled)),
+.tl-panel:has(.ai-bar__close:hover) {
+  --tl-tag-h: 84px;
+}
 
 /* The bump — a wide rounded extension of the panel that lives ABOVE
    the panel's top stroke. Shares the panel's fill and stroke so the
