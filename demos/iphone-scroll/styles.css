@@ -3253,8 +3253,11 @@ body {
 /* Row height locked to 32px (matches .tl-lane--asset) so the tree
    and the tracks pane align row-for-row — dots can't drift into a
    neighboring metric's lane. */
+/* Asset row total height MUST equal .tl-lane--asset height (32px).
+   border-bottom moved onto __hdr so .tl-asset's outer dimensions match
+   the lane exactly — no 0.5px drift accumulating per row. */
 .tl-asset {
-  border-bottom: 0.5px solid var(--tl-rule);
+  height: 32px;
   box-sizing: border-box;
 }
 .tl-asset__hdr {
@@ -3263,8 +3266,10 @@ body {
   gap: 6px;
   padding: 0 10px;
   height: 32px;
+  border-bottom: 0.5px solid var(--tl-rule);
   cursor: pointer;
   user-select: none;
+  box-sizing: border-box;
 }
 .tl-asset__caret {
   width: 10px; height: 10px;

@@ -4506,6 +4506,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           pLane.className = 'tl-lane tl-lane--prop';
           pLane.style.display = 'block';
           pLane.style.setProperty('--tl-asset-color', ASSET_COLORS[A.panelId] || 'var(--tl-dot)');
+          // Tag the lane with the same input + asset ids the tree row carries,
+          // so visual misalignment between tree and lanes is auditable from
+          // the DOM and any future row-injection bug fails loud.
+          pLane.dataset.assetId = A.panelId;
+          pLane.dataset.inputId = P.inputId;
+          pLane.dataset.label   = P.label;
           // Connecting line between consecutive KFs on this metric.
           // data-prev-sy / data-next-sy lets the dot drag handler update
           // adjacent segments live so the line stays connected during a
