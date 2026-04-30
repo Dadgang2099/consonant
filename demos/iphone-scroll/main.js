@@ -3975,20 +3975,47 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     resizeCvs();
     window.addEventListener('resize', resizeCvs);
 
-    // Show ball when mouse is near the right tip of the center line
+    // The ball follows whatever MAJOR tick the cursor is nearest to.
+    // Hover any long line → ball materializes at its right tip and
+    // can be grabbed to extend currentW. No static center line —
+    // the major ticks ARE the grabbable handles.
     let ballVis  = false;
     let dragging = false;
     let dragStartX, dragStartW;
+    let ballY    = window.innerHeight / 2;
+    let nearMajor = false;
 
     document.addEventListener('mousemove', ev => {
       if (dragging) return;
-      const cy      = window.innerHeight / 2;
-      const nearCtr = Math.abs(ev.clientY - cy) < 12;
-      const nearTip = Math.abs(ev.clientX - currentW) < 18 && ev.clientX > 0;
-      const show    = nearCtr && nearTip;
+      const H        = window.innerHeight;
+      const scrollY  = window.scrollY;
+      const centerY  = H / 2;
+      // Closest visible major tick (i % 10 === 0) to the cursor's Y
+      const stepsFromCenter = Math.round((ev.clientY - centerY + scrollY) / TICK_STEP);
+      const i        = stepsFromCenter;
+      const tickSY   = i * TICK_STEP;
+      const screenY  = centerY + (tickSY - scrollY);
+      const isMajor  = i % 10 === 0;
+      const verticalNear = Math.abs(ev.clientY - screenY) < 7;
+      // Use the actual rendered band width so the ball lands at the
+      // tick's true tip (band widths lerp at different rates).
+      const bW       = getBandW(screenY, H);
+      const tipX     = (i % 10 === 0 ? 0.58 : i % 5 === 0 ? 0.36 : 0.22) * bW;
+      // Close to the tick's right tip OR within the line's x-range
+      const horizontalNear = ev.clientX < tipX + 22 && ev.clientX > -8;
+      const show = isMajor && verticalNear && horizontalNear;
+      if (show) {
+        ballY = screenY;
+        ball.style.top = `${ballY}px`;
+        ball.style.left = `${Math.round(tipX)}px`;
+      }
       if (show !== ballVis) {
-        ballVis = show;
+        ballVis  = show;
+        nearMajor = show;
         ball.style.opacity = show ? '1' : '0';
+        ball.style.transform = show
+          ? 'translate(-50%, -50%) scale(1.4)'
+          : 'translate(-50%, -50%) scale(1)';
       }
     });
 
@@ -4049,11 +4076,14 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
         const screenY = centerY + (tickSY - scrollY);
 
         if (screenY < -2 || screenY > H + 2) continue;
-        if (Math.abs(screenY - centerY) < 0.8) continue; // center line drawn separately
 
         const isMajor  = i % 10 === 0;
         const isMedium = i % 5  === 0;
-        const alpha    = isMajor ? 0.20 : isMedium ? 0.13 : 0.07;
+        // Hovered major tick brightens to read as the active grabbable handle
+        const isHover  = nearMajor && Math.abs(screenY - ballY) < 1;
+        const alpha    = isHover  ? 0.55
+                       : isMajor  ? 0.22
+                       : isMedium ? 0.13 : 0.07;
         const frac     = isMajor ? 0.58 : isMedium ? 0.36 : 0.22;
         const bW       = getBandW(screenY, H);
         const lineLen  = Math.max(0, bW * frac);
@@ -4063,17 +4093,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
         ctx.moveTo(0, Math.round(screenY) + 0.5);
         ctx.lineTo(lineLen, Math.round(screenY) + 0.5);
         ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = isHover ? 1.5 : 1;
         ctx.stroke();
       }
-
-      // Fixed center line — full currentW, brightest
-      ctx.beginPath();
-      ctx.moveTo(0, centerY + 0.5);
-      ctx.lineTo(currentW, centerY + 0.5);
-      ctx.strokeStyle = 'rgba(255,255,255,0.50)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      // No more static center line — major ticks are the affordances.
     }
 
     requestAnimationFrame(drawRuler);
