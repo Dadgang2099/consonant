@@ -4604,10 +4604,13 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup',   onUp);
                 if (!didDrag) {
-                  // Single click: select + jump. ✕ stays visible until
-                  // the user clicks elsewhere or hits Delete.
+                  // Single click: select + jump. Use the 2-arg
+                  // window.scrollTo so the scroll is instant in every
+                  // browser — the smooth variant was getting clobbered
+                  // by the scroll-driver's per-frame rAF re-renders
+                  // and not arriving on REC-captured KFs reliably.
                   selectKF(P.inputId, originalSY);
-                  window.scrollTo({ top: originalSY, behavior: 'smooth' });
+                  window.scrollTo(0, originalSY);
                   return;
                 }
                 const newSY = parseInt(dot.dataset.dragSY, 10);
