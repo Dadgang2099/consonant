@@ -2435,7 +2435,7 @@ body {
 .ai-bar__send:hover:not(:disabled) {
   background: rgba(255,255,255,0.18);
   color: #fff;
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 .ai-bar__send:active { transform: scale(0.94); }
 .ai-bar__send:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -2802,8 +2802,15 @@ body {
 .app-dock > .ai-bar.ai-bar--expanded {
   width:     min(820px, calc(100vw - 64px));
   max-width: min(820px, calc(100vw - 64px));
-  height:    44px;     /* fixed height inside dock so the inner glass
-                          can never exceed the outer pill on hover/grow */
+  height:    44px;
+  transition: width 0.44s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Housing grows in lockstep with the send button on hover so the
+   bar always fully encases its contents. */
+.app-dock > .ai-bar.ai-bar--expanded:has(.ai-bar__send:hover:not(:disabled)),
+.app-dock > .ai-bar.ai-bar--expanded:has(.ai-bar__close:hover) {
+  height: 48px;
 }
 .app-dock--collapsed > .ai-bar   { width: 0;     max-width: 0; }
 /* Glass tracks the wrapper exactly when expanded — no auto growth. */
