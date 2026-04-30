@@ -3977,37 +3977,34 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
     // The ball follows whatever MAJOR tick the cursor is nearest to.
     // Hover any long line → ball materializes at its right tip and
-    // can be grabbed to extend currentW. No static center line —
-    // the major ticks ARE the grabbable handles.
-    let ballVis  = false;
-    let dragging = false;
+    // can be grabbed to extend currentW. drawRuler keeps the ball
+    // glued to the live tick tip every frame so band-width lerps
+    // and scroll changes can't detach it.
+    let ballVis   = false;
+    let dragging  = false;
     let dragStartX, dragStartW;
-    let ballY    = window.innerHeight / 2;
     let nearMajor = false;
+    let ballScreenY = window.innerHeight / 2;
+    let ballFrac    = 0.58;     // major tick fraction by default
 
     document.addEventListener('mousemove', ev => {
       if (dragging) return;
       const H        = window.innerHeight;
       const scrollY  = window.scrollY;
       const centerY  = H / 2;
-      // Closest visible major tick (i % 10 === 0) to the cursor's Y
       const stepsFromCenter = Math.round((ev.clientY - centerY + scrollY) / TICK_STEP);
       const i        = stepsFromCenter;
       const tickSY   = i * TICK_STEP;
       const screenY  = centerY + (tickSY - scrollY);
       const isMajor  = i % 10 === 0;
       const verticalNear = Math.abs(ev.clientY - screenY) < 7;
-      // Use the actual rendered band width so the ball lands at the
-      // tick's true tip (band widths lerp at different rates).
       const bW       = getBandW(screenY, H);
-      const tipX     = (i % 10 === 0 ? 0.58 : i % 5 === 0 ? 0.36 : 0.22) * bW;
-      // Close to the tick's right tip OR within the line's x-range
+      const tipX     = 0.58 * bW;
       const horizontalNear = ev.clientX < tipX + 22 && ev.clientX > -8;
       const show = isMajor && verticalNear && horizontalNear;
       if (show) {
-        ballY = screenY;
-        ball.style.top = `${ballY}px`;
-        ball.style.left = `${Math.round(tipX)}px`;
+        ballScreenY = screenY;
+        ballFrac    = 0.58;
       }
       if (show !== ballVis) {
         ballVis  = show;
@@ -4057,7 +4054,15 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       // Cascade: center-out bands
       tickBands();
 
-      ball.style.left = `${Math.round(currentW)}px`;
+      // Pin the ball to the live tip of whichever major tick is
+      // currently active (hovered, or being dragged). Recomputed each
+      // frame so band-width lerps and page scroll keep it glued.
+      if (ballVis || dragging) {
+        const liveBW   = getBandW(ballScreenY, window.innerHeight);
+        const liveTipX = liveBW * ballFrac;
+        ball.style.left = `${Math.round(liveTipX)}px`;
+        ball.style.top  = `${Math.round(ballScreenY)}px`;
+      }
 
       const ctx     = cvs.getContext('2d');
       const W       = cvs.width;
