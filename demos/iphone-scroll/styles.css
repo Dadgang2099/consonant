@@ -2982,9 +2982,7 @@ body {
   height: 320px;
   min-height: 120px;
   max-height: 50vh;
-  background: rgba(13, 13, 20, 0.78);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  background: rgba(13, 13, 20, 0.94);
   /* Top stroke runs across the header level. The bump pseudo above
      extends the same stroke up and over the dock as one continuous
      line — bump bottom shares this border so the two never read
@@ -3017,12 +3015,12 @@ body {
   top: calc(-1 * var(--tl-tag-h));
   width: 268px;                       /* dock + ~10px each side */
   height: var(--tl-tag-h);
-  background: rgba(13, 13, 20, 0.78);
-  /* Same backdrop-filter as the panel so the frosted color matches.
-     Without this the bump shows the raw page behind it (iPhone hero)
-     and reads darker than the panel below. */
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  /* Near-opaque fill identical to the panel so the bump and panel
+     read as one solid color regardless of what page content is
+     behind them. Backdrop-filter dropped — it was making each
+     surface frost different content (different page Y) and that's
+     what was creating the mismatch. */
+  background: rgba(13, 13, 20, 0.94);
   border: 1px solid var(--tl-border);
   border-bottom: none;
   border-radius: 34px 34px 0 0;
