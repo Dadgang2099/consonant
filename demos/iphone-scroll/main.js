@@ -4383,7 +4383,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           <span class="tl-asset__swatch"></span>
           <span class="tl-asset__label">${A.title}</span>
           <span class="tl-asset__count">${totalKFs}</span>
-          <button class="tl-row-add" title="Capture every metric in this asset at the current scroll" aria-label="Add master keyframe">+</button>
+          <button class="tl-row-add" title="Capture every metric in this asset at the current scroll" aria-label="Add master keyframe"><span class="tl-row-add__char">+</span></button>
         </div>
       `;
       aRow.querySelector('.tl-asset__hdr').addEventListener('click', e => {
@@ -4443,16 +4443,26 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             pRow.innerHTML = `
               <span class="tl-prop__label">${P.label}</span>
               <input class="tl-prop__color" type="color" value="#${hexNoHash}" data-for="${P.inputId}" aria-label="Color">
-              <button class="tl-row-add" title="Add keyframe at current scroll" aria-label="Add keyframe">+</button>
+              <button class="tl-row-add" title="Add keyframe at current scroll" aria-label="Add keyframe"><span class="tl-row-add__char">+</span></button>
             `;
             tree.appendChild(pRow);
             const colorEl = pRow.querySelector('.tl-prop__color');
             if (colorEl && realInput) {
+              // Live preview while the picker is open: write hex to the
+              // panel input and dispatch 'input' (not 'change') so the
+              // shadow color updates without auto-capture firing.
               colorEl.addEventListener('input', () => {
                 const newHex = colorEl.value.replace('#', '').toLowerCase();
                 realInput.value = newHex;
-                realInput.dispatchEvent(new Event('input',  { bubbles: true }));
-                realInput.dispatchEvent(new Event('change', { bubbles: true }));
+                realInput.dispatchEvent(new Event('input', { bubbles: true }));
+              });
+              // KF lands on picker close. Direct __captureKF — never
+              // dispatches synthetic 'change', so REC mode (animMode)
+              // can't accidentally capture every other metric in the
+              // panel. ONLY the COLOR input is keyframed.
+              colorEl.addEventListener('change', () => {
+                const newHex = colorEl.value.replace('#', '').toLowerCase();
+                window.__captureKF?.(P.inputId, Math.round(window.scrollY), newHex);
               });
             }
             pRow.querySelector('.tl-row-add').addEventListener('click', e => {
@@ -4475,7 +4485,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
                      value="${formatVal(liveVal)}"
                      spellcheck="false" autocomplete="off">
               <button class="tl-row-add" data-add-for="${P.inputId}"
-                      title="Add keyframe at current scroll" aria-label="Add keyframe">+</button>
+                      title="Add keyframe at current scroll" aria-label="Add keyframe"><span class="tl-row-add__char">+</span></button>
             `;
             tree.appendChild(pRow);
 
@@ -4500,15 +4510,20 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           pLane.style.display = 'block';
           pLane.style.setProperty('--tl-asset-color', ASSET_COLORS[A.panelId] || 'var(--tl-dot)');
           // Connecting line between consecutive KFs on this metric.
-          // Same pattern the build's per-metric column uses.
+          // data-prev-sy / data-next-sy lets the dot drag handler update
+          // adjacent segments live so the line stays connected during a
+          // drag instead of detaching until release.
           const sortedKFs = [...P.kfs].sort((a, b) => a.scrollY - b.scrollY);
           for (let i = 0; i < sortedKFs.length - 1; i++) {
             const seg = document.createElement('div');
             seg.className = 'tl-lane__seg';
-            const a = (sortedKFs[i].scrollY     / scrollMax) * 100;
-            const b = (sortedKFs[i + 1].scrollY / scrollMax) * 100;
-            seg.style.left  = `${a}%`;
-            seg.style.width = `${Math.max(0.3, b - a)}%`;
+            const a = sortedKFs[i].scrollY;
+            const b = sortedKFs[i + 1].scrollY;
+            seg.style.left  = `${(a / scrollMax) * 100}%`;
+            seg.style.width = `${Math.max(0.3, ((b - a) / scrollMax) * 100)}%`;
+            seg.dataset.inputId = P.inputId;
+            seg.dataset.prevSy  = String(a);
+            seg.dataset.nextSy  = String(b);
             pLane.appendChild(seg);
           }
           P.kfs.forEach(k => {
@@ -4520,19 +4535,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             dot.title = `${A.title} – ${P.label}  ·  KF @ ${Math.round(k.scrollY)}px  ·  Delete to remove`;
             dot.dataset.kfInput = P.inputId;
             dot.dataset.kfSy    = String(k.scrollY);
-
-            // ✕ click → delete (also visible whenever the dot is selected)
-            const x = document.createElement('span');
-            x.className = 'tl-dot__x';
-            x.textContent = '✕';
-            x.title = 'Delete keyframe';
-            x.addEventListener('mousedown', e => e.stopPropagation());
-            x.addEventListener('click', e => {
-              e.stopPropagation();
-              window.__deleteKFAt?.(P.inputId, k.scrollY);
-              selectedKF = null;
-            });
-            dot.appendChild(x);
+            // No ✕ badge on the timeline dot — delete via the row's red
+            // X-button (the + flips into ✕ when selected) or Delete key.
 
             // Double-click anywhere on the dot → delete
             dot.addEventListener('dblclick', e => {
@@ -4546,7 +4550,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             const originalSY = k.scrollY;
 
             dot.addEventListener('mousedown', e => {
-              if (e.target === x) return;     // delete affordance handles itself
               e.preventDefault();
               e.stopPropagation();
               dragging = true;
@@ -4564,6 +4567,23 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
                 const newSY = Math.max(0, Math.min(max, originalSY + (dx / lanesW) * max));
                 // Visual drag: move dot live
                 dot.style.left = `${(newSY / max) * 100}%`;
+                // Keep the connecting line glued to the dot — update the
+                // segments adjacent to this scrollY by fingerprint match.
+                const lane = dot.closest('.tl-lane--prop');
+                if (lane) {
+                  lane.querySelectorAll(`.tl-lane__seg[data-input-id="${P.inputId}"][data-next-sy="${originalSY}"]`)
+                    .forEach(seg => {
+                      const prev = parseInt(seg.dataset.prevSy, 10);
+                      seg.style.left  = `${(prev / max) * 100}%`;
+                      seg.style.width = `${Math.max(0.3, ((newSY - prev) / max) * 100)}%`;
+                    });
+                  lane.querySelectorAll(`.tl-lane__seg[data-input-id="${P.inputId}"][data-prev-sy="${originalSY}"]`)
+                    .forEach(seg => {
+                      const next = parseInt(seg.dataset.nextSy, 10);
+                      seg.style.left  = `${(newSY / max) * 100}%`;
+                      seg.style.width = `${Math.max(0.3, ((next - newSY) / max) * 100)}%`;
+                    });
+                }
                 // Scroll the page so the build mirrors the drag
                 window.scrollTo({ top: newSY, behavior: 'instant' });
                 dot.dataset.dragSY = String(Math.round(newSY));
