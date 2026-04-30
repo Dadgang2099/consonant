@@ -4386,35 +4386,60 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       if (isOpen) {
         A.props.forEach(P => {
           const realInput = document.getElementById(P.inputId);
-          const isRange = realInput?.type === 'range';
-          const liveVal = realInput?.value ?? '';
+          const isRange   = realInput?.type === 'range';
+          const isColor   = !!P.isColor;
+          const liveVal   = realInput?.value ?? '';
 
           const pRow = document.createElement('div');
           pRow.className = 'tl-prop';
           pRow.dataset.assetId = A.panelId;
           pRow.dataset.inputId = P.inputId;
           pRow.style.display = 'flex';
-          pRow.innerHTML = `
-            <span class="tl-prop__label">${P.label}</span>
-            <input class="tl-prop__val" type="text" inputmode="decimal"
-                   data-for="${P.inputId}"
-                   value="${formatVal(liveVal)}"
-                   spellcheck="false" autocomplete="off">
-            <button class="tl-row-add" data-add-for="${P.inputId}"
-                    title="Add keyframe at current scroll" aria-label="Add keyframe">+</button>
-          `;
-          tree.appendChild(pRow);
+          if (isColor) {
+            // Color rows get a native swatch picker instead of a numeric field
+            const hexNoHash = (liveVal || '000000').replace('#', '').toLowerCase();
+            pRow.innerHTML = `
+              <span class="tl-prop__label">${P.label}</span>
+              <input class="tl-prop__color" type="color" value="#${hexNoHash}" data-for="${P.inputId}" aria-label="Color">
+              <button class="tl-row-add" title="Add keyframe at current scroll" aria-label="Add keyframe">+</button>
+            `;
+            tree.appendChild(pRow);
+            const colorEl = pRow.querySelector('.tl-prop__color');
+            if (colorEl && realInput) {
+              colorEl.addEventListener('input', () => {
+                const newHex = colorEl.value.replace('#', '').toLowerCase();
+                realInput.value = newHex;
+                realInput.dispatchEvent(new Event('input',  { bubbles: true }));
+                realInput.dispatchEvent(new Event('change', { bubbles: true }));
+              });
+            }
+            pRow.querySelector('.tl-row-add').addEventListener('click', e => {
+              e.stopPropagation();
+              const sy = Math.round(window.scrollY);
+              const v  = (realInput?.value || '000000').replace('#', '').toLowerCase();
+              window.__captureKF?.(P.inputId, sy, v);
+            });
+          } else {
+            pRow.innerHTML = `
+              <span class="tl-prop__label">${P.label}</span>
+              <input class="tl-prop__val" type="text" inputmode="decimal"
+                     data-for="${P.inputId}"
+                     value="${formatVal(liveVal)}"
+                     spellcheck="false" autocomplete="off">
+              <button class="tl-row-add" data-add-for="${P.inputId}"
+                      title="Add keyframe at current scroll" aria-label="Add keyframe">+</button>
+            `;
+            tree.appendChild(pRow);
 
-          // Wire value editor — typed input + scrub-drag to change
-          const valEl = pRow.querySelector('.tl-prop__val');
-          if (valEl && realInput) wireValueEditor(valEl, realInput, isRange);
-          // + button — capture KF for this metric at current scroll
-          pRow.querySelector('.tl-row-add').addEventListener('click', e => {
-            e.stopPropagation();
-            const sy = Math.round(window.scrollY);
-            const v = isRange ? parseFloat(realInput.value) : realInput.value;
-            window.__captureKF?.(P.inputId, sy, v);
-          });
+            const valEl = pRow.querySelector('.tl-prop__val');
+            if (valEl && realInput) wireValueEditor(valEl, realInput, isRange);
+            pRow.querySelector('.tl-row-add').addEventListener('click', e => {
+              e.stopPropagation();
+              const sy = Math.round(window.scrollY);
+              const v = isRange ? parseFloat(realInput.value) : realInput.value;
+              window.__captureKF?.(P.inputId, sy, v);
+            });
+          }
 
           const pLane = document.createElement('div');
           pLane.className = 'tl-lane tl-lane--prop';
@@ -4563,6 +4588,20 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   renderTimeline();
   document.addEventListener('pw-kfs-changed', renderTimeline);
   window.addEventListener('resize', renderTimeline);
+
+  // Lock tree + lanes vertical scroll together so rows can never drift
+  // out of alignment. Whichever side the user scrolls, the other follows.
+  let syncing = false;
+  function mirror(src, dst) {
+    if (syncing) return;
+    syncing = true;
+    dst.scrollTop = src.scrollTop;
+    requestAnimationFrame(() => { syncing = false; });
+  }
+  if (tree && lanes) {
+    tree.addEventListener('scroll',  () => mirror(tree,  lanes), { passive: true });
+    lanes.addEventListener('scroll', () => mirror(lanes, tree),  { passive: true });
+  }
 
   // ── Scrub: click + drag horizontally on the tracks area ───
   // X position across the tracks pane maps linearly to window scrollY.

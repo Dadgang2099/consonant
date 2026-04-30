@@ -3215,6 +3215,7 @@ body {
    neighboring metric's lane. */
 .tl-asset {
   border-bottom: 0.5px solid var(--tl-rule);
+  box-sizing: border-box;
 }
 .tl-asset__hdr {
   display: flex;
@@ -3382,6 +3383,25 @@ body {
   background: rgba(56,210,255,0.18);
   border-color: rgba(56,210,255,0.40);
 }
+
+/* Color rows get a native swatch picker. Match the value-field
+   styling so it reads as part of the same row group. */
+.tl-prop__color {
+  width: 56px;
+  height: 18px;
+  margin-left: auto;
+  margin-right: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+}
+.tl-prop__color::-webkit-color-swatch-wrapper { padding: 2px; }
+.tl-prop__color::-webkit-color-swatch         { border: none; border-radius: 3px; }
+.tl-prop__color::-moz-color-swatch            { border: none; border-radius: 3px; }
 
 /* Editable value field on each property row */
 .tl-prop__val {
