@@ -3376,12 +3376,25 @@ body {
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: color 0.18s, background 0.18s, border-color 0.18s,
+              transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .tl-row-add:hover {
   color: #fff;
   background: rgba(56,210,255,0.18);
   border-color: rgba(56,210,255,0.40);
+}
+/* When this row's metric owns the currently selected KF, the + flips
+   into a red ✕ — click it to delete the selected keyframe. */
+.tl-row-add--delete {
+  background: rgba(255,80,80,0.92);
+  color: #fff;
+  border-color: rgba(255,80,80,0.55);
+  transform: rotate(45deg);
+}
+.tl-row-add--delete:hover {
+  background: rgba(255,80,80,1);
+  border-color: rgba(255,80,80,0.85);
 }
 
 /* Color rows get a native swatch picker. Match the value-field

@@ -4124,8 +4124,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     refreshSelectedHighlight();
   }
   function refreshSelectedHighlight() {
-    document.querySelectorAll('.tl-dot--selected, .drv-overlay__dot--kf-selected')
-      .forEach(el => el.classList.remove('tl-dot--selected', 'drv-overlay__dot--kf-selected'));
+    document.querySelectorAll('.tl-dot--selected, .drv-overlay__dot--kf-selected, .tl-row-add--delete')
+      .forEach(el => el.classList.remove('tl-dot--selected', 'drv-overlay__dot--kf-selected', 'tl-row-add--delete'));
     if (!selectedKF) return;
     document.querySelectorAll(
       `.tl-dot[data-kf-input="${selectedKF.inputId}"][data-kf-sy="${selectedKF.scrollY}"]`
@@ -4133,6 +4133,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     document.querySelectorAll(
       `.drv-overlay__dot[data-kf-input="${selectedKF.inputId}"][data-kf-sy="${selectedKF.scrollY}"]`
     ).forEach(el => el.classList.add('drv-overlay__dot--kf-selected'));
+    // Flip the row's + into a red ✕ for the metric that owns the selected KF
+    document.querySelectorAll(`.tl-prop[data-input-id="${selectedKF.inputId}"] .tl-row-add`)
+      .forEach(el => el.classList.add('tl-row-add--delete'));
   }
   // Listen for clicks on the right-edge build dots — they fire
   // 'pw-kf-clicked' when the user clicks (no drag), so the bottom
@@ -4454,6 +4457,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             }
             pRow.querySelector('.tl-row-add').addEventListener('click', e => {
               e.stopPropagation();
+              const btn = e.currentTarget;
+              if (btn.classList.contains('tl-row-add--delete') && selectedKF && selectedKF.inputId === P.inputId) {
+                window.__deleteKFAt?.(selectedKF.inputId, selectedKF.scrollY);
+                selectedKF = null;
+                return;
+              }
               const sy = Math.round(window.scrollY);
               const v  = (realInput?.value || '000000').replace('#', '').toLowerCase();
               window.__captureKF?.(P.inputId, sy, v);
@@ -4474,6 +4483,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
             if (valEl && realInput) wireValueEditor(valEl, realInput, isRange);
             pRow.querySelector('.tl-row-add').addEventListener('click', e => {
               e.stopPropagation();
+              const btn = e.currentTarget;
+              if (btn.classList.contains('tl-row-add--delete') && selectedKF && selectedKF.inputId === P.inputId) {
+                window.__deleteKFAt?.(selectedKF.inputId, selectedKF.scrollY);
+                selectedKF = null;
+                return;
+              }
               const sy = Math.round(window.scrollY);
               const v = isRange ? parseFloat(realInput.value) : realInput.value;
               window.__captureKF?.(P.inputId, sy, v);
