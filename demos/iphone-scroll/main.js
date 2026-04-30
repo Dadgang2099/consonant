@@ -3223,6 +3223,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     // Each metric (slider/select/etc.) gets its own vertical column,
     // colored by its parent panel. Hover a dot to see "PANEL – METRIC".
     const tracks = [];
+    const claimed = new Set();    // inputIds already attached to a panel
     panelIds.forEach(panelId => {
       const panelEl = document.getElementById(panelId);
       if (!panelEl) return;
@@ -3233,6 +3234,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
         if (KF_BLOCKLIST.has(inputId)) return;
         const kfs = kfStore[inputId];
         if (!kfs || !kfs.length) return;
+        claimed.add(inputId);
         const row = input.closest('.pw-row');
         const label = row?.querySelector('.pw-key')?.textContent?.trim() || inputId;
         tracks.push({
@@ -3240,6 +3242,31 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           color: PANEL_COLORS[panelId] || '#ffffff',
           sorted: [...new Set(kfs.map(k => k.scrollY))].sort((a, b) => a - b),
         });
+      });
+    });
+    // Sweep kfStore for any keyed inputs that DON'T live inside a panel's
+    // DOM tree (off-panel pickers / popovers like shadowCPickerHex). Match
+    // them back to a panel by id prefix and synthesize a track column so
+    // every keyframed metric — including color — appears in the build.
+    Object.keys(kfStore).forEach(inputId => {
+      if (claimed.has(inputId)) return;
+      if (KF_BLOCKLIST.has(inputId)) return;
+      const kfs = kfStore[inputId];
+      if (!kfs || !kfs.length) return;
+      const panelId = panelIds.find(id => inputId.startsWith(id.replace(/Panel$/, '')));
+      if (!panelId) return;
+      const panelEl = document.getElementById(panelId);
+      const panelTitle = panelEl?.querySelector('.pw-panel__title')?.textContent?.trim() || panelId;
+      // For off-panel inputs the row is in the panel proper (e.g. the
+      // shadow panel's COLOR row). Find by chip id mapping for color.
+      const chipId = inputId.replace('CPickerHex', 'ColorChip');
+      const chip = document.getElementById(chipId);
+      const row  = chip?.closest('.pw-row');
+      const label = row?.querySelector('.pw-key')?.textContent?.trim() || inputId;
+      tracks.push({
+        inputId, panelId, panelTitle, label,
+        color: PANEL_COLORS[panelId] || '#ffffff',
+        sorted: [...new Set(kfs.map(k => k.scrollY))].sort((a, b) => a - b),
       });
     });
 
