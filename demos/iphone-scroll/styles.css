@@ -2431,12 +2431,15 @@ body {
 }
 .ai-dust-overlay--on { opacity: 1; }
 
-/* Hover: glass picks up the chromatic glow + brighter rim. The
-   actual size growth is driven by the wrapper height bump above
-   (44 → 48px) so the bump base plate grows in lockstep — no
-   transform scale on the glass (would visually drift past the
-   wrapper and the bump would not follow). */
+/* Hover: subtle scale grow + chromatic glow + brighter rim. The
+   wrapper height also grows 44 → 48px (and --tl-tag-h grows 76 →
+   84px so the bump base plate follows), so the scale here is
+   additive softness, not a fake size change. transform-origin at
+   the bottom-center so the bar grows up into the bump space rather
+   than spilling out of it. */
 .ai-bar--hovered .ai-bar__glass {
+  transform: scale(1.018);
+  transform-origin: 50% 100%;
   border-color: rgba(56,210,240,0.40);
   box-shadow:
     0 0 0 0.5px rgba(56,210,240,0.28),
@@ -2448,6 +2451,7 @@ body {
     width         0.44s cubic-bezier(0.16, 1, 0.3, 1),
     height        0.40s cubic-bezier(0.16, 1, 0.3, 1),
     padding       0.40s cubic-bezier(0.16, 1, 0.3, 1),
+    transform     0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
     border-color  0.80s cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow    0.80s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -2995,8 +2999,11 @@ body {
   z-index: 1;
   /* Spring the bump width when the dock collapses so the bounding
      box hugs whichever circles are visible. Same easing as the dock
-     itself uses. */
+     itself uses. height + top spring so the bar's hover bump grows
+     softly instead of snapping. */
   transition: width         0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+              height        0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+              top           0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
               border-radius 0.30s ease;
 }
 /* Eye-only state: bump shrinks to wrap just the eye circle with
@@ -3029,6 +3036,10 @@ body {
   justify-content: center;
   cursor: ns-resize;
   pointer-events: auto;
+  /* Spring the tag's height + offset alongside the bump so they
+     stay welded as the bar's hover state grows the housing. */
+  transition: height 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+              top    0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 /* Existing tl-panel__handle kept as a no-op alias in case other code
    targets it; the tag itself handles the resize gesture now. */
