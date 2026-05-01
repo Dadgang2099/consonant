@@ -3238,31 +3238,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     hair.id = 'kwHair';
     overlayEl.appendChild(hair);
 
-    if (totalKFs > 0) {
-      // KF bypass toggle
-      const bypassBtn = document.createElement('button');
-      bypassBtn.className = 'drv-overlay__bypass';
-      bypassBtn.id = 'kfBypassBtn';
-      bypassBtn.title = 'Toggle KF playback (K)';
-      bypassBtn.textContent = kfEnabled ? 'KF' : 'OFF';
-      bypassBtn.classList.toggle('drv-overlay__bypass--off', !kfEnabled);
-      bypassBtn.addEventListener('click', toggleKFEnabled);
-      overlayEl.appendChild(bypassBtn);
-
-      // Clear-all button
-      const clearBtn = document.createElement('button');
-      clearBtn.className = 'drv-overlay__bypass drv-overlay__bypass--clear';
-      clearBtn.title = 'Delete all keyframes';
-      clearBtn.textContent = '✕ KFs';
-      clearBtn.addEventListener('click', () => {
-        kfStore = {};
-        save();
-        buildOverlayLines();
-        updateBadges();
-        refreshSnapButtons();
-      });
-      overlayEl.appendChild(clearBtn);
-    }
 
     // ── Per-input colored track columns ─────────────────
     // Each metric (slider/select/etc.) gets its own vertical column,
