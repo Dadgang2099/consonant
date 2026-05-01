@@ -2431,9 +2431,12 @@ body {
 }
 .ai-dust-overlay--on { opacity: 1; }
 
-/* Hover: scale + chromatic glow + text brighten — zero-overshoot */
+/* Hover: glass picks up the chromatic glow + brighter rim. The
+   actual size growth is driven by the wrapper height bump above
+   (44 → 48px) so the bump base plate grows in lockstep — no
+   transform scale on the glass (would visually drift past the
+   wrapper and the bump would not follow). */
 .ai-bar--hovered .ai-bar__glass {
-  transform: scale(1.032);
   border-color: rgba(56,210,240,0.40);
   box-shadow:
     0 0 0 0.5px rgba(56,210,240,0.28),
@@ -2445,7 +2448,6 @@ body {
     width         0.44s cubic-bezier(0.16, 1, 0.3, 1),
     height        0.40s cubic-bezier(0.16, 1, 0.3, 1),
     padding       0.40s cubic-bezier(0.16, 1, 0.3, 1),
-    transform     0.52s cubic-bezier(0.16, 1, 0.3, 1),
     border-color  0.80s cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow    0.80s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -2737,8 +2739,10 @@ body {
   transition: width 0.44s cubic-bezier(0.16, 1, 0.3, 1),
               height 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-/* Housing grows in lockstep with the send button on hover so the
-   bar always fully encases its contents. */
+/* Housing grows in lockstep with the bar's own hover state and with
+   the send/close button hovers so the wrapper always fully encases
+   its contents. */
+.app-dock > .ai-bar.ai-bar--expanded.ai-bar--hovered,
 .app-dock > .ai-bar.ai-bar--expanded:has(.ai-bar__send:hover:not(:disabled)),
 .app-dock > .ai-bar.ai-bar--expanded:has(.ai-bar__close:hover) {
   height: 48px;
@@ -2955,10 +2959,11 @@ body {
 }
 .tl-panel--open { transform: translateY(0); }
 
-/* When the chat send/close button is hovered, grow --tl-tag-h so the
-   bump pseudo AND the tag area both grow vertically in lockstep with
-   the bar's own height bump. The base plate keeps fully encasing the
-   chat bar at every moment, never gets bypassed. */
+/* Whenever the bar itself is hovered (or send/close hovered), grow
+   --tl-tag-h so the bump pseudo AND the tag area both grow vertically
+   in lockstep with the bar's own height bump. The base plate keeps
+   fully encasing the chat bar at every moment, never gets bypassed. */
+.tl-panel:has(.ai-bar--hovered),
 .tl-panel:has(.ai-bar__send:hover:not(:disabled)),
 .tl-panel:has(.ai-bar__close:hover) {
   --tl-tag-h: 84px;
