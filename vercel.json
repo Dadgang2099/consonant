@@ -1,5 +1,11 @@
 {
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "framework": null,
   "redirects": [
     { "source": "/", "destination": "/demos/iphone-scroll/", "permanent": false }
-  ]
+  ],
+  "functions": {
+    "api/ai-edit.js": { "memory": 1024, "maxDuration": 30 }
+  }
 }
