@@ -508,7 +508,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       shadowPanel.style.pointerEvents = opa < 0.08 ? 'none' : 'auto';
       if (!shadowPanel.dataset.userPositioned) {
         const slideX = p2 < 0.10 ? (1 - Math.min(p2 / 0.10, 1)) * -24 : 0;
-        shadowPanel.style.transform = `translateY(-50%) translateX(${slideX}px)`;
+        shadowPanel.style.transform = `translateX(${slideX}px)`;
       }
     }
   }

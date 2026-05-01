@@ -1490,10 +1490,10 @@ body {
 .pw-panel--shadow {
   right: auto;
   left: 20px;
-  top: 50%;
-  width: 260px;
+  top: 64px;            /* align with other panels' top edge */
+  width: 296px;         /* match other panels so pencil + REC fit in the header */
   z-index: 10500;       /* shadow panel sits above everything alongside other panels */
-  /* JS sets transform: translateY(-50%) translateX(slideX) */
+  /* JS sets transform: translateX(slideX) */
   /* opacity managed entirely by JS */
   pointer-events: none; /* JS re-enables when visible */
 }
