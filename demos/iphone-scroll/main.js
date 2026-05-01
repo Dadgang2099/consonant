@@ -2803,9 +2803,15 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   function currentState() {
     const g = id => document.getElementById(id)?.value ?? '';
     return {
+      // PHONE panel (now includes the merged shadow rows)
       scaleInput: g('scaleInput'), yRefInput: g('yRefInput'), xOffInput: g('xOffInput'),
+      phoneOpacity: g('phoneOpacity'),
       shadowBlur: g('shadowBlur'), shadowOpacity: g('shadowOpacity'),
-      shadowX: g('shadowX'), shadowY: g('shadowY'), seqSpeed: g('seqSpeed'),
+      shadowX: g('shadowX'), shadowY: g('shadowY'),
+      shadowCPickerHex: g('shadowCPickerHex'),
+      // SCROLL VIDEO
+      seqSpeed: g('seqSpeed'),
+      // HERO CONTENT
       hlSize: g('hlSize'), hlWeight: g('hlWeight'), hlTracking: g('hlTracking'), hlLineH: g('hlLineH'),
       bdSize: g('bdSize'), bdWeight: g('bdWeight'), bdTracking: g('bdTracking'), bdLineH: g('bdLineH'),
       lockupTop: g('lockupTop'), lockupMaxW: g('lockupMaxW'), lockupPad: g('lockupPad'), lockupGap: g('lockupGap'), lockupScale: g('lockupScale'),
@@ -2842,15 +2848,44 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   }
 
+  // ── Primary path: /api/ai-edit on Vercel (key lives in env). ───
+  // Fallback: direct Anthropic call if the user pasted a key into
+  // localStorage (works for local dev when the function isn't deployed).
   async function askClaude(instruction) {
+    const state = currentState();
+
+    // Try server proxy first
+    try {
+      const res = await fetch('/api/ai-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instruction, state }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.changes) return data.changes;
+        throw new Error(data?.error || 'No changes returned');
+      }
+      // 404/405 = function not deployed locally; fall through to direct call
+      if (res.status !== 404 && res.status !== 405) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || `Server proxy ${res.status}`);
+      }
+    } catch (e) {
+      // Network error or 404/405 — try direct call below
+      if (e?.message && !/ANTHROPIC_API_KEY|404|405|Failed to fetch|NetworkError/i.test(e.message)) {
+        throw e;
+      }
+    }
+
+    // Fallback: direct browser call (requires a localStorage key)
     const key = getKey();
     if (!key) throw new Error('NO_KEY');
-    const state = currentState();
     const system = `You control design panels for an iPhone scroll-hero demo. Return ONLY a raw JSON object mapping control IDs to new values. Only include keys that change.
 
 Current: ${JSON.stringify(state)}
 
-Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadowBlur(0-200) shadowOpacity(0-1) shadowX(-80–80) shadowY(0-180) seqSpeed(1-6) hlSize(24-160) hlWeight(300|400|500|600|700|800) hlTracking(-0.08–0.12) hlLineH(0.8-2.2) bdSize(12-32) bdWeight(300|400|500|600) bdTracking(-0.04–0.1) bdLineH(1-2.5) lockupTop(10-80) lockupMaxW(320-1400) lockupPad(0-160) lockupGap(0-80) lockupScale(50-150) ctaGap(0-80) headline(string) body(string) cta1(string) cta2(string)`;
+Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneOpacity(0-100) shadowBlur(0-200) shadowOpacity(0-1) shadowX(-80–80) shadowY(0-180) shadowCPickerHex(6-char hex no #) seqSpeed(1-6) hlSize(24-160) hlWeight(300|400|500|600|700|800) hlTracking(-0.08–0.12) hlLineH(0.8-2.2) bdSize(12-32) bdWeight(300|400|500|600) bdTracking(-0.04–0.1) bdLineH(1-2.5) lockupTop(10-80) lockupMaxW(320-1400) lockupPad(0-160) lockupGap(0-80) lockupScale(50-150) ctaGap(0-80) headline(string) body(string) cta1(string) cta2(string)`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -2894,10 +2929,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     const absorbDone = new Promise(r => setTimeout(r, 680));
 
     try {
-      const key = getKey();
-      const apiCall = key ? askClaude(txt) : new Promise(r => setTimeout(r, 1800, {}));
-      const [changes] = await Promise.all([apiCall, absorbDone]);
-      if (key && changes) applyChanges(changes);
+      // askClaude tries /api/ai-edit first (env-key proxy on Vercel), then
+      // falls back to a direct browser call if the user pasted a key into
+      // localStorage. Either path returns the changes object on success.
+      const [changes] = await Promise.all([askClaude(txt), absorbDone]);
+      if (changes) applyChanges(changes);
       animProg(100, 200);
       await new Promise(r => setTimeout(r, 240));
       input.value = ''; input.style.height = '';
@@ -2907,6 +2943,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
     } catch (err) {
       console.error('[AI bar]', err);
       bar.classList.add('ai-bar--error');
+      bar.dataset.aiError = err?.message || 'request failed';
       setTimeout(() => bar.classList.remove('ai-bar--error'), 2200);
     } finally {
       isLoading = false;
