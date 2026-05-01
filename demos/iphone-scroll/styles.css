@@ -1486,32 +1486,31 @@ body {
 
 /* ═══════════════════════════════════════════════════════════
    SECTION DIVIDER — subheader inside merged panels (e.g. SHADOW
-   block under PHONE controls)
+   block under PHONE controls). Same visual treatment as the
+   panel header's left-side icon + label.
    ═══════════════════════════════════════════════════════════ */
 .pw-section-divider {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 10px 0 6px;
-  padding: 0 2px;
+  gap: 6px;
+  margin: 14px 0 8px;
+  padding: 8px 0 0;
+  border-top: 0.5px solid rgba(255,255,255,0.08);
   user-select: none;
   -webkit-user-select: none;
 }
-.pw-section-divider::before,
-.pw-section-divider::after {
-  content: '';
-  flex: 1 1 auto;
-  height: 0.5px;
-  background: rgba(255,255,255,0.10);
+.pw-section-divider__ico {
+  color: rgba(255,255,255,0.28);
+  flex-shrink: 0;
+  display: block;
 }
 .pw-section-divider span {
   font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
-  font-size: 8.5px;
+  font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.22em;
-  color: rgba(255,255,255,0.34);
+  color: rgba(255,255,255,0.55);
   text-transform: uppercase;
-  flex: 0 0 auto;
 }
 
 /* ═══════════════════════════════════════════════════════════
