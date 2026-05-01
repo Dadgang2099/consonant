@@ -3334,15 +3334,23 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       track.className = 'drv-overlay__track';
       col.appendChild(track);
 
-      // Segment lines between every consecutive pair of KFs (this metric only)
+      // Segment lines between every consecutive pair of KFs (this metric only).
+      // Tag with input + prev/next scrollY so the drag handler can re-anchor
+      // adjacent segments live during a drag (otherwise the line snaps off
+      // the dot until the next render).
       for (let i = 0; i < T.sorted.length - 1; i++) {
         const line = document.createElement('div');
         line.className = 'drv-overlay__line';
-        const topPct = (T.sorted[i]     / scrollMax) * 100;
-        const botPct = (T.sorted[i + 1] / scrollMax) * 100;
+        const prevSY = T.sorted[i];
+        const nextSY = T.sorted[i + 1];
+        const topPct = (prevSY / scrollMax) * 100;
+        const botPct = (nextSY / scrollMax) * 100;
         line.style.top    = `${topPct}%`;
         line.style.height = `${Math.max(0.5, botPct - topPct)}%`;
         line.dataset.kfLinePan = T.panelId;
+        line.dataset.kfInput   = T.inputId;
+        line.dataset.kfPrevSy  = String(prevSY);
+        line.dataset.kfNextSy  = String(nextSY);
         col.appendChild(line);
       }
 
@@ -3431,10 +3439,32 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
           function updateKFVisuals(currentSY) {
             const deltaSY = Math.round(currentSY - startScrollY);
             selSnap.forEach(({ panelId: pid, inputId: iid, sy: sSY }) => {
+              const newSY = Math.max(0, sSY + deltaSY);
+              const newPct = Math.max(0, Math.min(100, (newSY / scrollMax) * 100));
               const el = overlayEl.querySelector(
                 `[data-kf-pan="${pid}"][data-kf-input="${iid}"][data-kf-sy="${sSY}"]`
               );
-              if (el) el.style.top = `${Math.max(0, Math.min(100, ((sSY + deltaSY) / scrollMax) * 100))}%`;
+              if (el) el.style.top = `${newPct}%`;
+
+              // Keep adjacent line segments glued to this dot. A segment
+              // whose data-kf-next-sy matches sSY ends at this dot; one whose
+              // data-kf-prev-sy matches starts at it. Re-anchor both.
+              overlayEl.querySelectorAll(
+                `.drv-overlay__line[data-kf-input="${iid}"][data-kf-next-sy="${sSY}"]`
+              ).forEach(seg => {
+                const prev = parseInt(seg.dataset.kfPrevSy, 10);
+                const topPct = Math.max(0, Math.min(100, (prev / scrollMax) * 100));
+                seg.style.top    = `${topPct}%`;
+                seg.style.height = `${Math.max(0.5, newPct - topPct)}%`;
+              });
+              overlayEl.querySelectorAll(
+                `.drv-overlay__line[data-kf-input="${iid}"][data-kf-prev-sy="${sSY}"]`
+              ).forEach(seg => {
+                const next = parseInt(seg.dataset.kfNextSy, 10);
+                const botPct = Math.max(0, Math.min(100, (next / scrollMax) * 100));
+                seg.style.top    = `${newPct}%`;
+                seg.style.height = `${Math.max(0.5, botPct - newPct)}%`;
+              });
             });
             if (dragState) dragState.deltaSY = deltaSY;
 
@@ -4517,6 +4547,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
               targets.push({ inputId: pp.inputId, sy: kk.scrollY });
             }
           }));
+          // Snapshot the aggregate bar's current bounds so we can
+          // recompute its left+width as the dot drags away.
+          const allOriginalSYs = A.props.flatMap(pp => pp.kfs.map(k => k.scrollY));
+          const otherSYs = allOriginalSYs.filter(sy => Math.abs(sy - originalSY) > 30);
 
           dot.addEventListener('mousedown', ev => {
             ev.preventDefault();
@@ -4534,6 +4568,17 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
               const max = Math.max(1, document.body.scrollHeight - window.innerHeight);
               const newSY = Math.max(0, Math.min(max, originalSY + (dx / lanesW) * max));
               dot.style.left = `${(newSY / max) * 100}%`;
+              // Keep the aggregate bar (.tl-lane__bar) glued to the
+              // current min..max scrollY across the asset including
+              // this dot's live position.
+              const bar = aLane.querySelector('.tl-lane__bar');
+              if (bar) {
+                const allSYs = otherSYs.concat([newSY]);
+                const minS = Math.min(...allSYs);
+                const maxS = Math.max(...allSYs);
+                bar.style.left  = `${(minS / max) * 100}%`;
+                bar.style.width = `${Math.max(0.3, ((maxS - minS) / max) * 100)}%`;
+              }
               window.scrollTo(0, newSY);
               dot.dataset.dragSY = String(Math.round(newSY));
             }
