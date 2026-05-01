@@ -1609,64 +1609,6 @@ body {
 .undo-btn:not(:disabled):active { transform: scale(0.88); }
 .undo-btn:disabled { opacity: 0.30; cursor: default; }
 
-/* ── KF Draft Banner ─────────────────────────────────────── */
-.kf-draft-banner {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: 9998;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  background: rgba(18,18,22,0.92);
-  backdrop-filter: blur(24px) saturate(1.5);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
-  border: 1px solid rgba(245,158,11,0.35);
-  border-radius: 20px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06) inset;
-  animation: kfDraftIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
-}
-@keyframes kfDraftIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.kf-draft-banner__label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #f59e0b;
-  user-select: none;
-  white-space: nowrap;
-}
-.kf-draft-banner__load {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.9);
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 8px;
-  padding: 3px 8px;
-  cursor: pointer;
-  text-transform: uppercase;
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-.kf-draft-banner__load:hover { background: rgba(255,255,255,0.22); }
-.kf-draft-banner__discard {
-  font-size: 11px;
-  line-height: 1;
-  color: rgba(255,255,255,0.35);
-  background: none;
-  border: none;
-  padding: 2px 4px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: color 0.15s;
-}
-.kf-draft-banner__discard:hover { color: rgba(255,255,255,0.80); }
-
 /* ═══════════════════════════════════════════════════════════
    PUBLISH CLUSTER — pub btn + history btn side by side
    ═══════════════════════════════════════════════════════════ */

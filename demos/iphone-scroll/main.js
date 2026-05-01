@@ -1548,7 +1548,6 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         if (data.ok) {
           // Draft is now committed — clear it so refresh shows the live state cleanly
           try { sessionStorage.removeItem('pw_kf_draft'); } catch(_) {}
-          document.getElementById('kfDraftBanner')?.remove();
           flashPushLive('pushlive-btn--live', 'LIVE ✓', 2200);
         } else {
           flashPushLive('pushlive-btn--error', 'ERROR', 2000);
@@ -1973,45 +1972,11 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   // Clear any stale pw_live localStorage from old sessions
   try { localStorage.removeItem('pw_live'); } catch(_) {}
 
-  // ── KF Draft banner ──────────────────────────────────────
-  // Shows after page load when sessionStorage has unsaved KF work.
-  // Refresh reverts to live.json; this banner lets the user decide
-  // whether to restore their draft or discard it.
-  function showKFDraftBanner() {
-    if (document.getElementById('kfDraftBanner')) return;
-    let draft;
-    try { draft = JSON.parse(sessionStorage.getItem('pw_kf_draft') || 'null'); } catch(_) {}
-    if (!draft || !Object.keys(draft).length) return;
-
-    const banner = document.createElement('div');
-    banner.id = 'kfDraftBanner';
-    banner.className = 'kf-draft-banner';
-    banner.innerHTML =
-      '<span class="kf-draft-banner__label">◆ KF DRAFT</span>'
-      + '<button class="kf-draft-banner__load" id="kfDraftLoad">Load</button>'
-      + '<button class="kf-draft-banner__discard" id="kfDraftDiscard">✕</button>';
-    document.body.appendChild(banner);
-
-    document.getElementById('kfDraftLoad')?.addEventListener('click', () => {
-      if (window.__restoreKFDraft) window.__restoreKFDraft();
-      banner.remove();
-    });
-    document.getElementById('kfDraftDiscard')?.addEventListener('click', () => {
-      if (window.__clearKFDraft) window.__clearKFDraft();
-      banner.remove();
-    });
-  }
-
   // Apply live state on page load — only from server live.json, never localStorage
   fetch('/live.json')
     .then(r => r.ok ? r.json() : null)
-    .then(live => {
-      if (live) applyPayload(live);
-      setTimeout(showKFDraftBanner, 0);  // after all IIFEs have run
-    })
-    .catch(() => {
-      setTimeout(showKFDraftBanner, 0);
-    });
+    .then(live => { if (live) applyPayload(live); })
+    .catch(() => {});
 }());
 
 /* ─────────────────────────────────────────────────────────
