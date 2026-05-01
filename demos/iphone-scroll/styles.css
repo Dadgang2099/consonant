@@ -1485,39 +1485,33 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SHADOW PANEL — left side, peeks behind phone
+   SECTION DIVIDER — subheader inside merged panels (e.g. SHADOW
+   block under PHONE controls)
    ═══════════════════════════════════════════════════════════ */
-.pw-panel--shadow {
-  right: auto;
-  left: 20px;
-  top: 64px;            /* align with other panels' top edge */
-  width: 296px;         /* match other panels so pencil + REC fit in the header */
-  z-index: 10500;       /* shadow panel sits above everything alongside other panels */
-  /* JS sets transform: translateX(slideX) */
-  /* opacity managed entirely by JS */
-  pointer-events: none; /* JS re-enables when visible */
+.pw-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 6px;
+  padding: 0 2px;
+  user-select: none;
+  -webkit-user-select: none;
 }
-
-/* Right-edge fade: makes the panel appear to slip behind the phone */
-.pw-panel__edge-fade {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 72px;
-  height: 100%;
-  border-radius: 0 14px 14px 0;
-  background: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.52) 100%);
-  pointer-events: none;
-  z-index: 20;
+.pw-section-divider::before,
+.pw-section-divider::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 0.5px;
+  background: rgba(255,255,255,0.10);
 }
-
-#shadowBody {
-  padding: 8px 14px 28px;
-  gap: 0;
-}
-#shadowBody .pw-row {
-  margin-bottom: 4px;
-  min-height: 26px;
+.pw-section-divider span {
+  font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(255,255,255,0.34);
+  text-transform: uppercase;
+  flex: 0 0 auto;
 }
 
 /* ═══════════════════════════════════════════════════════════

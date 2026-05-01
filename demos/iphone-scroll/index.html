@@ -34,80 +34,6 @@
     </div>
 
     <!-- ─── Shadow Panel (left, behind phone) ───────────────── -->
-    <div class="pw-panel pw-panel--shadow" id="shadowPanel">
-      <canvas class="pw-panel__gl" id="shadowGl"></canvas>
-      <div class="pw-panel__inner">
-        <header class="pw-panel__hdr">
-          <div class="pw-panel__hdr-left">
-            <svg class="pw-panel__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-              <circle cx="6.5" cy="5.5" r="3.5" stroke="currentColor" stroke-width="1.1"/>
-              <ellipse cx="6.5" cy="10.5" rx="3.8" ry="1.1" fill="currentColor" opacity="0.38"/>
-            </svg>
-            <input class="pw-panel__title pw-panel__title--input" type="text" data-asset-for="shadowPanel" value="phone shadow" spellcheck="false" autocomplete="off" readonly>
-            <button class="pw-panel__edit" type="button" aria-label="Rename asset" title="Rename">
-              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M 8.5 1.5 L 10.5 3.5 L 4 10 L 1.5 10.5 L 2 8 Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="shadowToggle">−</button></div>
-        </header>
-        <div class="pw-panel__body" id="shadowBody">
-          <div class="pw-row">
-            <span class="pw-key">BLUR</span>
-            <div class="pw-slider-wrap">
-              <input type="range" class="pw-range" id="shadowBlur" min="0" max="200" step="2" value="96">
-            </div>
-            <span class="pw-num" id="shadowBlurNum">96</span><span class="pw-unit">px</span>
-            <button class="pw-cp" data-target="shadowBlur" title="Copy">
-              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
-            </button>
-          </div>
-          <div class="pw-row">
-            <span class="pw-key">OPACITY</span>
-            <div class="pw-slider-wrap">
-              <input type="range" class="pw-range" id="shadowOpacity" min="0" max="1" step="0.01" value="0.6">
-            </div>
-            <span class="pw-num" id="shadowOpacityNum">0.60</span><span class="pw-unit"> </span>
-            <button class="pw-cp" data-target="shadowOpacity" title="Copy">
-              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
-            </button>
-          </div>
-          <div class="pw-row pw-row--color">
-            <span class="pw-key">COLOR</span>
-            <button class="pw-color-chip" id="shadowColorChip" aria-label="Shadow color" aria-haspopup="true"></button>
-            <span class="pw-color-chip__hex" id="shadowColorHex">#000000</span>
-          </div>
-          <div class="pw-row" data-pro-only>
-            <span class="pw-key">Y LIFT</span>
-            <div class="pw-slider-wrap">
-              <input type="range" class="pw-range" id="shadowY" min="0" max="180" step="2" value="48">
-            </div>
-            <span class="pw-num" id="shadowYNum">48</span><span class="pw-unit">px</span>
-            <button class="pw-cp" data-target="shadowY" title="Copy">
-              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
-            </button>
-          </div>
-          <div class="pw-row" data-pro-only>
-            <span class="pw-key">X SHIFT</span>
-            <div class="pw-slider-wrap">
-              <input type="range" class="pw-range" id="shadowX" min="-80" max="80" step="2" value="0">
-            </div>
-            <span class="pw-num" id="shadowXNum">0</span><span class="pw-unit">px</span>
-            <button class="pw-cp" data-target="shadowX" title="Copy">
-              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
-            </button>
-          </div>
-          <div class="pw-actions">
-            <button class="pw-btn" id="shadowReset">Reset</button>
-            <button class="pw-btn pw-btn--primary" id="shadowCopy">Copy all</button>
-          </div>
-        </div>
-      </div>
-      <!-- Right-edge fade: visual trick — panel slips behind phone edge -->
-      <div class="pw-panel__edge-fade"></div>
-    </div>
-
     <!-- ─── Sequence Panel ──────────────────────────────────── -->
     <div class="pw-panel pw-panel--seq" id="seqPanel">
       <canvas class="pw-panel__gl" id="seqGl"></canvas>
@@ -237,6 +163,52 @@
             <span class="pw-num" id="phoneOpacityVal">100</span>
             <span class="pw-unit">%</span>
             <button class="pw-cp" data-target="phoneOpacity" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-section-divider"><span>SHADOW</span></div>
+          <div class="pw-row">
+            <span class="pw-key">BLUR</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowBlur" min="0" max="200" step="2" value="96">
+            </div>
+            <span class="pw-num" id="shadowBlurNum">96</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="shadowBlur" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">OPACITY</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowOpacity" min="0" max="1" step="0.01" value="0.6">
+            </div>
+            <span class="pw-num" id="shadowOpacityNum">0.60</span><span class="pw-unit"> </span>
+            <button class="pw-cp" data-target="shadowOpacity" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row pw-row--color">
+            <span class="pw-key">COLOR</span>
+            <button class="pw-color-chip" id="shadowColorChip" aria-label="Shadow color" aria-haspopup="true"></button>
+            <span class="pw-color-chip__hex" id="shadowColorHex">#000000</span>
+          </div>
+          <div class="pw-row" data-pro-only>
+            <span class="pw-key">Y LIFT</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowY" min="0" max="180" step="2" value="48">
+            </div>
+            <span class="pw-num" id="shadowYNum">48</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="shadowY" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row" data-pro-only>
+            <span class="pw-key">X SHIFT</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="shadowX" min="-80" max="80" step="2" value="0">
+            </div>
+            <span class="pw-num" id="shadowXNum">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="shadowX" title="Copy">
               <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
             </button>
           </div>

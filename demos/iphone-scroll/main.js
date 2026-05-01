@@ -62,6 +62,15 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       scaleInput.value = tweakScale;
       yRefInput.value  = tweakYRef;
       xOffInput.value  = tweakXOff;
+      // Also reset the merged shadow rows that share this panel
+      const setShadow = (id, v) => {
+        const el = document.getElementById(id);
+        if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); }
+      };
+      setShadow('shadowBlur',    96);
+      setShadow('shadowOpacity', 0.60);
+      setShadow('shadowY',       48);
+      setShadow('shadowX',       0);
       syncLabels(); onScroll();
       // Reset wipes the timeline alongside the values
       window.__applyKFs?.({});
@@ -394,7 +403,6 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   bindToggle('tweakToggle',   'tweakBody');
   bindToggle('ctrlToggle',    'ctrlBody');
   bindToggle('seqToggle',     'seqBody');
-  bindToggle('shadowToggle',  'shadowBody');
 
   // ── Panel switch + shadow opacity ────────────────────────
   const seqPanel     = document.getElementById('seqPanel');
@@ -650,29 +658,17 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     const scaleEl = document.getElementById('scaleInput');
     const yEl     = document.getElementById('yRefInput');
     const xEl     = document.getElementById('xOffInput');
-    const txt = `scale:${(+scaleEl?.value).toFixed(1)}  yRef:${yEl?.value}px  xOff:${xEl?.value}px`;
+    const opaEl   = document.getElementById('phoneOpacity');
+    const sBlur   = document.getElementById('shadowBlur')?.value;
+    const sOpa    = document.getElementById('shadowOpacity')?.value;
+    const sYL     = document.getElementById('shadowY')?.value;
+    const sXS     = document.getElementById('shadowX')?.value;
+    const sHex    = document.getElementById('shadowCPickerHex')?.value || '000000';
+    const txt =
+      `scale:${(+scaleEl?.value).toFixed(1)}  yRef:${yEl?.value}px  xOff:${xEl?.value}px  opacity:${opaEl?.value}%\n`
+      + `shadow blur:${sBlur}px  opacity:${sOpa}  yLift:${sYL}px  xShift:${sXS}px  color:#${sHex}`;
     navigator.clipboard?.writeText(txt);
     flashCopied('tweakCopy');
-  });
-
-  // ── Shadow panel reset + copy-all ────────────────────────
-  document.getElementById('shadowReset')?.addEventListener('click', () => {
-    const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
-    set('shadowBlur',    96);
-    set('shadowOpacity', 0.60);
-    set('shadowY',       48);
-    set('shadowX',       0);
-    window.__applyKFs?.({});
-  });
-  document.getElementById('shadowCopy')?.addEventListener('click', () => {
-    const blur = document.getElementById('shadowBlur')?.value;
-    const opa  = document.getElementById('shadowOpacity')?.value;
-    const yL   = document.getElementById('shadowY')?.value;
-    const xS   = document.getElementById('shadowX')?.value;
-    const hex  = document.getElementById('shadowCPickerHex')?.value || '000000';
-    const txt = `shadow blur:${blur}px  opacity:${opa}  yLift:${yL}px  xShift:${xS}px  color:#${hex}`;
-    navigator.clipboard?.writeText(txt);
-    flashCopied('shadowCopy');
   });
 
   // ── Sequence panel reset + copy-all ──────────────────────
@@ -2940,11 +2936,13 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   'use strict';
 
   const PANEL_COLORS = {
-    shadowPanel:  '#38d2ff',
     seqPanel:     '#ff9f40',
     tweakPanel:   '#c4ff60',
     contentPanel: '#ff5eb0',
   };
+  // shadow* inputs were merged into the PHONE panel; map them by id prefix
+  // when the input lives outside the panel DOM (e.g. shadowCPickerHex popover)
+  const INPUT_PREFIX_TO_PANEL = { shadow: 'tweakPanel' };
 
   let kfStore    = {};   // { inputId: [{id, scrollY, val}] }
   let animMode   = false;
@@ -3193,9 +3191,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
     const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
     const OVERLAY_W  = 48;
-    // Match the timeline tree order: PHONE (top) → HERO COPY → SCROLL
-    // VIDEO → PHONE SHADOW (bottom).
-    const panelIds   = ['tweakPanel', 'contentPanel', 'seqPanel', 'shadowPanel'];
+    // Match the timeline tree order: PHONE (top, includes shadow rows)
+    // → HERO COPY → SCROLL VIDEO.
+    const panelIds   = ['tweakPanel', 'contentPanel', 'seqPanel'];
 
     // Scrubber hairline — always visible
     const hair = document.createElement('div');
@@ -3238,7 +3236,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       if (KF_BLOCKLIST.has(inputId)) return;
       const kfs = kfStore[inputId];
       if (!kfs || !kfs.length) return;
-      const panelId = panelIds.find(id => inputId.startsWith(id.replace(/Panel$/, '')));
+      let panelId = panelIds.find(id => inputId.startsWith(id.replace(/Panel$/, '')));
+      if (!panelId) {
+        const prefix = Object.keys(INPUT_PREFIX_TO_PANEL).find(p => inputId.startsWith(p));
+        if (prefix) panelId = INPUT_PREFIX_TO_PANEL[prefix];
+      }
       if (!panelId) return;
       const panelEl = document.getElementById(panelId);
       const panelTitle = panelEl?.querySelector('.pw-panel__title')?.textContent?.trim() || panelId;
@@ -3787,12 +3789,18 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
       });
       // Fallback: pickers and popovers may live outside their panel's
       // DOM tree (e.g. shadowCPickerHex sits in #shadowCPicker, a body-
-      // level sibling of #shadowPanel). Match by id prefix instead.
+      // level sibling of the panel). Match by id prefix.
       if (!panelId) {
         panelId = Object.keys(PANEL_COLORS).find(id => {
           const stem = id.replace(/Panel$/, '');
           return inp.id.startsWith(stem);
         });
+      }
+      // Also map merged-asset prefixes (e.g. shadow* inputs now live
+      // under the PHONE panel after the shadow + phone merge).
+      if (!panelId) {
+        const prefix = Object.keys(INPUT_PREFIX_TO_PANEL).find(p => inp.id.startsWith(p));
+        if (prefix) panelId = INPUT_PREFIX_TO_PANEL[prefix];
       }
       if (!panelId) return;
 
@@ -4154,7 +4162,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
 
   // Kept in sync with PANEL_COLORS in panelAnimSystem
   const ASSET_COLORS = {
-    shadowPanel:  '#38d2ff',
     seqPanel:     '#ff9f40',
     tweakPanel:   '#c4ff60',
     contentPanel: '#ff5eb0',
@@ -4362,9 +4369,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) shadow
   function gatherTracks() {
     const store = window.__getKFs ? window.__getKFs() : {};
     // Layer order matches what's on top of the page visually:
-    //   PHONE (hero, dominant)  →  HERO COPY (sits under the phone)
-    //   →  SCROLL VIDEO (background)  →  PHONE SHADOW (deepest)
-    const panelIds = ['tweakPanel', 'contentPanel', 'seqPanel', 'shadowPanel'];
+    //   PHONE (hero, includes merged shadow rows)  →  HERO COPY
+    //   (sits under the phone)  →  SCROLL VIDEO (background)
+    const panelIds = ['tweakPanel', 'contentPanel', 'seqPanel'];
     // assets: [{ panelId, title, props: [{ inputId, label, kfs, isColor }] }]
     // Walk every metric row in every panel — sliders, selects, text inputs,
     // segmented controls AND color rows so the timeline mirrors the panel
