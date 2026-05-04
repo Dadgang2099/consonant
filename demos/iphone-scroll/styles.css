@@ -4203,11 +4203,12 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  /* Crops + rotation + opacity driven by CSS vars set inline on
-     the parent card and updated live by the CARDS panel sliders. */
-  object-position: var(--px, center) var(--py, center);
+  /* CSS-var driven layout. Anchor (--ox/--oy) is the scale pivot
+     set by the ANCHOR picker — independent of position. Translate
+     (--tx/--ty) is the X POS / Y POS sliders' job. */
+  object-position: center center;
   transform-origin: var(--ox, 50%) var(--oy, 50%);
-  transform: scale(var(--scale, 1)) rotate(var(--rot, 0deg));
+  transform: translate(var(--tx, 0%), var(--ty, 0%)) scale(var(--scale, 1)) rotate(var(--rot, 0deg));
   opacity: var(--opa, 1);
   transition: transform 0.12s ease, opacity 0.12s ease;
   will-change: transform, opacity;

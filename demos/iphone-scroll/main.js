@@ -742,9 +742,12 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       const y = document.getElementById(c.y);
       const r = document.getElementById(c.rot);
       const o = document.getElementById(c.opa);
+      // X POS / Y POS sliders now drive translate (--tx / --ty),
+      // NOT transform-origin. The anchor picker is the only thing
+      // that touches --ox / --oy.
       if (s) setVar(el, '--scale', s.value,           c.scale + 'Num', v => (+v).toFixed(2));
-      if (x) setVar(el, '--ox',    x.value + '%',     c.x     + 'Num', () => x.value);
-      if (y) setVar(el, '--oy',    y.value + '%',     c.y     + 'Num', () => y.value);
+      if (x) setVar(el, '--tx',    x.value + '%',     c.x     + 'Num', () => x.value);
+      if (y) setVar(el, '--ty',    y.value + '%',     c.y     + 'Num', () => y.value);
       if (r) setVar(el, '--rot',   r.value + 'deg',   c.rot   + 'Num', () => r.value);
       if (o) setVar(el, '--opa',   (+o.value / 100),  c.opa   + 'Num', () => o.value);
     }
@@ -759,9 +762,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
     document.getElementById('cardsReset')?.addEventListener('click', () => {
       const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
-      set('card1Scale', 2.8);  set('card1X', 15); set('card1Y', 24); set('card1Rot', 0); set('card1Opa', 100);
-      set('card2Scale', 1);    set('card2X', 50); set('card2Y', 50); set('card2Rot', 0); set('card2Opa', 100);
-      set('card3Scale', 6.0);  set('card3X', 28); set('card3Y', 22); set('card3Rot', 0); set('card3Opa', 100);
+      set('card1Scale', 1.7); set('card1X', 0); set('card1Y', 0); set('card1Rot', 0); set('card1Opa', 100);
+      set('card2Scale', 5.5); set('card2X', 0); set('card2Y', 0); set('card2Rot', 0); set('card2Opa', 100);
+      set('card3Scale', 1);   set('card3X', 0); set('card3Y', 0); set('card3Rot', 0); set('card3Opa', 100);
       window.__applyKFs?.({});
     });
     document.getElementById('cardsCopy')?.addEventListener('click', () => {
@@ -774,49 +777,40 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       flashCopied('cardsCopy');
     });
 
-    // ── Alignment picker — 3×3 corner / edge / center grid ──
-    // Click a cell → snap target X + Y inputs to its data-x/data-y.
-    // Active cell tracks current input values.
-    function alignPickers() {
-      return document.querySelectorAll('.pw-align-picker');
+    // ── Alignment picker — anchor pivot only ────────────────
+    // Click a cell → write --ox / --oy directly to the card
+    // (the scale pivot for transform-origin). NEVER dispatches
+    // input/change events on the X POS / Y POS sliders, so:
+    //  - the picker doesn't move the image (translate is sliders)
+    //  - the picker doesn't create a keyframe by itself
+    // The anchor only matters when something keyframable changes
+    // (scale, translate) — at which point it determines the pivot.
+    function pickerCard(picker) {
+      // Derive the card from the (legacy) data-target-x attr.
+      // e.g. card1X → card1
+      const tgt = picker.dataset.targetX || '';
+      return document.getElementById(tgt.replace(/X$/, ''));
     }
     function syncPicker(picker) {
-      const xId = picker.dataset.targetX;
-      const yId = picker.dataset.targetY;
-      const xInp = document.getElementById(xId);
-      const yInp = document.getElementById(yId);
-      if (!xInp || !yInp) return;
-      const xv = +xInp.value;
-      const yv = +yInp.value;
+      const card = pickerCard(picker);
+      if (!card) return;
+      const ox = parseFloat(card.style.getPropertyValue('--ox')) || 0;
+      const oy = parseFloat(card.style.getPropertyValue('--oy')) || 0;
       picker.querySelectorAll('.pw-align-picker__cell').forEach(cell => {
         const cx = +cell.dataset.x;
         const cy = +cell.dataset.y;
-        cell.classList.toggle('pw-align-picker__cell--active', cx === xv && cy === yv);
+        cell.classList.toggle('pw-align-picker__cell--active', cx === ox && cy === oy);
       });
     }
-    alignPickers().forEach(picker => {
+    document.querySelectorAll('.pw-align-picker').forEach(picker => {
       picker.querySelectorAll('.pw-align-picker__cell').forEach(cell => {
         cell.addEventListener('click', () => {
-          const xId = picker.dataset.targetX;
-          const yId = picker.dataset.targetY;
-          const xInp = document.getElementById(xId);
-          const yInp = document.getElementById(yId);
-          if (!xInp || !yInp) return;
-          xInp.value = cell.dataset.x;
-          yInp.value = cell.dataset.y;
-          xInp.dispatchEvent(new Event('input',  { bubbles: true }));
-          yInp.dispatchEvent(new Event('input',  { bubbles: true }));
-          xInp.dispatchEvent(new Event('change', { bubbles: true }));
-          yInp.dispatchEvent(new Event('change', { bubbles: true }));
+          const card = pickerCard(picker);
+          if (!card) return;
+          card.style.setProperty('--ox', cell.dataset.x + '%');
+          card.style.setProperty('--oy', cell.dataset.y + '%');
           syncPicker(picker);
         });
-      });
-      // Keep cell highlighted when sliders change manually
-      const xInp = document.getElementById(picker.dataset.targetX);
-      const yInp = document.getElementById(picker.dataset.targetY);
-      [xInp, yInp].forEach(inp => {
-        if (!inp) return;
-        inp.addEventListener('input', () => syncPicker(picker));
       });
       syncPicker(picker); // initial sync
     });
