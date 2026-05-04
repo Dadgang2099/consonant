@@ -406,6 +406,13 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   bindToggle('cardsToggle',   'cardsBody');
 
   // ── Panel switch + shadow opacity ────────────────────────
+  // Portal every .pw-panel out of .stage (which is position:sticky and
+  // creates a stacking context) so they always paint above page sections
+  // like .s3-triptych. RULE: ALL PANELS OVER ALL CONTENT.
+  document.querySelectorAll('.pw-panel').forEach(p => {
+    if (p.parentElement !== document.body) document.body.appendChild(p);
+  });
+
   const seqPanel     = document.getElementById('seqPanel');
   const shadowPanel  = document.getElementById('shadowPanel');
   const tweakPanel   = document.getElementById('tweakPanel');
