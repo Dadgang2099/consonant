@@ -4189,6 +4189,15 @@ body {
   height: 75vh;
   border-radius: 22px;
 }
+
+/* Cards panel goes on the LEFT — keeps Card C unobscured. The
+   masked phone silhouette in Card A hugs the center, so the
+   left margin of the card is dark/empty and the panel sits over
+   that without covering the editable asset. */
+.pw-panel--cards {
+  right: auto;
+  left: 20px;
+}
 .s3-triptych__card img {
   width: 100%;
   height: 100%;
@@ -4202,21 +4211,6 @@ body {
   opacity: var(--opa, 1);
   transition: transform 0.12s ease, opacity 0.12s ease;
   will-change: transform, opacity;
-  /* Phone-silhouette SVG mask — phone_endframe.jpg + this mask
-     are a matched pair, so the JPG (cover-fit, scale 1, center
-     origin) lines up with the silhouette. Slight aspect stretch
-     when the card aspect drifts from the phone aspect — that's
-     expected; the user can tweak X/Y/SCALE to recompose. */
-  -webkit-mask-image: url('assets/phone_endframe_mask.svg');
-          mask-image: url('assets/phone_endframe_mask.svg');
-  -webkit-mask-mode: alpha;
-          mask-mode: alpha;
-  -webkit-mask-size: 100% 100%;
-          mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-          mask-position: center;
 }
 
 /* ── Alignment picker — 3×3 corner / edge / center anchor grid ──
