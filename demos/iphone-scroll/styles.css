@@ -35,7 +35,10 @@ body {
   /* 300vh Phase 1 (video scrub) + 300vh Phase 2 (phone reveal) + 100vh stage + 100vh reading buffer */
   height: 700vh;
   position: relative;
-  z-index: 1; /* creates stacking context — lp-below at z-index:2 paints cleanly above */
+  /* No z-index here — would create a stacking context that traps every
+     .pw-panel inside it below sibling sections like .s3-triptych. Rule:
+     ALL PANELS OVER ALL CONTENT. Panels enforce that via their own
+     z-index in the body's stacking context. */
 }
 
 /* ── Sticky stage ─────────────────────────────────────── */
@@ -253,11 +256,14 @@ body {
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Shared panel shell ─────────────────────────────────── */
+/* RULE: ALL PANELS OVER ALL CONTENT. .pw-panel always paints
+   above every page section, modal, and overlay. Don't introduce
+   any z-index >= this value on page content. */
 .pw-panel {
   position: fixed;
   top: 64px;
   right: 20px;
-  z-index: 10500;       /* above timeline (9999), drv-overlay (10002), all content */
+  z-index: 2147483000;  /* near max int — guarantees on top of everything */
   width: 296px;
   border-radius: 14px;
   overflow: hidden;
