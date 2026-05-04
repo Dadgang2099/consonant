@@ -4213,44 +4213,53 @@ body {
   will-change: transform, opacity;
 }
 
-/* ── Alignment picker — 3×3 corner / edge / center anchor grid ──
-   Reusable widget. data-target-x / data-target-y on the wrapper
-   point at the input IDs to drive. Cells carry data-x / data-y in
-   percentages (0/50/100); click snaps the targets, dispatches input
-   events to keep timeline + applyCard in sync. Foundation for
-   cross-viewport corner-pinning. */
+/* ── Alignment picker — 5-dot quincunx (4 corners + center)
+   Reusable widget. Sits in its own compact .pw-row--align row
+   directly under SCALE, no key label, right-aligned so it reads
+   as a small anchor selector hanging off the SCALE row's right
+   edge. data-target-x / data-target-y on the wrapper point at
+   the input IDs to drive. Foundation for cross-viewport corner
+   pinning. */
+.pw-row--align {
+  min-height: 0 !important;
+  margin-top: -2px !important;
+  margin-bottom: 6px !important;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
 .pw-align-picker {
-  grid-column: 2 / 5;
+  width: 18px;
+  height: 18px;
   display: grid;
-  grid-template-columns: repeat(3, 12px);
-  grid-template-rows:    repeat(3, 12px);
-  gap: 2px;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  align-self: center;
-  justify-self: start;
+  grid-template-columns: 5px 5px 5px;
+  grid-template-rows:    5px 5px 5px;
+  gap: 1.5px;
 }
 .pw-align-picker__cell {
-  width: 12px;
-  height: 12px;
-  border: 0.5px solid rgba(255,255,255,0.16);
-  border-radius: 2px;
-  background: rgba(255,255,255,0.04);
+  width: 5px;
+  height: 5px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.22);
   cursor: pointer;
   padding: 0;
-  transition: background 0.14s, border-color 0.14s, box-shadow 0.14s;
+  transition: background 0.14s, box-shadow 0.14s, transform 0.14s;
   -webkit-appearance: none;
   appearance: none;
 }
+.pw-align-picker__cell--tl { grid-column: 1; grid-row: 1; }
+.pw-align-picker__cell--tr { grid-column: 3; grid-row: 1; }
+.pw-align-picker__cell--c  { grid-column: 2; grid-row: 2; }
+.pw-align-picker__cell--bl { grid-column: 1; grid-row: 3; }
+.pw-align-picker__cell--br { grid-column: 3; grid-row: 3; }
 .pw-align-picker__cell:hover {
-  background: rgba(56,210,255,0.20);
-  border-color: rgba(56,210,255,0.50);
+  background: rgba(56,210,255,0.65);
+  transform: scale(1.35);
 }
 .pw-align-picker__cell--active {
-  background: rgba(56,210,255,0.62);
-  border-color: rgba(56,210,255,0.92);
-  box-shadow: 0 0 6px rgba(56,210,255,0.55);
+  background: #38d2ff;
+  box-shadow: 0 0 6px rgba(56,210,255,0.65);
 }
 
 /* ── Asset-drop row — standard pw-row grid; drop spans cols 2–6 ── */
