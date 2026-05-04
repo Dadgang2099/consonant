@@ -522,9 +522,22 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       }
     }
 
-    // cardsPanel is now a virtual sentinel — per-card mini panels
-    // live inside each .s3-triptych__card, no scroll-driven visibility
-    // for the panel needed.
+    // ── cards panel: appears when the .s3-triptych enters viewport ──
+    if (cardsPanel) {
+      const tri = document.querySelector('.s3-triptych');
+      let opa = 0;
+      if (tri) {
+        const r = tri.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // Enter: top crosses 80% of viewport, fully on by 30%
+        const enter = c01((vh * 0.80 - r.top) / (vh * 0.50));
+        // Exit: bottom passes above viewport
+        const exit  = c01((0 - r.bottom) / (vh * 0.30));
+        opa = Math.max(0, Math.min(1, enter * (1 - exit)));
+      }
+      cardsPanel.style.opacity       = opa;
+      cardsPanel.style.pointerEvents = opa < 0.08 ? 'none' : 'auto';
+    }
   }
   window.addEventListener('scroll', updatePanelVisibility, { passive: true });
   updatePanelVisibility();
