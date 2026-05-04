@@ -448,6 +448,148 @@
       </div><!-- /pw-panel__inner -->
     </div><!-- /contentPanel -->
 
+    <!-- ─── Cards Panel (triptych crops) ─────────────────────── -->
+    <div class="pw-panel pw-panel--cards" id="cardsPanel">
+      <canvas class="pw-panel__gl" id="cardsGl"></canvas>
+      <div class="pw-panel__inner">
+        <header class="pw-panel__hdr">
+          <div class="pw-panel__hdr-left">
+            <svg class="pw-panel__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="1" y="2" width="3.5" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
+              <rect x="5" y="2" width="3" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
+              <rect x="8.5" y="2" width="3.5" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <input class="pw-panel__title pw-panel__title--input" type="text" data-asset-for="cardsPanel" value="cards" spellcheck="false" autocomplete="off" readonly>
+            <button class="pw-panel__edit" type="button" aria-label="Rename asset" title="Rename">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M 8.5 1.5 L 10.5 3.5 L 4 10 L 1.5 10.5 L 2 8 Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="cardsToggle">−</button></div>
+        </header>
+        <div class="pw-panel__body" id="cardsBody">
+
+          <div class="pw-section-divider">
+            <svg class="pw-section-divider__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="1" y="2" width="3.5" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <span>CARD A</span>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card1Scale" min="1" max="8" step="0.05" value="2.8">
+            </div>
+            <span class="pw-num" id="card1ScaleNum">2.80</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="card1Scale" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X POS</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card1X" min="0" max="100" step="1" value="15">
+            </div>
+            <span class="pw-num" id="card1XNum">15</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="card1X" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y POS</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card1Y" min="0" max="100" step="1" value="24">
+            </div>
+            <span class="pw-num" id="card1YNum">24</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="card1Y" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+
+          <div class="pw-section-divider">
+            <svg class="pw-section-divider__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="5" y="2" width="3" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <span>CARD B</span>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card2Scale" min="1" max="8" step="0.05" value="1.12">
+            </div>
+            <span class="pw-num" id="card2ScaleNum">1.12</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="card2Scale" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X POS</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card2X" min="0" max="100" step="1" value="50">
+            </div>
+            <span class="pw-num" id="card2XNum">50</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="card2X" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y POS</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card2Y" min="0" max="100" step="1" value="50">
+            </div>
+            <span class="pw-num" id="card2YNum">50</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="card2Y" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+
+          <div class="pw-section-divider">
+            <svg class="pw-section-divider__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="8.5" y="2" width="3.5" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <span>CARD C</span>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card3Scale" min="1" max="8" step="0.05" value="6.0">
+            </div>
+            <span class="pw-num" id="card3ScaleNum">6.00</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="card3Scale" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X POS</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card3X" min="0" max="100" step="1" value="28">
+            </div>
+            <span class="pw-num" id="card3XNum">28</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="card3X" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y POS</span>
+            <div class="pw-slider-wrap">
+              <input type="range" class="pw-range" id="card3Y" min="0" max="100" step="1" value="22">
+            </div>
+            <span class="pw-num" id="card3YNum">22</span><span class="pw-unit">%</span>
+            <button class="pw-cp" data-target="card3Y" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg>
+            </button>
+          </div>
+
+          <div class="pw-actions">
+            <button class="pw-btn" id="cardsReset">Reset</button>
+            <button class="pw-btn pw-btn--primary" id="cardsCopy">Copy all</button>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /cardsPanel -->
+
     <!-- ─── Scope Modal ────────────────────────────────────── -->
     <div class="scope-modal" id="scopeModal" hidden>
       <div class="scope-modal__card">
@@ -482,64 +624,32 @@
 <!-- ═══════════════════════════════════════════════════════════
      BELOW-HERO — triptych + Take a closer look
      ═══════════════════════════════════════════════════════════ -->
-<div class="lp-below">
-
-  <!-- Triptych: three-panel camera showcase -->
-  <section class="lp-tri" aria-label="Triple camera system">
-    <div class="lp-tri__panel lp-tri__panel--a"
-         style="--scale:2.8; --ox:15%; --oy:24%; --px:left; --py:top">
-      <img class="lp-tri__img" src="assets/phone_endframe.jpg"
-           alt="iPhone 11 Pro triple camera" aria-hidden="true">
-      <div class="lp-tri__veil lp-tri__veil--r"></div>
-      <div class="lp-tri__caption">
-        <span class="lp-tri__cap-rule"></span>
-        <span class="lp-tri__cap-label">Ultra Wide</span>
-        <span class="lp-tri__cap-sub">0.5×  13mm</span>
-      </div>
-    </div>
-    <div class="lp-tri__panel lp-tri__panel--b"
-         style="--scale:1.12; --ox:50%; --oy:50%; --px:center; --py:56%">
-      <img class="lp-tri__img" src="assets/phone_endframe.jpg"
-           alt="" aria-hidden="true">
-      <div class="lp-tri__caption">
-        <span class="lp-tri__cap-rule"></span>
-        <span class="lp-tri__cap-label">Wide</span>
-        <span class="lp-tri__cap-sub">1×  26mm</span>
-      </div>
-    </div>
-    <div class="lp-tri__panel lp-tri__panel--c"
-         style="--scale:6.0; --ox:28%; --oy:22%; --px:left; --py:top">
-      <img class="lp-tri__img" src="assets/phone_endframe.jpg"
-           alt="iPhone 11 Pro camera detail" aria-hidden="true">
-      <div class="lp-tri__veil lp-tri__veil--l"></div>
-      <div class="lp-tri__caption">
-        <span class="lp-tri__cap-rule"></span>
-        <span class="lp-tri__cap-label">Telephoto</span>
-        <span class="lp-tri__cap-sub">2×  52mm</span>
-      </div>
-    </div>
-  </section>
-
-</div><!-- /lp-below -->
+<!-- lp-below triptych removed; assets relocated into the s3-triptych below -->
 
 <!-- ═══════════════════════════════════════════════════════════
      SECTION 3 — TRIPTYCH
      ═══════════════════════════════════════════════════════════ -->
 <section class="s3-triptych" aria-label="Triple camera showcase">
   <div class="s3-triptych__grid">
-    <div class="s3-triptych__card s3-triptych__card--left">
+    <div class="s3-triptych__card s3-triptych__card--left"
+         id="card1"
+         style="--scale:2.8; --ox:15%; --oy:24%; --px:left; --py:top">
       <img src="assets/phone_endframe.jpg"
-           alt="iPhone 11 Pro Midnight Green, rear camera system"
+           alt="iPhone 11 Pro — Ultra Wide camera detail"
            aria-hidden="true">
     </div>
-    <div class="s3-triptych__card s3-triptych__card--center">
-      <img src="assets/lens_startframe.jpg"
+    <div class="s3-triptych__card s3-triptych__card--center"
+         id="card2"
+         style="--scale:1.12; --ox:50%; --oy:50%; --px:center; --py:56%">
+      <img src="assets/phone_endframe.jpg"
            alt=""
            aria-hidden="true">
     </div>
-    <div class="s3-triptych__card s3-triptych__card--right">
+    <div class="s3-triptych__card s3-triptych__card--right"
+         id="card3"
+         style="--scale:6.0; --ox:28%; --oy:22%; --px:left; --py:top">
       <img src="assets/phone_endframe.jpg"
-           alt="iPhone 11 Pro Midnight Green"
+           alt="iPhone 11 Pro — Telephoto camera detail"
            aria-hidden="true">
     </div>
   </div>

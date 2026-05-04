@@ -403,15 +403,17 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   bindToggle('tweakToggle',   'tweakBody');
   bindToggle('ctrlToggle',    'ctrlBody');
   bindToggle('seqToggle',     'seqBody');
+  bindToggle('cardsToggle',   'cardsBody');
 
   // ── Panel switch + shadow opacity ────────────────────────
   const seqPanel     = document.getElementById('seqPanel');
   const shadowPanel  = document.getElementById('shadowPanel');
   const tweakPanel   = document.getElementById('tweakPanel');
   const contentPanel = document.getElementById('contentPanel');
+  const cardsPanel   = document.getElementById('cardsPanel');
 
   // All right-side panels start hidden via inline style
-  [seqPanel, tweakPanel, contentPanel].forEach(p => {
+  [seqPanel, tweakPanel, contentPanel, cardsPanel].forEach(p => {
     if (!p) return;
     p.style.opacity       = '0';
     p.style.pointerEvents = 'none';
@@ -519,6 +521,25 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         shadowPanel.style.transform = `translateX(${slideX}px)`;
       }
     }
+
+    // ── cards panel: appears when the triptych enters viewport ──
+    // Tied to the .s3-triptych section's top position. Fades in
+    // as it crosses ~30% of viewport, fades out below.
+    if (cardsPanel) {
+      const tri = document.querySelector('.s3-triptych');
+      let opa = 0;
+      if (tri) {
+        const r = tri.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // Enter: top crosses 80% of viewport. Fully on by 30%.
+        const enter = c01((vh * 0.80 - r.top) / (vh * 0.50));
+        // Exit: bottom passes 0 (above viewport)
+        const exit  = c01((0 - r.bottom) / (vh * 0.30));
+        opa = Math.max(0, Math.min(1, enter * (1 - exit)));
+      }
+      cardsPanel.style.opacity       = opa;
+      cardsPanel.style.pointerEvents = opa < 0.08 ? 'none' : 'auto';
+    }
   }
   window.addEventListener('scroll', updatePanelVisibility, { passive: true });
   updatePanelVisibility();
@@ -598,7 +619,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   }
 
-  [seqPanel, shadowPanel, tweakPanel, contentPanel].forEach(p => {
+  [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel].forEach(p => {
     if (!p) return;
     makeDraggable(p);
   });
@@ -689,6 +710,66 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     navigator.clipboard?.writeText(txt);
     flashCopied('seqCopy');
   });
+
+  // ── Cards panel — bind sliders to per-card CSS vars ─────
+  // The triptych cards (#card1/#card2/#card3) read --scale, --ox,
+  // --oy from inline styles set by JS. Each slider writes the var
+  // on its parent card. Initial values are seeded by HTML inline
+  // style; this loop just keeps live edits in sync.
+  (function bindCardsPanel() {
+    const cards = [
+      { id: 'card1', scale: 'card1Scale', x: 'card1X', y: 'card1Y' },
+      { id: 'card2', scale: 'card2Scale', x: 'card2X', y: 'card2Y' },
+      { id: 'card3', scale: 'card3Scale', x: 'card3X', y: 'card3Y' },
+    ];
+    function applyCard(c) {
+      const el  = document.getElementById(c.id);
+      if (!el) return;
+      const s   = document.getElementById(c.scale);
+      const x   = document.getElementById(c.x);
+      const y   = document.getElementById(c.y);
+      if (s) {
+        el.style.setProperty('--scale', s.value);
+        const num = document.getElementById(c.scale + 'Num');
+        if (num) num.textContent = (+s.value).toFixed(2);
+      }
+      if (x) {
+        el.style.setProperty('--ox', x.value + '%');
+        const num = document.getElementById(c.x + 'Num');
+        if (num) num.textContent = x.value;
+      }
+      if (y) {
+        el.style.setProperty('--oy', y.value + '%');
+        const num = document.getElementById(c.y + 'Num');
+        if (num) num.textContent = y.value;
+      }
+    }
+    cards.forEach(c => {
+      [c.scale, c.x, c.y].forEach(inputId => {
+        const inp = document.getElementById(inputId);
+        if (!inp) return;
+        inp.addEventListener('input', () => applyCard(c));
+      });
+      applyCard(c); // seed once on load (so live.json restores carry over)
+    });
+
+    document.getElementById('cardsReset')?.addEventListener('click', () => {
+      const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+      set('card1Scale', 2.8);  set('card1X', 15); set('card1Y', 24);
+      set('card2Scale', 1.12); set('card2X', 50); set('card2Y', 50);
+      set('card3Scale', 6.0);  set('card3X', 28); set('card3Y', 22);
+      window.__applyKFs?.({});
+    });
+    document.getElementById('cardsCopy')?.addEventListener('click', () => {
+      const v = id => document.getElementById(id)?.value;
+      const txt =
+        `card A scale:${v('card1Scale')}× pos:${v('card1X')}%,${v('card1Y')}%\n` +
+        `card B scale:${v('card2Scale')}× pos:${v('card2X')}%,${v('card2Y')}%\n` +
+        `card C scale:${v('card3Scale')}× pos:${v('card3X')}%,${v('card3Y')}%`;
+      navigator.clipboard?.writeText(txt);
+      flashCopied('cardsCopy');
+    });
+  })();
 
   // ── Section accordion ────────────────────────────────────
   document.querySelectorAll('.pw-sec__hdr').forEach(hdr => {
@@ -945,7 +1026,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     document.querySelectorAll('.mode-toggle__opt').forEach(btn => {
       btn.classList.toggle('mode-toggle__opt--on', btn.dataset.mode === mode);
     });
-    [seqPanel, shadowPanel, tweakPanel, contentPanel].forEach(p => {
+    [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel].forEach(p => {
       p?.classList.toggle('pw-panel--newb', !isPro);
     });
     document.querySelectorAll('.pw-panel .pw-range').forEach(r => updateTrack(r));
@@ -1436,7 +1517,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
 
     // Slide panels back in
-    const allPanels = [shadowPanel, seqPanel, tweakPanel, contentPanel].filter(Boolean);
+    const allPanels = [shadowPanel, seqPanel, tweakPanel, contentPanel, cardsPanel].filter(Boolean);
     allPanels.forEach((el, i) => {
       setTimeout(() => {
         el.style.transition = `translate 0.54s ${OPEN_EASE}, opacity 0.48s ${OPEN_EASE}`;
@@ -1466,7 +1547,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   initHidePanels();
 
   function initHidePanels() {
-    [seqPanel, shadowPanel, tweakPanel, contentPanel].forEach(p => {
+    [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel].forEach(p => {
       if (p) { p.style.opacity = '0'; p.style.pointerEvents = 'none'; }
     });
   }
@@ -2811,6 +2892,10 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       shadowCPickerHex: g('shadowCPickerHex'),
       // SCROLL VIDEO
       seqSpeed: g('seqSpeed'),
+      // CARDS (below-hero triptych)
+      card1Scale: g('card1Scale'), card1X: g('card1X'), card1Y: g('card1Y'),
+      card2Scale: g('card2Scale'), card2X: g('card2X'), card2Y: g('card2Y'),
+      card3Scale: g('card3Scale'), card3X: g('card3X'), card3Y: g('card3Y'),
       // HERO CONTENT
       hlSize: g('hlSize'), hlWeight: g('hlWeight'), hlTracking: g('hlTracking'), hlLineH: g('hlLineH'),
       bdSize: g('bdSize'), bdWeight: g('bdWeight'), bdTracking: g('bdTracking'), bdLineH: g('bdLineH'),
@@ -2976,6 +3061,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     seqPanel:     '#ff9f40',
     tweakPanel:   '#c4ff60',
     contentPanel: '#ff5eb0',
+    cardsPanel:   '#38d2ff',
   };
   // shadow* inputs were merged into the PHONE panel; map them by id prefix
   // when the input lives outside the panel DOM (e.g. shadowCPickerHex popover)
@@ -3229,8 +3315,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     const scrollMax = Math.max(1, document.body.scrollHeight - window.innerHeight);
     const OVERLAY_W  = 48;
     // Match the timeline tree order: PHONE (top, includes shadow rows)
-    // → HERO COPY → SCROLL VIDEO.
-    const panelIds   = ['tweakPanel', 'contentPanel', 'seqPanel'];
+    // → HERO COPY → SCROLL VIDEO → CARDS (triptych below the hero).
+    const panelIds   = ['tweakPanel', 'contentPanel', 'seqPanel', 'cardsPanel'];
 
     // Scrubber hairline — always visible
     const hair = document.createElement('div');
@@ -4202,6 +4288,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     seqPanel:     '#ff9f40',
     tweakPanel:   '#c4ff60',
     contentPanel: '#ff5eb0',
+    cardsPanel:   '#38d2ff',
   };
 
   // Track which asset rows are currently expanded (persists across rebuilds)
@@ -4408,7 +4495,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     // Layer order matches what's on top of the page visually:
     //   PHONE (hero, includes merged shadow rows)  →  HERO COPY
     //   (sits under the phone)  →  SCROLL VIDEO (background)
-    const panelIds = ['tweakPanel', 'contentPanel', 'seqPanel'];
+    //   →  CARDS (below-hero triptych)
+    const panelIds = ['tweakPanel', 'contentPanel', 'seqPanel', 'cardsPanel'];
     // assets: [{ panelId, title, props: [{ inputId, label, kfs, isColor }] }]
     // Walk every metric row in every panel — sliders, selects, text inputs,
     // segmented controls AND color rows so the timeline mirrors the panel

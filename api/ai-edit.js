@@ -26,6 +26,16 @@ const APPLY_TOOL = {
       shadowCPickerHex: { type: 'string', description: 'Shadow color, 6-char hex without #' },
       // SCROLL VIDEO panel
       seqSpeed:         { type: 'number', minimum: 1,    maximum: 6 },
+      // CARDS panel (below-hero triptych, 3 cards: A/B/C)
+      card1Scale:       { type: 'number', minimum: 1,    maximum: 8,    description: 'Card A zoom 1–8×' },
+      card1X:           { type: 'number', minimum: 0,    maximum: 100,  description: 'Card A focal X 0–100%' },
+      card1Y:           { type: 'number', minimum: 0,    maximum: 100,  description: 'Card A focal Y 0–100%' },
+      card2Scale:       { type: 'number', minimum: 1,    maximum: 8,    description: 'Card B zoom 1–8×' },
+      card2X:           { type: 'number', minimum: 0,    maximum: 100,  description: 'Card B focal X 0–100%' },
+      card2Y:           { type: 'number', minimum: 0,    maximum: 100,  description: 'Card B focal Y 0–100%' },
+      card3Scale:       { type: 'number', minimum: 1,    maximum: 8,    description: 'Card C zoom 1–8×' },
+      card3X:           { type: 'number', minimum: 0,    maximum: 100,  description: 'Card C focal X 0–100%' },
+      card3Y:           { type: 'number', minimum: 0,    maximum: 100,  description: 'Card C focal Y 0–100%' },
       // HERO CONTENT panel
       hlSize:           { type: 'number', minimum: 24,   maximum: 160 },
       hlWeight:         { type: 'number', enum: [300, 400, 500, 600, 700, 800] },

@@ -3481,97 +3481,7 @@ body {
    container; each section spans full viewport width.
    ═══════════════════════════════════════════════════════════ */
 
-.lp-below {
-  background: #000;
-  position: relative;
-  z-index: 2; /* clears sticky stage at scroll boundary */
-}
-
-/* ── Triptych ──────────────────────────────────────────── */
-.lp-tri {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  width: 100%;
-  height: clamp(220px, 50vw, 540px);
-  border: 1px solid rgb(72, 72, 72);
-  overflow: hidden;
-}
-
-.lp-tri__panel {
-  position: relative;
-  overflow: hidden;
-}
-
-.lp-tri__panel--a { border-right: 1px solid rgb(72, 72, 72); }
-.lp-tri__panel--b { border-right: 1px solid rgb(72, 72, 72); }
-
-/* Base image — position/scale driven by CSS vars set inline on each panel */
-.lp-tri__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.12s ease;
-  will-change: transform;
-  object-position: var(--px, center) var(--py, center);
-  transform-origin: var(--ox, 50%) var(--oy, 50%);
-  transform: scale(var(--scale, 1));
-}
-
-/* Grey bar captions — overline rule + label + focal length */
-.lp-tri__caption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0 22px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  pointer-events: none;
-}
-
-.lp-tri__cap-rule {
-  display: block;
-  width: 100%;
-  height: 1px;
-  background: rgba(255,255,255,0.26);
-  margin-bottom: 10px;
-}
-
-.lp-tri__cap-label {
-  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.62);
-}
-
-.lp-tri__cap-sub {
-  font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: rgba(255,255,255,0.30);
-}
-
-/* Edge-softening veil — makes panels feel carved from one image */
-.lp-tri__veil {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  width: 40px;
-  pointer-events: none;
-}
-.lp-tri__veil--r {
-  right: 0;
-  background: linear-gradient(to right, transparent, rgba(0,0,0,0.28));
-}
-.lp-tri__veil--l {
-  left: 0;
-  background: linear-gradient(to left, transparent, rgba(0,0,0,0.28));
-}
+/* lp-below + lp-tri removed — assets moved into .s3-triptych cards */
 
 
 
@@ -4235,20 +4145,6 @@ body {
 .kOrb2 { animation: kOrb2 3.3s ease-in-out infinite; }
 .kOrb3 { animation: kOrb3 2.1s ease-in-out infinite; }
 
-/* ── Responsive: stack on narrow viewports ─────────────── */
-@media (max-width: 767px) {
-  .lp-tri {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    height: auto;
-  }
-  .lp-tri__panel {
-    height: clamp(200px, 60vw, 340px);
-  }
-  .lp-tri__panel--a { border-right: none; border-bottom: 0.5px solid rgba(255,255,255,0.09); }
-  .lp-tri__panel--b { border-right: none; border-bottom: 0.5px solid rgba(255,255,255,0.09); }
-
-}
 
 /* ═══════════════════════════════════════════════════════
    SECTION 3 — TRIPTYCH
@@ -4276,8 +4172,15 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center center;
   display: block;
+  /* Crops driven by CSS vars set inline on the parent card and
+     overridden live by the CARDS panel (cardN-scale / cardN-x /
+     cardN-y). */
+  object-position: var(--px, center) var(--py, center);
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+  transform: scale(var(--scale, 1));
+  transition: transform 0.12s ease;
+  will-change: transform;
 }
 
 @media (max-width: 768px) {
