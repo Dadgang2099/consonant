@@ -4187,10 +4187,7 @@ body {
   position: relative;
   background: #000;
   height: 75vh;
-  /* Soft rounded clip — overflow:hidden + radius keeps the
-     scaled/rotated img bound to the card's rounded silhouette. */
   border-radius: 22px;
-  -webkit-mask-image: -webkit-radial-gradient(white, black); /* Safari Y mask anti-alias */
 }
 .s3-triptych__card img {
   width: 100%;
@@ -4205,6 +4202,21 @@ body {
   opacity: var(--opa, 1);
   transition: transform 0.12s ease, opacity 0.12s ease;
   will-change: transform, opacity;
+  /* Phone-silhouette SVG mask — phone_endframe.jpg + this mask
+     are a matched pair, so the JPG (cover-fit, scale 1, center
+     origin) lines up with the silhouette. Slight aspect stretch
+     when the card aspect drifts from the phone aspect — that's
+     expected; the user can tweak X/Y/SCALE to recompose. */
+  -webkit-mask-image: url('assets/phone_endframe_mask.svg');
+          mask-image: url('assets/phone_endframe_mask.svg');
+  -webkit-mask-mode: alpha;
+          mask-mode: alpha;
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
 }
 
 /* ── Alignment picker — 3×3 corner / edge / center anchor grid ──

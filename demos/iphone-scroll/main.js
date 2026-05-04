@@ -760,7 +760,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     document.getElementById('cardsReset')?.addEventListener('click', () => {
       const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
       set('card1Scale', 2.8);  set('card1X', 15); set('card1Y', 24); set('card1Rot', 0); set('card1Opa', 100);
-      set('card2Scale', 1.12); set('card2X', 50); set('card2Y', 50); set('card2Rot', 0); set('card2Opa', 100);
+      set('card2Scale', 1);    set('card2X', 50); set('card2Y', 50); set('card2Rot', 0); set('card2Opa', 100);
       set('card3Scale', 6.0);  set('card3X', 28); set('card3Y', 22); set('card3Rot', 0); set('card3Opa', 100);
       window.__applyKFs?.({});
     });
