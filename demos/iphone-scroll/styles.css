@@ -4174,13 +4174,96 @@ body {
   object-fit: cover;
   display: block;
   /* Crops driven by CSS vars set inline on the parent card and
-     overridden live by the CARDS panel (cardN-scale / cardN-x /
-     cardN-y). */
+     overridden live by each card's mini-panel (cardN-scale /
+     cardN-x / cardN-y). */
   object-position: var(--px, center) var(--py, center);
   transform-origin: var(--ox, 50%) var(--oy, 50%);
   transform: scale(var(--scale, 1));
   transition: transform 0.12s ease;
   will-change: transform;
+}
+
+/* ── Per-card mini control panel ─────────────────────────
+   Lives inside its .s3-triptych__card. Compact glass surface
+   anchored to the card's top-right corner. Same input IDs as
+   the (now virtual) cardsPanel so timeline/KF/AI-bar wiring
+   keeps working unchanged. */
+.card-panel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  width: 188px;
+  padding: 9px 11px 11px;
+  background: rgba(7, 8, 13, 0.78);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 0.5px solid rgba(255,255,255,0.10);
+  border-radius: 11px;
+  box-shadow:
+    0 8px 28px rgba(0,0,0,0.6),
+    inset 0 0.5px 0 rgba(255,255,255,0.10);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  pointer-events: auto;
+  opacity: 0.92;
+  transition: opacity 0.18s ease;
+}
+.s3-triptych__card:hover .card-panel,
+.card-panel:focus-within {
+  opacity: 1;
+}
+.card-panel__hdr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 4px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.card-panel__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38d2ff;
+  box-shadow: 0 0 8px rgba(56,210,255,0.55);
+  flex-shrink: 0;
+}
+.card-panel__title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(255,255,255,0.62);
+  text-transform: uppercase;
+}
+.card-panel__row {
+  display: grid;
+  grid-template-columns: 36px 1fr 42px;
+  align-items: center;
+  gap: 8px;
+  height: 18px;
+}
+.card-panel__key {
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.42);
+  text-transform: uppercase;
+}
+.card-panel__range {
+  width: 100%;
+  height: 14px;
+  margin: 0;
+}
+.card-panel__val {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.78);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 768px) {
@@ -4281,3 +4364,54 @@ body {
     height: 60vw;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   VIEWPORT TAG — live size + breakpoint chip (bottom-right)
+   ═══════════════════════════════════════════════════════════ */
+.vp-tag {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(7, 8, 13, 0.78);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.6),
+    inset 0 0.5px 0 rgba(255,255,255,0.10);
+  font-family: 'SF Mono', 'Menlo', 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  color: rgba(255,255,255,0.78);
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none; /* never blocks clicks */
+}
+.vp-tag__size {
+  font-variant-numeric: tabular-nums;
+}
+.vp-tag__tier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(56,210,255,0.18);
+  border: 0.5px solid rgba(56,210,255,0.42);
+  color: #cdf2ff;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+}
+.vp-tag__tier--s { background: rgba(255,158,80,0.18);  border-color: rgba(255,158,80,0.42);  color: #ffd9b8; }
+.vp-tag__tier--m { background: rgba(196,255,96,0.16);  border-color: rgba(196,255,96,0.40);  color: #e9ffc6; }
+.vp-tag__tier--l { background: rgba(56,210,255,0.18);  border-color: rgba(56,210,255,0.42);  color: #cdf2ff; }
+.vp-tag__tier--xl{ background: rgba(255,94,176,0.18);  border-color: rgba(255,94,176,0.42);  color: #ffd0e6; }

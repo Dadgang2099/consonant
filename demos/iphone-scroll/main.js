@@ -522,24 +522,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       }
     }
 
-    // ── cards panel: appears when the triptych enters viewport ──
-    // Tied to the .s3-triptych section's top position. Fades in
-    // as it crosses ~30% of viewport, fades out below.
-    if (cardsPanel) {
-      const tri = document.querySelector('.s3-triptych');
-      let opa = 0;
-      if (tri) {
-        const r = tri.getBoundingClientRect();
-        const vh = window.innerHeight;
-        // Enter: top crosses 80% of viewport. Fully on by 30%.
-        const enter = c01((vh * 0.80 - r.top) / (vh * 0.50));
-        // Exit: bottom passes 0 (above viewport)
-        const exit  = c01((0 - r.bottom) / (vh * 0.30));
-        opa = Math.max(0, Math.min(1, enter * (1 - exit)));
-      }
-      cardsPanel.style.opacity       = opa;
-      cardsPanel.style.pointerEvents = opa < 0.08 ? 'none' : 'auto';
-    }
+    // cardsPanel is now a virtual sentinel — per-card mini panels
+    // live inside each .s3-triptych__card, no scroll-driven visibility
+    // for the panel needed.
   }
   window.addEventListener('scroll', updatePanelVisibility, { passive: true });
   updatePanelVisibility();
@@ -3064,8 +3049,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     cardsPanel:   '#38d2ff',
   };
   // shadow* inputs were merged into the PHONE panel; map them by id prefix
-  // when the input lives outside the panel DOM (e.g. shadowCPickerHex popover)
-  const INPUT_PREFIX_TO_PANEL = { shadow: 'tweakPanel' };
+  // when the input lives outside the panel DOM (e.g. shadowCPickerHex popover).
+  // card1*/card2*/card3* inputs live inside per-card mini-panels embedded
+  // in each .s3-triptych__card and route to the virtual cardsPanel.
+  const INPUT_PREFIX_TO_PANEL = { shadow: 'tweakPanel', card: 'cardsPanel' };
+  // Expose to timelineSystem so gatherTracks can resolve virtual panels
+  window.__inputPrefixToPanel = INPUT_PREFIX_TO_PANEL;
 
   let kfStore    = {};   // { inputId: [{id, scrollY, val}] }
   let animMode   = false;
@@ -4503,6 +4492,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     // surface in full. KFs may not exist yet; the row still renders so the
     // user can drop one straight from the timeline.
     const assets = [];
+    // Reverse map: panelId → id-prefix (used for virtual panels whose
+    // controls live outside the panel DOM, e.g. the per-card mini panels)
+    const PANEL_TO_PREFIX = {};
+    Object.entries(window.__inputPrefixToPanel || { card: 'cardsPanel' }).forEach(([pre, pid]) => {
+      PANEL_TO_PREFIX[pid] = pre;
+    });
     panelIds.forEach(pid => {
       const pe = document.getElementById(pid);
       if (!pe) return;
@@ -4529,6 +4524,22 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
         seen.add(ctrl.id);
         props.push({ inputId: ctrl.id, label: label || ctrl.id, kfs: store[ctrl.id] || [] });
       });
+      // Virtual-panel fallback: cardsPanel renders its inputs inside the
+      // .s3-triptych__card divs (per-card mini-panel), not inside #cardsPanel.
+      // When the panel walk yields nothing, sweep DOM for any input whose id
+      // starts with this panel's mapped prefix and absorb them as props.
+      if (!props.length && PANEL_TO_PREFIX[pid]) {
+        const prefix = PANEL_TO_PREFIX[pid];
+        document
+          .querySelectorAll(`input[type=range][id^="${prefix}"], input[type=text][id^="${prefix}"], select[id^="${prefix}"]`)
+          .forEach(ctrl => {
+            if (seen.has(ctrl.id)) return;
+            seen.add(ctrl.id);
+            const row = ctrl.closest('.pw-row, .card-panel__row');
+            const label = row?.querySelector('.pw-key, .card-panel__key')?.textContent?.trim() || ctrl.id;
+            props.push({ inputId: ctrl.id, label, kfs: store[ctrl.id] || [] });
+          });
+      }
       if (props.length) assets.push({ panelId: pid, title, props });
     });
     return assets;
@@ -5098,3 +5109,32 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     document.body.style.cursor = '';
   });
 }());
+
+// ═══════════════════════════════════════════════════════
+// VIEWPORT TAG — live size + breakpoint chip
+// Tiers: S (<768) M (768–1199) L (1200–1599) XL (≥1600)
+// 1920×1080 lands in L per spec.
+// ═══════════════════════════════════════════════════════
+(function vpTagSystem() {
+  const tag  = document.getElementById('vpTag');
+  const size = document.getElementById('vpTagSize');
+  const tier = document.getElementById('vpTagTier');
+  if (!tag || !size || !tier) return;
+
+  function tierFor(w) {
+    if (w < 768)  return 'S';
+    if (w < 1200) return 'M';
+    if (w < 1600) return 'L';
+    return 'XL';
+  }
+  function update() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    size.textContent = `${w}×${h}`;
+    const t = tierFor(w);
+    tier.textContent = t;
+    tier.className = 'vp-tag__tier vp-tag__tier--' + t.toLowerCase();
+  }
+  window.addEventListener('resize', update, { passive: true });
+  update();
+})();
