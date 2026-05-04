@@ -4214,35 +4214,32 @@ body {
   will-change: transform, opacity;
 }
 
-/* ── Alignment picker — 5-dot quincunx (4 corners + center)
-   Reusable widget. Sits in its own compact .pw-row--align row
-   directly under SCALE, no key label, right-aligned so it reads
-   as a small anchor selector hanging off the SCALE row's right
-   edge. data-target-x / data-target-y on the wrapper point at
-   the input IDs to drive. Foundation for cross-viewport corner
-   pinning. */
-.pw-row--align {
-  min-height: 0 !important;
-  margin-top: -2px !important;
-  margin-bottom: 6px !important;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+/* ── Alignment picker — 5-dot quincunx (4 corners + center).
+   Lives INLINE in the SCALE row alongside copy + KF icons.
+   data-target-x / data-target-y are legacy hooks the JS uses
+   to identify which card the picker drives. */
+.pw-row--scale {
+  /* Extra column at index 6 holds the picker, KF-del / KF land
+     in implicit cols 7+8. NUM/UNIT/CP slimmed to 18px each so
+     the slider keeps reasonable width. */
+  grid-template-columns: 52px 1fr 38px 18px 18px 18px 18px !important;
 }
-.pw-align-picker {
-  width: 18px;
-  height: 18px;
+.pw-row--scale .pw-align-picker {
+  width: 14px;
+  height: 14px;
   display: grid;
-  grid-template-columns: 5px 5px 5px;
-  grid-template-rows:    5px 5px 5px;
-  gap: 1.5px;
+  grid-template-columns: 4px 4px 4px;
+  grid-template-rows:    4px 4px 4px;
+  gap: 1px;
+  align-self: center;
+  justify-self: center;
 }
 .pw-align-picker__cell {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border: none;
   border-radius: 50%;
-  background: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.26);
   cursor: pointer;
   padding: 0;
   transition: background 0.14s, box-shadow 0.14s, transform 0.14s;

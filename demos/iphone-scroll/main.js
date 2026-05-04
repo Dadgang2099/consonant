@@ -762,9 +762,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
     document.getElementById('cardsReset')?.addEventListener('click', () => {
       const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
-      set('card1Scale', 1.7); set('card1X', 0); set('card1Y', 0); set('card1Rot', 0); set('card1Opa', 100);
-      set('card2Scale', 5.5); set('card2X', 0); set('card2Y', 0); set('card2Rot', 0); set('card2Opa', 100);
-      set('card3Scale', 1);   set('card3X', 0); set('card3Y', 0); set('card3Rot', 0); set('card3Opa', 100);
+      set('card1Scale', 1); set('card1X', 0); set('card1Y', 0); set('card1Rot', 0); set('card1Opa', 100);
+      set('card2Scale', 1); set('card2X', 0); set('card2Y', 0); set('card2Rot', 0); set('card2Opa', 100);
+      set('card3Scale', 1); set('card3X', 0); set('card3Y', 0); set('card3Rot', 0); set('card3Opa', 100);
       window.__applyKFs?.({});
     });
     document.getElementById('cardsCopy')?.addEventListener('click', () => {
