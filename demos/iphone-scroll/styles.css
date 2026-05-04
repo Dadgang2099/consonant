@@ -4187,6 +4187,10 @@ body {
   position: relative;
   background: #000;
   height: 75vh;
+  /* Soft rounded clip — overflow:hidden + radius keeps the
+     scaled/rotated img bound to the card's rounded silhouette. */
+  border-radius: 22px;
+  -webkit-mask-image: -webkit-radial-gradient(white, black); /* Safari Y mask anti-alias */
 }
 .s3-triptych__card img {
   width: 100%;
