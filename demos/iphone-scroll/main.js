@@ -698,39 +698,38 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
   // ── Cards panel — bind sliders to per-card CSS vars ─────
   // The triptych cards (#card1/#card2/#card3) read --scale, --ox,
-  // --oy from inline styles set by JS. Each slider writes the var
-  // on its parent card. Initial values are seeded by HTML inline
-  // style; this loop just keeps live edits in sync.
+  // --oy, --rot, --opa from inline styles. Each slider writes the
+  // var on its parent card. Image rows accept drag-and-drop or
+  // click-to-pick to swap the card's <img> src.
   (function bindCardsPanel() {
     const cards = [
-      { id: 'card1', scale: 'card1Scale', x: 'card1X', y: 'card1Y' },
-      { id: 'card2', scale: 'card2Scale', x: 'card2X', y: 'card2Y' },
-      { id: 'card3', scale: 'card3Scale', x: 'card3X', y: 'card3Y' },
+      { id: 'card1', img: 'card1Img', scale: 'card1Scale', x: 'card1X', y: 'card1Y', rot: 'card1Rot', opa: 'card1Opa' },
+      { id: 'card2', img: 'card2Img', scale: 'card2Scale', x: 'card2X', y: 'card2Y', rot: 'card2Rot', opa: 'card2Opa' },
+      { id: 'card3', img: 'card3Img', scale: 'card3Scale', x: 'card3X', y: 'card3Y', rot: 'card3Rot', opa: 'card3Opa' },
     ];
+    function setVar(el, name, val, numId, format) {
+      el.style.setProperty(name, val);
+      if (numId) {
+        const num = document.getElementById(numId);
+        if (num) num.textContent = format ? format(val) : val;
+      }
+    }
     function applyCard(c) {
       const el  = document.getElementById(c.id);
       if (!el) return;
-      const s   = document.getElementById(c.scale);
-      const x   = document.getElementById(c.x);
-      const y   = document.getElementById(c.y);
-      if (s) {
-        el.style.setProperty('--scale', s.value);
-        const num = document.getElementById(c.scale + 'Num');
-        if (num) num.textContent = (+s.value).toFixed(2);
-      }
-      if (x) {
-        el.style.setProperty('--ox', x.value + '%');
-        const num = document.getElementById(c.x + 'Num');
-        if (num) num.textContent = x.value;
-      }
-      if (y) {
-        el.style.setProperty('--oy', y.value + '%');
-        const num = document.getElementById(c.y + 'Num');
-        if (num) num.textContent = y.value;
-      }
+      const s = document.getElementById(c.scale);
+      const x = document.getElementById(c.x);
+      const y = document.getElementById(c.y);
+      const r = document.getElementById(c.rot);
+      const o = document.getElementById(c.opa);
+      if (s) setVar(el, '--scale', s.value,           c.scale + 'Num', v => (+v).toFixed(2));
+      if (x) setVar(el, '--ox',    x.value + '%',     c.x     + 'Num', () => x.value);
+      if (y) setVar(el, '--oy',    y.value + '%',     c.y     + 'Num', () => y.value);
+      if (r) setVar(el, '--rot',   r.value + 'deg',   c.rot   + 'Num', () => r.value);
+      if (o) setVar(el, '--opa',   (+o.value / 100),  c.opa   + 'Num', () => o.value);
     }
     cards.forEach(c => {
-      [c.scale, c.x, c.y].forEach(inputId => {
+      [c.scale, c.x, c.y, c.rot, c.opa].forEach(inputId => {
         const inp = document.getElementById(inputId);
         if (!inp) return;
         inp.addEventListener('input', () => applyCard(c));
@@ -740,19 +739,72 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
     document.getElementById('cardsReset')?.addEventListener('click', () => {
       const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
-      set('card1Scale', 2.8);  set('card1X', 15); set('card1Y', 24);
-      set('card2Scale', 1.12); set('card2X', 50); set('card2Y', 50);
-      set('card3Scale', 6.0);  set('card3X', 28); set('card3Y', 22);
+      set('card1Scale', 2.8);  set('card1X', 15); set('card1Y', 24); set('card1Rot', 0); set('card1Opa', 100);
+      set('card2Scale', 1.12); set('card2X', 50); set('card2Y', 50); set('card2Rot', 0); set('card2Opa', 100);
+      set('card3Scale', 6.0);  set('card3X', 28); set('card3Y', 22); set('card3Rot', 0); set('card3Opa', 100);
       window.__applyKFs?.({});
     });
     document.getElementById('cardsCopy')?.addEventListener('click', () => {
       const v = id => document.getElementById(id)?.value;
       const txt =
-        `card A scale:${v('card1Scale')}× pos:${v('card1X')}%,${v('card1Y')}%\n` +
-        `card B scale:${v('card2Scale')}× pos:${v('card2X')}%,${v('card2Y')}%\n` +
-        `card C scale:${v('card3Scale')}× pos:${v('card3X')}%,${v('card3Y')}%`;
+        `card A scale:${v('card1Scale')}× pos:${v('card1X')}%,${v('card1Y')}% rot:${v('card1Rot')}° opa:${v('card1Opa')}%\n` +
+        `card B scale:${v('card2Scale')}× pos:${v('card2X')}%,${v('card2Y')}% rot:${v('card2Rot')}° opa:${v('card2Opa')}%\n` +
+        `card C scale:${v('card3Scale')}× pos:${v('card3X')}%,${v('card3Y')}% rot:${v('card3Rot')}° opa:${v('card3Opa')}%`;
       navigator.clipboard?.writeText(txt);
       flashCopied('cardsCopy');
+    });
+
+    // ── Image replace (drag-drop OR click-to-pick) ──────────
+    function loadFileToCard(file, targetImgId) {
+      if (!file || !file.type?.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const url = e.target.result;
+        const img = document.getElementById(targetImgId);
+        if (img) img.src = url;
+        document.querySelectorAll(`.pw-asset-drop__thumb[data-card-thumb="${targetImgId}"]`)
+          .forEach(t => { t.src = url; });
+      };
+      reader.readAsDataURL(file);
+    }
+    document.querySelectorAll('.pw-asset-drop').forEach(drop => {
+      const targetImgId = drop.dataset.cardTarget;
+      const fileInput   = document.querySelector(`input[data-card-file="${targetImgId}"]`);
+      drop.addEventListener('click', () => fileInput?.click());
+      fileInput?.addEventListener('change', e => {
+        loadFileToCard(e.target.files?.[0], targetImgId);
+        e.target.value = '';
+      });
+      ['dragenter', 'dragover'].forEach(ev => {
+        drop.addEventListener(ev, e => {
+          e.preventDefault(); e.stopPropagation();
+          drop.classList.add('pw-asset-drop--dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(ev => {
+        drop.addEventListener(ev, e => {
+          e.preventDefault(); e.stopPropagation();
+          drop.classList.remove('pw-asset-drop--dragover');
+        });
+      });
+      drop.addEventListener('drop', e => {
+        const file = e.dataTransfer?.files?.[0];
+        if (file) loadFileToCard(file, targetImgId);
+      });
+    });
+    // Also let the user drop a file directly onto the card itself
+    ['card1', 'card2', 'card3'].forEach(cardId => {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const targetImg = cardId + 'Img';
+      ['dragenter', 'dragover'].forEach(ev => {
+        card.addEventListener(ev, e => { e.preventDefault(); });
+      });
+      card.addEventListener('drop', e => {
+        e.preventDefault();
+        const file = e.dataTransfer?.files?.[0];
+        if (file) loadFileToCard(file, targetImg);
+      });
     });
   })();
 
@@ -2878,9 +2930,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       // SCROLL VIDEO
       seqSpeed: g('seqSpeed'),
       // CARDS (below-hero triptych)
-      card1Scale: g('card1Scale'), card1X: g('card1X'), card1Y: g('card1Y'),
-      card2Scale: g('card2Scale'), card2X: g('card2X'), card2Y: g('card2Y'),
-      card3Scale: g('card3Scale'), card3X: g('card3X'), card3Y: g('card3Y'),
+      card1Scale: g('card1Scale'), card1X: g('card1X'), card1Y: g('card1Y'), card1Rot: g('card1Rot'), card1Opa: g('card1Opa'),
+      card2Scale: g('card2Scale'), card2X: g('card2X'), card2Y: g('card2Y'), card2Rot: g('card2Rot'), card2Opa: g('card2Opa'),
+      card3Scale: g('card3Scale'), card3X: g('card3X'), card3Y: g('card3Y'), card3Rot: g('card3Rot'), card3Opa: g('card3Opa'),
       // HERO CONTENT
       hlSize: g('hlSize'), hlWeight: g('hlWeight'), hlTracking: g('hlTracking'), hlLineH: g('hlLineH'),
       bdSize: g('bdSize'), bdWeight: g('bdWeight'), bdTracking: g('bdTracking'), bdLineH: g('bdLineH'),

@@ -4173,97 +4173,67 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  /* Crops driven by CSS vars set inline on the parent card and
-     overridden live by each card's mini-panel (cardN-scale /
-     cardN-x / cardN-y). */
+  /* Crops + rotation + opacity driven by CSS vars set inline on
+     the parent card and updated live by the CARDS panel sliders. */
   object-position: var(--px, center) var(--py, center);
   transform-origin: var(--ox, 50%) var(--oy, 50%);
-  transform: scale(var(--scale, 1));
-  transition: transform 0.12s ease;
-  will-change: transform;
+  transform: scale(var(--scale, 1)) rotate(var(--rot, 0deg));
+  opacity: var(--opa, 1);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+  will-change: transform, opacity;
 }
 
-/* ── Per-card mini control panel ─────────────────────────
-   Lives inside its .s3-triptych__card. Compact glass surface
-   anchored to the card's top-right corner. Same input IDs as
-   the (now virtual) cardsPanel so timeline/KF/AI-bar wiring
-   keeps working unchanged. */
-.card-panel {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 5;
-  width: 188px;
-  padding: 9px 11px 11px;
-  background: rgba(7, 8, 13, 0.78);
-  backdrop-filter: blur(20px) saturate(1.6);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  border: 0.5px solid rgba(255,255,255,0.10);
-  border-radius: 11px;
-  box-shadow:
-    0 8px 28px rgba(0,0,0,0.6),
-    inset 0 0.5px 0 rgba(255,255,255,0.10);
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  pointer-events: auto;
-  opacity: 0.92;
-  transition: opacity 0.18s ease;
-}
-.s3-triptych__card:hover .card-panel,
-.card-panel:focus-within {
-  opacity: 1;
-}
-.card-panel__hdr {
+/* ── Asset-drop row inside CARDS panel ─────────────────── */
+.pw-row--asset {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding-bottom: 4px;
-  border-bottom: 0.5px solid rgba(255,255,255,0.08);
-  user-select: none;
-  -webkit-user-select: none;
+  gap: 10px;
+  padding: 6px 0;
 }
-.card-panel__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #38d2ff;
-  box-shadow: 0 0 8px rgba(56,210,255,0.55);
+.pw-row--asset .pw-key {
+  flex: 0 0 52px;
+}
+.pw-asset-drop {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px dashed rgba(255,255,255,0.18);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+  font-family: inherit;
+  color: rgba(255,255,255,0.50);
+}
+.pw-asset-drop:hover {
+  background: rgba(56,210,255,0.06);
+  border-color: rgba(56,210,255,0.45);
+  color: rgba(255,255,255,0.78);
+}
+.pw-asset-drop--dragover {
+  background: rgba(56,210,255,0.14);
+  border-color: rgba(56,210,255,0.75);
+  border-style: solid;
+  color: rgba(255,255,255,0.95);
+}
+.pw-asset-drop__thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #000;
   flex-shrink: 0;
+  pointer-events: none;
 }
-.card-panel__title {
+.pw-asset-drop__hint {
   font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: rgba(255,255,255,0.62);
-  text-transform: uppercase;
-}
-.card-panel__row {
-  display: grid;
-  grid-template-columns: 36px 1fr 42px;
-  align-items: center;
-  gap: 8px;
-  height: 18px;
-}
-.card-panel__key {
-  font-size: 8.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
-  color: rgba(255,255,255,0.42);
   text-transform: uppercase;
-}
-.card-panel__range {
-  width: 100%;
-  height: 14px;
-  margin: 0;
-}
-.card-panel__val {
-  font-size: 9.5px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.78);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {
