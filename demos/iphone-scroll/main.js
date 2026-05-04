@@ -774,6 +774,53 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       flashCopied('cardsCopy');
     });
 
+    // ── Alignment picker — 3×3 corner / edge / center grid ──
+    // Click a cell → snap target X + Y inputs to its data-x/data-y.
+    // Active cell tracks current input values.
+    function alignPickers() {
+      return document.querySelectorAll('.pw-align-picker');
+    }
+    function syncPicker(picker) {
+      const xId = picker.dataset.targetX;
+      const yId = picker.dataset.targetY;
+      const xInp = document.getElementById(xId);
+      const yInp = document.getElementById(yId);
+      if (!xInp || !yInp) return;
+      const xv = +xInp.value;
+      const yv = +yInp.value;
+      picker.querySelectorAll('.pw-align-picker__cell').forEach(cell => {
+        const cx = +cell.dataset.x;
+        const cy = +cell.dataset.y;
+        cell.classList.toggle('pw-align-picker__cell--active', cx === xv && cy === yv);
+      });
+    }
+    alignPickers().forEach(picker => {
+      picker.querySelectorAll('.pw-align-picker__cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const xId = picker.dataset.targetX;
+          const yId = picker.dataset.targetY;
+          const xInp = document.getElementById(xId);
+          const yInp = document.getElementById(yId);
+          if (!xInp || !yInp) return;
+          xInp.value = cell.dataset.x;
+          yInp.value = cell.dataset.y;
+          xInp.dispatchEvent(new Event('input',  { bubbles: true }));
+          yInp.dispatchEvent(new Event('input',  { bubbles: true }));
+          xInp.dispatchEvent(new Event('change', { bubbles: true }));
+          yInp.dispatchEvent(new Event('change', { bubbles: true }));
+          syncPicker(picker);
+        });
+      });
+      // Keep cell highlighted when sliders change manually
+      const xInp = document.getElementById(picker.dataset.targetX);
+      const yInp = document.getElementById(picker.dataset.targetY);
+      [xInp, yInp].forEach(inp => {
+        if (!inp) return;
+        inp.addEventListener('input', () => syncPicker(picker));
+      });
+      syncPicker(picker); // initial sync
+    });
+
     // ── Image replace (drag-drop OR click-to-pick) ──────────
     function loadFileToCard(file, targetImgId) {
       if (!file || !file.type?.startsWith('image/')) return;

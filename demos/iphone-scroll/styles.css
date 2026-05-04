@@ -4203,6 +4203,46 @@ body {
   will-change: transform, opacity;
 }
 
+/* ── Alignment picker — 3×3 corner / edge / center anchor grid ──
+   Reusable widget. data-target-x / data-target-y on the wrapper
+   point at the input IDs to drive. Cells carry data-x / data-y in
+   percentages (0/50/100); click snaps the targets, dispatches input
+   events to keep timeline + applyCard in sync. Foundation for
+   cross-viewport corner-pinning. */
+.pw-align-picker {
+  grid-column: 2 / 5;
+  display: grid;
+  grid-template-columns: repeat(3, 12px);
+  grid-template-rows:    repeat(3, 12px);
+  gap: 2px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  align-self: center;
+  justify-self: start;
+}
+.pw-align-picker__cell {
+  width: 12px;
+  height: 12px;
+  border: 0.5px solid rgba(255,255,255,0.16);
+  border-radius: 2px;
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.14s, border-color 0.14s, box-shadow 0.14s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.pw-align-picker__cell:hover {
+  background: rgba(56,210,255,0.20);
+  border-color: rgba(56,210,255,0.50);
+}
+.pw-align-picker__cell--active {
+  background: rgba(56,210,255,0.62);
+  border-color: rgba(56,210,255,0.92);
+  box-shadow: 0 0 6px rgba(56,210,255,0.55);
+}
+
 /* ── Asset-drop row — standard pw-row grid; drop spans cols 2–6 ── */
 .pw-row--asset {
   min-height: 28px;
