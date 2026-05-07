@@ -2176,7 +2176,7 @@ html.theme-light .vp-tag {
 
 /* ── Light mode: annotation panel elements ────────────────────────────────── */
 html.theme-light .ann-select {
-  background: rgba(0,0,0,0.04);
+  background-color: rgba(0,0,0,0.04);
   border-color: rgba(0,0,0,0.12);
   color: rgba(0,0,0,0.75);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='rgba(0,0,0,0.4)' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -2203,6 +2203,60 @@ html.theme-light .ann-recipient-dropdown    { background: rgba(248,249,252,0.98)
 html.theme-light .ann-recipient-item        { color: rgba(0,0,0,0.70); }
 html.theme-light .ann-recipient-item:hover  { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.90); }
 html.theme-light .ann-recipient-del         { color: rgba(0,0,0,0.25); }
+
+/* ── Light mode: annotation tool palette ── */
+html.theme-light .ann-tool {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.10);
+  color: rgba(0,0,0,0.38);
+}
+html.theme-light .ann-tool:hover {
+  background: rgba(0,0,0,0.07);
+  color: rgba(0,0,0,0.72);
+}
+html.theme-light .ann-tool--on {
+  background: rgba(255,149,0,0.10);
+  border-color: rgba(255,149,0,0.40);
+  color: rgba(200,100,0,0.95);
+}
+
+/* ── Light mode: annotation list ── */
+html.theme-light .ann-empty { color: rgba(0,0,0,0.28); }
+html.theme-light .ann-card {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.08);
+}
+html.theme-light .ann-card:hover { background: rgba(0,0,0,0.06); }
+html.theme-light .ann-card--selected {
+  background: rgba(255,149,0,0.08);
+  border-color: rgba(255,149,0,0.30);
+}
+html.theme-light .ann-card__badge {
+  background: rgba(0,0,0,0.08);
+  color: rgba(0,0,0,0.60);
+}
+html.theme-light .ann-card--selected .ann-card__badge {
+  background: rgba(255,149,0,0.20);
+  color: rgba(180,80,0,1);
+}
+html.theme-light .ann-card__type  { color: rgba(0,0,0,0.28); }
+html.theme-light .ann-card__text  { color: rgba(0,0,0,0.55); }
+html.theme-light .ann-card__del   { color: rgba(0,0,0,0.18); }
+
+/* ── Light mode: dock AI send button (the + FAB) ── */
+html.theme-light .ai-bar__send {
+  background: rgba(242,245,252,0.92);
+  border-color: rgba(0,0,0,0.10);
+  color: rgba(0,0,0,0.55);
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.08),
+    0 8px 28px rgba(0,0,0,0.10),
+    inset 0 0.5px 0 rgba(255,255,255,1);
+}
+html.theme-light .ai-bar__send:hover:not(:disabled) {
+  background: rgba(230,235,248,0.95);
+  color: rgba(0,0,0,0.88);
+}
 
 /* ═══════════════════════════════════════════════════════════
    ANNOTATION OVERLAY + DOTS
