@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scroll-to-Static — Burn the Ships Template</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="scroll-driver">
+  <div class="stage">
+
+    <!-- Phase 1: scroll-scrubbed video -->
+    <video class="stage__video" id="heroVideo"
+      src="assets/hero.mp4"
+      muted playsinline preload="auto"
+      aria-hidden="true"></video>
+
+    <!-- Optional: vignette / overlay effects go here -->
+    <!-- <div class="lens-mask" id="lensMask"></div> -->
+
+    <!-- Phase 2: static asset that crossfades in and scrolls up -->
+    <!-- Apply mask-image + drop-shadow in styles.css if needed -->
+    <img class="static-asset" id="staticAsset"
+      src="assets/endframe.jpg"
+      alt="">
+
+    <!-- Revealed beneath the static asset as it scrolls up -->
+    <div class="reveal-content" id="revealContent">
+      <h2 class="reveal-content__headline">Your headline here.</h2>
+      <p class="reveal-content__body">Supporting copy goes here.</p>
+      <div class="reveal-content__ctas">
+        <a class="reveal-cta" href="#">Primary action</a>
+        <a class="reveal-cta reveal-cta--secondary" href="#">Secondary action</a>
+      </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" id="scrollHint">
+      <span>Scroll</span>
+      <div class="scroll-hint__line"></div>
+    </div>
+
+    <!-- Alignment tweak panel — remove for production -->
+    <div class="tweak-panel" id="tweakPanel">
+      <div class="tweak-panel__header">
+        <span>Asset Alignment</span>
+        <button class="tweak-panel__close" id="tweakToggle">−</button>
+      </div>
+      <div class="tweak-panel__body" id="tweakBody">
+        <label class="tweak-row">
+          <span class="tweak-label">Scale <b id="scaleVal">72</b></span>
+          <input type="range" id="scaleInput" min="20" max="200" step="0.1" value="72">
+        </label>
+        <label class="tweak-row">
+          <span class="tweak-label">Y ref <b id="yRefVal">0</b>px</span>
+          <input type="range" id="yRefInput" min="-1000" max="2000" step="1" value="0">
+        </label>
+        <label class="tweak-row">
+          <span class="tweak-label">X off <b id="xOffVal">0</b>px</span>
+          <input type="range" id="xOffInput" min="-600" max="600" step="1" value="0">
+        </label>
+        <div class="tweak-info" id="tweakInfo">S: —</div>
+        <div class="tweak-actions">
+          <button id="tweakReset">Reset</button>
+          <button id="tweakCopy">Copy values</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

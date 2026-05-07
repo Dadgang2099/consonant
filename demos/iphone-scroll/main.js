@@ -598,8 +598,8 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         if (!dragging) return;
         const dx = e.clientX - ox;
         const dy = e.clientY - oy;
-        const newL = Math.max(0, Math.min(window.innerWidth  - 60, pl + dx));
-        const newT = Math.max(0, Math.min(window.innerHeight - 40, pt + dy));
+        const newL = Math.max(0, Math.min(window.innerWidth  - panel.offsetWidth,  pl + dx));
+        const newT = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, pt + dy));
         panel.style.left = newL + 'px';
         panel.style.top  = newT + 'px';
         // Drag followers by the same delta the parent actually traveled
@@ -5198,7 +5198,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   // Mousedown on the tag area itself (excluding the four dock circles)
   // begins a resize drag. Whether timeline is open or closed.
   tagArea?.addEventListener('mousedown', e => {
-    if (e.target.closest('.panel-tog, .ai-bar, .fx-knob, .tl-tog')) return;
+    if (e.target.closest('.panel-tog, .ai-bar, .fx-knob, .tl-tog, .comment-tog')) return;
     if (!open) {
       // If the panel is closed, the first downward gesture opens it
       // first; subsequent drag continues to size it.
@@ -5274,10 +5274,23 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   const annDetailSec  = document.getElementById('annDetailSec');
   const annDetailLabel= document.getElementById('annDetailLabel');
   const annDetailText = document.getElementById('annDetailText');
-  const annJira       = document.getElementById('annJira');
-  const annSlack      = document.getElementById('annSlack');
-  const annJiraBtn    = document.getElementById('annJiraBtn');
-  const annSlackBtn   = document.getElementById('annSlackBtn');
+  const annJiraProject     = document.getElementById('annJiraProject');
+  const annJiraResult      = document.getElementById('annJiraResult');
+  const annSlackChannel      = document.getElementById('annSlackChannel');
+  const annSlackMention      = document.getElementById('annSlackMention');
+  const annRecipientDropdown = document.getElementById('annRecipientDropdown');
+  const annJiraBtn         = document.getElementById('annJiraBtn');
+  const annSlackBtn        = document.getElementById('annSlackBtn');
+  const annAttachBtn       = document.getElementById('annAttachBtn');
+  const annThumbs          = document.getElementById('annThumbs');
+  const annFigmaUrl        = document.getElementById('annFigmaUrl');
+  const annFigmaPreviewBtn = document.getElementById('annFigmaPreviewBtn');
+  const annFigmaFrame      = document.getElementById('annFigmaFrame');
+  const annFigmaIframe     = document.getElementById('annFigmaIframe');
+  const annFigmaClose      = document.getElementById('annFigmaClose');
+  const annColors          = document.getElementById('annColors');
+  const annColorCustom     = document.getElementById('annColorCustom');
+  const drawSvg            = document.getElementById('drawSvg');
   const annClear      = document.getElementById('annClear');
   const annFileInput  = document.getElementById('annFileInput');
   const modeToggle    = document.getElementById('modeToggle');
@@ -5294,57 +5307,45 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     return Array.from(document.querySelectorAll('.pw-panel'));
   }
 
-  function applyTransition(el, props, duration, ease, delay) {
-    if (!el) return;
-    const ms  = duration || 240;
-    const dlm = delay   || 0;
-    el.style.transition = `opacity ${ms}ms ${ease} ${dlm}ms, transform ${ms}ms ${ease} ${dlm}ms`;
-    Object.assign(el.style, props);
-  }
-
   function fadeHideEl(el, delay) {
     if (!el) return;
-    applyTransition(el,
-      { opacity: '0', transform: 'translateX(300px)', pointerEvents: 'none' },
-      220, CLOSE_EASE, delay || 0);
+    setTimeout(() => {
+      el.style.transition    = `translate 220ms ${CLOSE_EASE} 0ms, opacity 220ms ${CLOSE_EASE} 0ms`;
+      el.style.translate     = '300px 0';
+      el.style.opacity       = '0';
+      el.style.pointerEvents = 'none';
+    }, delay || 0);
   }
 
   function fadeShowEl(el, delay) {
     if (!el) return;
-    el.style.pointerEvents = 'auto';
-    // Prime from off-left so it slides in
-    const current = el.style.transform;
-    if (!current || current === 'none' || current === '') {
-      el.style.transition = 'none';
-      el.style.transform  = 'translateX(-300px)';
-      el.style.opacity    = '0';
-      // force reflow
-      void el.offsetHeight;
-    }
-    applyTransition(el,
-      { opacity: '1', transform: 'translateX(0px)' },
-      280, OPEN_EASE, delay || 0);
+    setTimeout(() => {
+      el.style.transition    = `translate 380ms ${OPEN_EASE} 0ms, opacity 360ms ${OPEN_EASE} 0ms`;
+      el.style.translate     = '0 0';
+      el.style.opacity       = '1';
+      el.style.pointerEvents = '';
+    }, delay || 0);
   }
 
   function fadeOutSimple(el) {
     if (!el) return;
-    el.style.transition = `opacity 180ms ${CLOSE_EASE}`;
-    el.style.opacity    = '0';
+    el.style.transition    = `opacity 180ms ${CLOSE_EASE}`;
+    el.style.opacity       = '0';
     el.style.pointerEvents = 'none';
   }
 
   function fadeInSimple(el) {
     if (!el) return;
-    el.style.transition = `opacity 220ms ${OPEN_EASE}`;
-    el.style.opacity    = '1';
-    el.style.pointerEvents = 'auto';
+    el.style.transition    = `opacity 220ms ${OPEN_EASE}`;
+    el.style.opacity       = '1';
+    el.style.pointerEvents = '';
   }
 
   // ── Enter / Exit comment mode ──────────────────────────────────────────────
   function enterCommentMode() {
     if (inCommentMode) return;
     inCommentMode = true;
-    wasVisible    = panelsVisible;
+    wasVisible    = !document.getElementById('panelTog')?.classList.contains('panel-tog--panels-hidden');
 
     commentTog && commentTog.classList.add('comment-tog--on');
 
@@ -5358,9 +5359,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     fadeOutSimple(modeToggle);
     fadeOutSimple(pubCluster);
 
-    // Show commentPanel after 80ms
+    // Show commentPanel — prime off-left then animate in
     if (commentPanel) {
-      commentPanel.style.display = '';
+      commentPanel.style.transition = 'none';
+      commentPanel.style.translate  = '-300px 0';
+      commentPanel.style.opacity    = '0';
+      void commentPanel.offsetHeight;
       fadeShowEl(commentPanel, 80);
     }
 
@@ -5377,8 +5381,13 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
 
     commentTog && commentTog.classList.remove('comment-tog--on');
 
-    // Hide commentPanel
-    fadeHideEl(commentPanel, 0);
+    // Hide commentPanel — slide back left
+    if (commentPanel) {
+      commentPanel.style.transition    = `translate 220ms ${CLOSE_EASE}, opacity 200ms ${CLOSE_EASE}`;
+      commentPanel.style.translate     = '-300px 0';
+      commentPanel.style.opacity       = '0';
+      commentPanel.style.pointerEvents = 'none';
+    }
 
     // Hide overlay
     if (annOverlay) annOverlay.setAttribute('hidden', '');
@@ -5395,6 +5404,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   }
 
   // ── Tool selection ─────────────────────────────────────────────────────────
+  let drawColor = '#ff3b30';
+
   function setActiveTool(tool) {
     activeTool = tool;
     if (appDock) {
@@ -5403,9 +5414,28 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       });
     }
     if (annOverlay) {
-      const cursors = { pin: 'crosshair', box: 'crosshair', text: 'text', image: 'copy' };
+      const cursors = { pin: 'crosshair', box: 'crosshair', draw: 'crosshair' };
       annOverlay.style.cursor = cursors[tool] || 'crosshair';
     }
+    if (annColors) annColors.classList.toggle('ann-colors--on', tool === 'draw');
+  }
+
+  // ── Color picker ──────────────────────────────────────────────────────────
+  if (annColors) {
+    annColors.addEventListener('click', e => {
+      const swatch = e.target.closest('.ann-color-swatch');
+      if (!swatch) return;
+      drawColor = swatch.dataset.color;
+      annColors.querySelectorAll('.ann-color-swatch').forEach(s => {
+        s.classList.toggle('ann-color-swatch--on', s === swatch);
+      });
+    });
+  }
+  if (annColorCustom) {
+    annColorCustom.addEventListener('input', () => {
+      drawColor = annColorCustom.value;
+      annColors.querySelectorAll('.ann-color-swatch').forEach(s => s.classList.remove('ann-color-swatch--on'));
+    });
   }
 
   if (appDock) {
@@ -5420,7 +5450,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   function addAnnotation(type, x, y, w, h) {
     const id  = nextId++;
     const ann = { id, type, x: x || 0, y: y || 0, w: w || 0, h: h || 0,
-                  text: '', jira: '', slack: '', imageDataUrl: '' };
+                  text: '', images: [], figmaUrl: '',
+                  strokes: [], drawColor: drawColor,
+                  jiraProject: '', jiraKey: '', slackChannel: '', slackMention: '', imageDataUrl: '' };
     annotations.push(ann);
     renderDot(ann);
     renderCard(ann);
@@ -5430,8 +5462,10 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
 
   function deleteAnnotation(id) {
     annotations = annotations.filter(a => a.id !== id);
-    const dot  = annOverlay && annOverlay.querySelector(`[data-ann-id="${id}"]`);
-    if (dot) dot.remove();
+    // Remove overlay dot (pin/box) and any SVG draw strokes
+    if (annOverlay) annOverlay.querySelectorAll(`[data-ann-id="${id}"]`).forEach(el => el.remove());
+    if (drawSvg)    drawSvg.querySelectorAll(`[data-ann-id="${id}"]`).forEach(el => el.remove());
+    if (activeDrawAnn && activeDrawAnn.id === id) activeDrawAnn = null;
     const card = annList && annList.querySelector(`[data-card-id="${id}"]`);
     if (card) card.remove();
     if (selectedId === id) {
@@ -5453,6 +5487,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   // ── Dot rendering ──────────────────────────────────────────────────────────
   function renderDot(ann) {
     if (!annOverlay) return;
+    // Draw annotations use SVG strokes — no overlay div needed
+    if (ann.type === 'draw') { renderDrawStrokes(ann); return; }
     const dot  = document.createElement('div');
     dot.className = `ann-dot ann-dot--${ann.type}`;
     dot.dataset.annId = ann.id;
@@ -5501,7 +5537,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
 
     const type = document.createElement('span');
     type.className   = 'ann-card__type';
-    type.textContent = ann.type.toUpperCase();
+    const typeLabels = { pin: 'TAG', box: 'GROUP', draw: 'DRAW', text: 'TEXT', image: 'IMAGE' };
+    type.textContent = typeLabels[ann.type] || ann.type.toUpperCase();
 
     const preview = document.createElement('span');
     preview.className   = 'ann-card__text';
@@ -5556,9 +5593,50 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
 
     if (annDetailSec) annDetailSec.removeAttribute('hidden');
     if (annDetailLabel) annDetailLabel.textContent = `#${id}`;
-    if (annDetailText) annDetailText.value = ann.text  || '';
-    if (annJira)       annJira.value        = ann.jira  || '';
-    if (annSlack)      annSlack.value       = ann.slack || '';
+    if (annDetailText)   annDetailText.value     = ann.text         || '';
+    if (annJiraProject)  annJiraProject.value    = ann.jiraProject  || '';
+    if (annSlackChannel) annSlackChannel.value   = ann.slackChannel || '';
+    if (annSlackMention) annSlackMention.value   = ann.slackMention || '';
+    if (annFigmaUrl)     annFigmaUrl.value       = ann.figmaUrl     || '';
+    if (annJiraResult) {
+      if (ann.jiraKey) {
+        annJiraResult.textContent = ann.jiraKey;
+        annJiraResult.href = `https://jira.corp.adobe.com/browse/${ann.jiraKey}`;
+        annJiraResult.removeAttribute('hidden');
+      } else {
+        annJiraResult.setAttribute('hidden', '');
+      }
+    }
+    // Render image thumbnails
+    renderThumbs(ann);
+    // Hide Figma frame when switching annotations
+    if (annFigmaFrame) annFigmaFrame.hidden = true;
+    if (annFigmaIframe) annFigmaIframe.src = '';
+  }
+
+  function renderThumbs(ann) {
+    if (!annThumbs || !ann) return;
+    annThumbs.innerHTML = '';
+    (ann.images || []).forEach((img, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'ann-thumb-wrap';
+      const el = document.createElement('img');
+      el.className = 'ann-thumb';
+      el.src = img.dataUrl;
+      el.title = img.name || 'image';
+      const del = document.createElement('button');
+      del.className = 'ann-thumb-del';
+      del.textContent = '✕';
+      del.title = 'Remove';
+      del.addEventListener('click', e => {
+        e.stopPropagation();
+        ann.images.splice(idx, 1);
+        renderThumbs(ann);
+      });
+      wrap.appendChild(el);
+      wrap.appendChild(del);
+      annThumbs.appendChild(wrap);
+    });
   }
 
   // ── Overlay mouse interactions ─────────────────────────────────────────────
@@ -5567,78 +5645,132 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   let boxStartY   = 0;
   let boxEl       = null;
 
+  // Draw tool state
+  let drawingStroke  = false;
+  let activeDrawAnn  = null;
+  let currentPolyline = null;
+  let strokePoints    = [];
+
+  function svgCoords(e) {
+    const rect = annOverlay.getBoundingClientRect();
+    return [
+      (e.clientX - rect.left) / rect.width  * 100,
+      (e.clientY - rect.top)  / rect.height * 100,
+    ];
+  }
+
+  function renderDrawStrokes(ann) {
+    if (!drawSvg) return;
+    drawSvg.querySelectorAll(`[data-ann-id="${ann.id}"]`).forEach(el => el.remove());
+    (ann.strokes || []).forEach((stroke, si) => {
+      const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      pl.setAttribute('points', stroke.points.map(p => p.join(',')).join(' '));
+      pl.setAttribute('stroke', stroke.color || '#ff3b30');
+      pl.setAttribute('stroke-width', '0.6');
+      pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke-linecap', 'round');
+      pl.setAttribute('stroke-linejoin', 'round');
+      pl.setAttribute('data-ann-id', ann.id);
+      pl.setAttribute('data-stroke-idx', si);
+      pl.style.pointerEvents = 'stroke';
+      pl.addEventListener('click', ev => {
+        if (activeTool === 'draw') return;
+        ev.stopPropagation();
+        selectAnnotation(ann.id);
+      });
+      drawSvg.appendChild(pl);
+    });
+  }
+
   annOverlay.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
-    const rect   = annOverlay.getBoundingClientRect();
-    const fracX  = (e.clientX - rect.left) / rect.width  * 100;
-    const fracY  = (e.clientY - rect.top)  / rect.height * 100;
+    const [fracX, fracY] = svgCoords(e);
+
+    const onCanvas = e.target === annOverlay || e.target === drawSvg || e.target.closest?.('.draw-svg');
 
     if (activeTool === 'pin') {
-      if (e.target !== annOverlay) return;
+      if (!onCanvas) return;
       const ann = addAnnotation('pin', fracX, fracY);
       selectAnnotation(ann.id);
 
     } else if (activeTool === 'box') {
-      if (e.target !== annOverlay) return;
+      if (!onCanvas) return;
       boxDrawing = true;
       boxStartX  = fracX;
       boxStartY  = fracY;
-
       boxEl = document.createElement('div');
       boxEl.className = 'ann-dot ann-dot--box ann-dot--drawing';
       boxEl.style.cssText = `left:${fracX}%;top:${fracY}%;width:0%;height:0%;`;
       annOverlay.appendChild(boxEl);
 
-    } else if (activeTool === 'text') {
-      if (e.target !== annOverlay) return;
-      const ann = addAnnotation('text', fracX, fracY);
-      selectAnnotation(ann.id);
-      if (annDetailText) setTimeout(() => annDetailText.focus(), 50);
-
-    } else if (activeTool === 'image') {
-      if (e.target !== annOverlay) return;
-      const ann = addAnnotation('image', fracX, fracY);
-      selectAnnotation(ann.id);
-      pendingImageId = ann.id;
-      if (annFileInput) annFileInput.click();
+    } else if (activeTool === 'draw') {
+      drawingStroke = true;
+      strokePoints  = [[fracX, fracY]];
+      // Start or continue the active draw annotation
+      if (!activeDrawAnn) {
+        activeDrawAnn = addAnnotation('draw', fracX, fracY);
+        selectAnnotation(activeDrawAnn.id);
+      }
+      // Create live polyline
+      currentPolyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      currentPolyline.setAttribute('points', `${fracX},${fracY}`);
+      currentPolyline.setAttribute('stroke', drawColor);
+      currentPolyline.setAttribute('stroke-width', '0.6');
+      currentPolyline.setAttribute('fill', 'none');
+      currentPolyline.setAttribute('stroke-linecap', 'round');
+      currentPolyline.setAttribute('stroke-linejoin', 'round');
+      currentPolyline.setAttribute('data-ann-id', activeDrawAnn.id);
+      currentPolyline.style.pointerEvents = 'none';
+      if (drawSvg) drawSvg.appendChild(currentPolyline);
     }
   });
 
   annOverlay.addEventListener('mousemove', e => {
-    if (!boxDrawing || !boxEl) return;
-    const rect  = annOverlay.getBoundingClientRect();
-    const fracX = (e.clientX - rect.left) / rect.width  * 100;
-    const fracY = (e.clientY - rect.top)  / rect.height * 100;
-    const x = Math.min(fracX, boxStartX);
-    const y = Math.min(fracY, boxStartY);
-    const w = Math.abs(fracX - boxStartX);
-    const h = Math.abs(fracY - boxStartY);
-    boxEl.style.left   = `${x}%`;
-    boxEl.style.top    = `${y}%`;
-    boxEl.style.width  = `${w}%`;
-    boxEl.style.height = `${h}%`;
+    if (boxDrawing && boxEl) {
+      const rect  = annOverlay.getBoundingClientRect();
+      const fracX = (e.clientX - rect.left) / rect.width  * 100;
+      const fracY = (e.clientY - rect.top)  / rect.height * 100;
+      const x = Math.min(fracX, boxStartX);
+      const y = Math.min(fracY, boxStartY);
+      boxEl.style.left   = `${Math.min(fracX, boxStartX)}%`;
+      boxEl.style.top    = `${Math.min(fracY, boxStartY)}%`;
+      boxEl.style.width  = `${Math.abs(fracX - boxStartX)}%`;
+      boxEl.style.height = `${Math.abs(fracY - boxStartY)}%`;
+    }
+    if (drawingStroke && currentPolyline) {
+      const [fx, fy] = svgCoords(e);
+      strokePoints.push([fx, fy]);
+      // Thin down points for performance (every other point)
+      if (strokePoints.length % 2 === 0) {
+        currentPolyline.setAttribute('points',
+          strokePoints.map(p => p.join(',')).join(' '));
+      }
+    }
   });
 
   annOverlay.addEventListener('mouseup', e => {
-    if (!boxDrawing || !boxEl) return;
-    boxDrawing = false;
+    if (boxDrawing && boxEl) {
+      const h = Math.abs(fracY - boxStartY);
+      boxEl.remove();
+      boxEl = null;
+      if (w > 1 && h > 1) {
+        const ann = addAnnotation('box', x, y, w, h);
+        selectAnnotation(ann.id);
+      }
+    }
 
-    const rect  = annOverlay.getBoundingClientRect();
-    const fracX = (e.clientX - rect.left) / rect.width  * 100;
-    const fracY = (e.clientY - rect.top)  / rect.height * 100;
-    const x = Math.min(fracX, boxStartX);
-    const y = Math.min(fracY, boxStartY);
-    const w = Math.abs(fracX - boxStartX);
-    const h = Math.abs(fracY - boxStartY);
-
-    boxEl.remove();
-    boxEl = null;
-
-    if (w > 1 && h > 1) {
-      const ann   = addAnnotation('box', x, y, w, h);
-      // The renderDot already added the dot; but we need to update its badge
-      // (it was already added via addAnnotation → renderDot)
-      selectAnnotation(ann.id);
+    if (drawingStroke && currentPolyline && activeDrawAnn) {
+      drawingStroke = false;
+      // Simplify: keep every 3rd point to reduce data size
+      const simplified = strokePoints.filter((_, i) => i % 3 === 0 || i === strokePoints.length - 1);
+      if (simplified.length > 1) {
+        activeDrawAnn.strokes.push({ points: simplified, color: drawColor });
+        renderDrawStrokes(activeDrawAnn);
+      } else {
+        currentPolyline.remove();
+      }
+      currentPolyline = null;
+      strokePoints    = [];
     }
   });
 
@@ -5652,42 +5784,347 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     });
   }
 
-  if (annJira) {
-    annJira.addEventListener('input', () => {
+  if (annJiraProject) {
+    annJiraProject.addEventListener('change', () => {
       const ann = getAnnotation(selectedId);
-      if (!ann) return;
-      ann.jira = annJira.value;
+      if (ann) ann.jiraProject = annJiraProject.value;
     });
   }
 
-  if (annSlack) {
-    annSlack.addEventListener('input', () => {
+  if (annSlackChannel) {
+    annSlackChannel.addEventListener('change', () => {
       const ann = getAnnotation(selectedId);
-      if (!ann) return;
-      ann.slack = annSlack.value;
+      if (ann) ann.slackChannel = annSlackChannel.value;
     });
   }
 
-  if (annJiraBtn) {
-    annJiraBtn.addEventListener('click', () => {
-      const ann = getAnnotation(selectedId);
-      if (!ann || !ann.jira) return;
-      window.open('https://jira.corp.adobe.com/browse/' + ann.jira.trim(), '_blank');
-    });
+  // ── Recipient combobox (localStorage-backed) ──────────────────────────────
+  const RECIPIENTS_KEY = 'ann-recipients';
+
+  function loadRecipients() {
+    try { return JSON.parse(localStorage.getItem(RECIPIENTS_KEY) || '[]'); } catch { return []; }
+  }
+  function saveRecipient(name) {
+    const clean = name.replace(/^@/, '').trim();
+    if (!clean) return;
+    const list = loadRecipients().filter(n => n !== clean);
+    list.unshift(clean);
+    localStorage.setItem(RECIPIENTS_KEY, JSON.stringify(list.slice(0, 20)));
+  }
+  function removeRecipient(name) {
+    const list = loadRecipients().filter(n => n !== name);
+    localStorage.setItem(RECIPIENTS_KEY, JSON.stringify(list));
   }
 
-  if (annSlackBtn) {
-    annSlackBtn.addEventListener('click', () => {
-      const ann = getAnnotation(selectedId);
-      if (!ann) return;
-      const ticket  = (ann.jira  || '').trim();
-      const message = (ann.slack || '').trim();
-      const combined = ticket ? `[${ticket}] ${message}` : message;
-      navigator.clipboard.writeText(combined).then(() => {
-        const orig = annSlackBtn.textContent;
-        annSlackBtn.textContent = '✓';
-        setTimeout(() => { annSlackBtn.textContent = orig; }, 1400);
+  function renderRecipientDropdown(filter) {
+    if (!annRecipientDropdown) return;
+    const all  = loadRecipients();
+    const q    = (filter || '').replace(/^@/, '').toLowerCase();
+    const matches = q ? all.filter(n => n.toLowerCase().includes(q)) : all;
+    annRecipientDropdown.innerHTML = '';
+    matches.forEach(name => {
+      const row = document.createElement('div');
+      row.className = 'ann-recipient-item';
+      const label = document.createElement('span');
+      label.textContent = '@' + name;
+      const del = document.createElement('button');
+      del.className = 'ann-recipient-del';
+      del.textContent = '✕';
+      del.title = 'Remove from list';
+      del.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        removeRecipient(name);
+        renderRecipientDropdown(annSlackMention?.value);
       });
+      row.appendChild(label);
+      row.appendChild(del);
+      row.addEventListener('mousedown', ev => {
+        ev.preventDefault();
+        if (annSlackMention) annSlackMention.value = '@' + name;
+        const ann = getAnnotation(selectedId);
+        if (ann) ann.slackMention = '@' + name;
+        annRecipientDropdown.hidden = true;
+      });
+      annRecipientDropdown.appendChild(row);
+    });
+    // "Add" option when typed name isn't saved yet
+    const typed = (annSlackMention?.value || '').replace(/^@/, '').trim();
+    if (typed && !all.includes(typed)) {
+      const addRow = document.createElement('div');
+      addRow.className = 'ann-recipient-item ann-recipient-item--add';
+      addRow.textContent = `Save "@${typed}"`;
+      addRow.addEventListener('mousedown', ev => {
+        ev.preventDefault();
+        saveRecipient(typed);
+        renderRecipientDropdown('');
+      });
+      annRecipientDropdown.appendChild(addRow);
+    }
+    annRecipientDropdown.hidden = annRecipientDropdown.children.length === 0;
+  }
+
+  if (annSlackMention) {
+    annSlackMention.addEventListener('input', () => {
+      const ann = getAnnotation(selectedId);
+      if (ann) ann.slackMention = annSlackMention.value;
+      renderRecipientDropdown(annSlackMention.value);
+    });
+    annSlackMention.addEventListener('focus', () => {
+      renderRecipientDropdown(annSlackMention.value);
+    });
+    annSlackMention.addEventListener('blur', () => {
+      // Save if something is typed
+      const typed = annSlackMention.value.replace(/^@/, '').trim();
+      if (typed) saveRecipient(typed);
+      setTimeout(() => { if (annRecipientDropdown) annRecipientDropdown.hidden = true; }, 150);
+    });
+    annSlackMention.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const typed = annSlackMention.value.replace(/^@/, '').trim();
+        if (typed) { saveRecipient(typed); renderRecipientDropdown(''); }
+        annSlackMention.blur();
+      }
+      if (e.key === 'Escape') { annRecipientDropdown.hidden = true; annSlackMention.blur(); }
+    });
+  }
+
+  // ── Figma URL + preview ────────────────────────────────────────────────────
+  if (annFigmaUrl) {
+    annFigmaUrl.addEventListener('input', () => {
+      const ann = getAnnotation(selectedId);
+      if (ann) ann.figmaUrl = annFigmaUrl.value;
+    });
+  }
+
+  if (annFigmaPreviewBtn) {
+    annFigmaPreviewBtn.addEventListener('click', () => {
+      if (!annFigmaFrame || !annFigmaIframe) return;
+      const ann = getAnnotation(selectedId);
+      const url = (ann?.figmaUrl || annFigmaUrl?.value || '').trim();
+      if (!url) return;
+      if (annFigmaFrame.hidden) {
+        const embedUrl = `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
+        annFigmaIframe.src = embedUrl;
+        annFigmaFrame.hidden = false;
+      } else {
+        annFigmaFrame.hidden = true;
+        annFigmaIframe.src = '';
+      }
+    });
+  }
+
+  if (annFigmaClose) {
+    annFigmaClose.addEventListener('click', () => {
+      if (annFigmaFrame) annFigmaFrame.hidden = true;
+      if (annFigmaIframe) annFigmaIframe.src = '';
+    });
+  }
+
+  // ── Image attach ───────────────────────────────────────────────────────────
+  if (annAttachBtn) {
+    annAttachBtn.addEventListener('click', () => {
+      if (annFileInput) annFileInput.click();
+    });
+  }
+
+  if (annFileInput) {
+    annFileInput.addEventListener('change', () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann || !annFileInput.files.length) return;
+      const file = annFileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = ev => {
+        ann.images = ann.images || [];
+        ann.images.push({ dataUrl: ev.target.result, name: file.name });
+        renderThumbs(ann);
+      };
+      reader.readAsDataURL(file);
+      annFileInput.value = '';
+    });
+  }
+
+  // Switching away from draw tool finalises the current annotation session
+  if (appDock) {
+    appDock.addEventListener('click', e => {
+      const btn = e.target.closest('.ann-tool');
+      if (btn && btn.dataset.tool !== 'draw') {
+        activeDrawAnn = null; // next draw starts a fresh annotation
+      }
+    });
+  }
+
+  // ── Screenshot helpers ─────────────────────────────────────────────────────
+  function loadH2C() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.crossOrigin = 'anonymous';
+      s.onload  = () => resolve(window.html2canvas);
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function captureScreenshots(ann) {
+    const h2c = await loadH2C();
+    const toHide = [...document.querySelectorAll('.pw-panel, .comment-panel, #annOverlay')];
+    toHide.forEach(el => { el.style.visibility = 'hidden'; });
+    let canvas;
+    try {
+      canvas = await h2c(document.documentElement, {
+        useCORS: true, allowTaint: true,
+        scale: Math.min(window.devicePixelRatio || 1, 2),
+        logging: false,
+      });
+    } finally {
+      toHide.forEach(el => { el.style.visibility = ''; });
+    }
+
+    const fullDataUrl = canvas.toDataURL('image/png');
+
+    // Crop around annotation pin / box
+    const overlay = document.getElementById('annOverlay');
+    const r   = overlay ? overlay.getBoundingClientRect()
+                        : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let cx, cy, cw, ch;
+    if (ann.type === 'box') {
+      const pad = 40 * dpr;
+      cx = Math.max(0, (ann.x / 100 * r.width  + r.left) * dpr - pad);
+      cy = Math.max(0, (ann.y / 100 * r.height + r.top)  * dpr - pad);
+      cw = Math.min(canvas.width  - cx, ann.w / 100 * r.width  * dpr + pad * 2);
+      ch = Math.min(canvas.height - cy, ann.h / 100 * r.height * dpr + pad * 2);
+    } else {
+      const half = 200 * dpr;
+      cx = Math.max(0, (ann.x / 100 * r.width  + r.left) * dpr - half);
+      cy = Math.max(0, (ann.y / 100 * r.height + r.top)  * dpr - half);
+      cw = Math.min(half * 2, canvas.width  - cx);
+      ch = Math.min(half * 2, canvas.height - cy);
+    }
+    const crop = document.createElement('canvas');
+    crop.width = cw; crop.height = ch;
+    crop.getContext('2d').drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
+    const cropDataUrl = crop.toDataURL('image/png');
+
+    return { fullDataUrl, cropDataUrl };
+  }
+
+  // ── Jira: create ticket + attach screenshots ───────────────────────────────
+  if (annJiraBtn) {
+    annJiraBtn.addEventListener('click', async () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann) return;
+      const project = (ann.jiraProject || '').trim();
+      if (!project) {
+        annJiraProject?.classList.add('ann-select--error');
+        setTimeout(() => annJiraProject?.classList.remove('ann-select--error'), 900);
+        return;
+      }
+
+      annJiraBtn.disabled = true;
+      const origHTML = annJiraBtn.innerHTML;
+      annJiraBtn.innerHTML = '<span style="font-size:9px;line-height:1">…</span>';
+
+      try {
+        const { fullDataUrl, cropDataUrl } = await captureScreenshots(ann);
+
+        const summary     = (ann.text || '').trim() || `Annotation #${ann.id} — ${document.title}`;
+        const figmaLine   = ann.figmaUrl ? `\n\n*Figma:* ${ann.figmaUrl}` : '';
+        const description = `*Comment:* ${ann.text || '(none)'}${figmaLine}\n\nPage: ${window.location.href}`;
+
+        const createResp = await fetch('/api/jira', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project, summary, description }),
+        });
+        const createData = await createResp.json();
+        if (!createResp.ok) throw new Error(createData.error || 'Jira error');
+
+        ann.jiraKey = createData.key;
+        if (annJiraResult) {
+          annJiraResult.textContent = createData.key;
+          annJiraResult.href = createData.url;
+          annJiraResult.removeAttribute('hidden');
+        }
+
+        // Attach screenshots + any user-attached images (fire-and-forget)
+        const attachQueue = [
+          { filename: 'page.png',       data: fullDataUrl },
+          { filename: 'annotation.png', data: cropDataUrl },
+          ...(ann.images || []).map((img, i) => ({ filename: img.name || `image-${i}.png`, data: img.dataUrl })),
+        ];
+        Promise.all(attachQueue.map(a => fetch('/api/jira-attach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ issueKey: createData.key, ...a }),
+        }))).catch(console.error);
+
+        annJiraBtn.innerHTML = origHTML;
+        annJiraBtn.style.color = 'rgba(34,197,94,1)';
+        setTimeout(() => { annJiraBtn.style.color = ''; }, 1800);
+      } catch (e) {
+        console.error('Jira create failed:', e);
+        annJiraBtn.innerHTML = origHTML;
+        annJiraBtn.style.color = 'rgba(239,68,68,1)';
+        setTimeout(() => { annJiraBtn.style.color = ''; }, 2200);
+      } finally {
+        annJiraBtn.disabled = false;
+      }
+    });
+  }
+
+  // ── Slack: post message ────────────────────────────────────────────────────
+  if (annSlackBtn) {
+    annSlackBtn.addEventListener('click', async () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann) return;
+      const channel = (ann.slackChannel || '').trim();
+      if (!channel) {
+        annSlackChannel?.classList.add('ann-select--error');
+        setTimeout(() => annSlackChannel?.classList.remove('ann-select--error'), 900);
+        return;
+      }
+
+      annSlackBtn.disabled = true;
+      const origHTML = annSlackBtn.innerHTML;
+      annSlackBtn.innerHTML = '<span style="font-size:9px;line-height:1">…</span>';
+
+      try {
+        const mention   = (ann.slackMention || '').trim().replace(/^@/, '');
+        const atPart    = mention ? `@${mention} ` : '';
+        const figmaPart = ann.figmaUrl ? `\n*Figma:* ${ann.figmaUrl}` : '';
+        const imgCount  = (ann.images || []).length;
+        const imgPart   = imgCount ? `\n_${imgCount} image${imgCount > 1 ? 's' : ''} attached to Jira ticket_` : '';
+        const body      = ann.text || '';
+        const text = `${atPart}*Annotation #${ann.id}${body ? ':* ' + body : '*'}` +
+                     `\n${window.location.href}${figmaPart}${imgPart}`;
+
+        const resp = await fetch('/api/slack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channel,
+            text,
+            jiraKey: ann.jiraKey || '',
+            jiraUrl: ann.jiraKey ? `https://jira.corp.adobe.com/browse/${ann.jiraKey}` : '',
+          }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Slack error');
+
+        annSlackBtn.innerHTML = origHTML;
+        annSlackBtn.style.color = 'rgba(34,197,94,1)';
+        setTimeout(() => { annSlackBtn.style.color = ''; }, 1800);
+      } catch (e) {
+        console.error('Slack send failed:', e);
+        annSlackBtn.innerHTML = origHTML;
+        annSlackBtn.style.color = 'rgba(239,68,68,1)';
+        setTimeout(() => { annSlackBtn.style.color = ''; }, 2200);
+      } finally {
+        annSlackBtn.disabled = false;
+      }
     });
   }
 
@@ -5700,24 +6137,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       if (annList)    annList.innerHTML = '';
       if (annDetailSec) annDetailSec.setAttribute('hidden', '');
       syncEmpty();
-    });
-  }
-
-  if (annFileInput) {
-    annFileInput.addEventListener('change', () => {
-      const file = annFileInput.files && annFileInput.files[0];
-      if (!file || pendingImageId === null) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const ann = getAnnotation(pendingImageId);
-        if (ann) {
-          ann.imageDataUrl = ev.target.result;
-          updateDot(ann);
-        }
-        pendingImageId = null;
-      };
-      reader.readAsDataURL(file);
-      annFileInput.value = '';
     });
   }
 

@@ -1019,34 +1019,40 @@
   </header>
   <div class="pw-panel__body pw-panel__body--scroll" id="commentBody">
 
-    <!-- Tool palette -->
+    <!-- Tool palette: Pin · Box · Draw -->
     <div class="ann-tools">
-      <button class="ann-tool ann-tool--on" data-tool="pin" title="Drop pin">
+      <button class="ann-tool ann-tool--on" data-tool="pin" title="Drop tag">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
           <circle cx="7" cy="6" r="3"/><line x1="7" y1="9" x2="7" y2="13.5"/>
         </svg>
-        <span>Pin</span>
+        <span>Tag</span>
       </button>
-      <button class="ann-tool" data-tool="box" title="Draw box">
+      <button class="ann-tool" data-tool="box" title="Group region">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2.5 2" aria-hidden="true">
           <rect x="1.5" y="1.5" width="11" height="11" rx="1.5"/>
         </svg>
-        <span>Box</span>
+        <span>Group</span>
       </button>
-      <button class="ann-tool" data-tool="text" title="Text note">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-          <line x1="3" y1="3" x2="11" y2="3"/><line x1="7" y1="3" x2="7" y2="11"/>
-        </svg>
-        <span>Text</span>
-      </button>
-      <button class="ann-tool" data-tool="image" title="Pin image">
+      <button class="ann-tool" data-tool="draw" title="Freehand draw">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="1.5" y="2.5" width="11" height="9" rx="1.5"/>
-          <polyline points="1.5,8.5 4.5,6 7,8 9.5,5.5 12.5,8.5"/>
-          <circle cx="10" cy="5" r="1"/>
+          <path d="M2 10 C3 7 5 5 7 6 C9 7 10 5 11 3"/>
+          <circle cx="11.5" cy="2.5" r="1" fill="currentColor" stroke="none"/>
         </svg>
-        <span>Image</span>
+        <span>Draw</span>
       </button>
+    </div>
+
+    <!-- Color picker row — shown when Draw tool is active -->
+    <div class="ann-colors" id="annColors" hidden>
+      <button class="ann-color-swatch ann-color-swatch--on" data-color="#ff3b30" style="background:#ff3b30" title="Red"></button>
+      <button class="ann-color-swatch" data-color="#ff9500" style="background:#ff9500" title="Orange"></button>
+      <button class="ann-color-swatch" data-color="#ffcc00" style="background:#ffcc00" title="Yellow"></button>
+      <button class="ann-color-swatch" data-color="#30d158" style="background:#30d158" title="Green"></button>
+      <button class="ann-color-swatch" data-color="#0066ff" style="background:#0066ff" title="Blue"></button>
+      <button class="ann-color-swatch" data-color="#bf5af2" style="background:#bf5af2" title="Purple"></button>
+      <label class="ann-color-custom" title="Custom color">
+        <input type="color" id="annColorCustom" value="#ff3b30">
+      </label>
     </div>
     <input type="file" id="annFileInput" accept="image/*" style="display:none">
 
@@ -1061,25 +1067,80 @@
         <span class="pw-sec__label">COMMENT <span id="annDetailLabel">#1</span></span>
       </div>
       <div class="pw-sec__body ann-detail-body">
-        <textarea class="pw-textinput ann-comment-ta" id="annDetailText" rows="3" placeholder="Leave a comment…"></textarea>
-        <div class="ann-int-row">
-          <span class="pw-key">JIRA</span>
-          <input class="pw-textinput" id="annJira" placeholder="PROJ-123">
-          <button class="ann-int-btn" id="annJiraBtn" title="Open in Jira">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-              <path d="M2 8L8 2M5 2h3v3"/>
+        <textarea class="pw-textinput ann-comment-ta" id="annDetailText" rows="5" placeholder="Leave a comment…"></textarea>
+
+        <!-- Attach image -->
+        <div class="ann-attach-row">
+          <button class="ann-attach-btn" id="annAttachBtn" title="Attach image">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="1" y="2" width="10" height="8" rx="1.2"/>
+              <polyline points="1,7.5 3.5,5 5.5,7 7.5,4.5 11,7.5"/>
+              <circle cx="8.5" cy="4" r="0.8" fill="currentColor" stroke="none"/>
+            </svg>
+            <span>Attach image</span>
+          </button>
+          <div class="ann-thumbs" id="annThumbs"></div>
+        </div>
+
+        <!-- Figma link -->
+        <div class="ann-int-row ann-int-row--figma">
+          <span class="pw-key">FIG</span>
+          <input class="pw-textinput" id="annFigmaUrl" placeholder="Figma URL…">
+          <button class="ann-int-btn ann-int-btn--figma" id="annFigmaPreviewBtn" title="Preview Figma">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+              <ellipse cx="5.5" cy="5.5" rx="4.5" ry="3"/><circle cx="5.5" cy="5.5" r="1.3"/>
             </svg>
           </button>
         </div>
+        <!-- Figma inline preview iframe -->
+        <div class="ann-figma-frame" id="annFigmaFrame" hidden>
+          <iframe id="annFigmaIframe" src="" allowfullscreen></iframe>
+          <button class="ann-figma-close" id="annFigmaClose" title="Close preview">✕</button>
+        </div>
+
+        <!-- JIRA -->
         <div class="ann-int-row">
-          <span class="pw-key">SLACK</span>
-          <input class="pw-textinput" id="annSlack" placeholder="#channel message">
-          <button class="ann-int-btn" id="annSlackBtn" title="Copy to clipboard">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-              <rect x="1" y="3" width="7" height="7" rx="1.2"/>
-              <path d="M3 3V2a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1H9"/>
+          <span class="pw-key">JIRA</span>
+          <select class="pw-select ann-select" id="annJiraProject">
+            <option value="">Project…</option>
+            <option value="MKTG">MKTG</option>
+            <option value="MILO">MILO</option>
+            <option value="FROND">FROND</option>
+            <option value="JAM">JAM</option>
+            <option value="ACOM">ACOM</option>
+            <option value="MWPW">MWPW</option>
+          </select>
+          <button class="ann-int-btn ann-int-btn--jira" id="annJiraBtn" title="Create Jira ticket + attach screenshots">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+              <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
             </svg>
           </button>
+        </div>
+        <a class="ann-ticket-link" id="annJiraResult" href="#" target="_blank" hidden></a>
+
+        <!-- SLACK — channel + recipient combined -->
+        <div class="ann-slack-group">
+          <div class="ann-int-row">
+            <span class="pw-key">SLACK</span>
+            <select class="pw-select ann-select" id="annSlackChannel">
+              <option value="">Channel…</option>
+              <option value="#jam-feedback">#jam-feedback</option>
+              <option value="#mktg-reviews">#mktg-reviews</option>
+              <option value="#acom-web">#acom-web</option>
+              <option value="#design-reviews">#design-reviews</option>
+              <option value="#web-reviews">#web-reviews</option>
+            </select>
+            <button class="ann-int-btn ann-int-btn--slack" id="annSlackBtn" title="Send to Slack">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="11,1 1,6 11,1"/><polyline points="11,1 7,11 4.5,6.5 11,1"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Recipient combobox — saves to localStorage -->
+          <div class="ann-recipient-wrap">
+            <input class="pw-textinput ann-recipient-input" id="annSlackMention" placeholder="Add recipient…" autocomplete="off" spellcheck="false">
+            <div class="ann-recipient-dropdown" id="annRecipientDropdown" hidden></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1093,7 +1154,9 @@
 </div>
 
 <!-- ─── Annotation overlay ────────────────────────────────── -->
-<div class="ann-overlay" id="annOverlay" hidden></div>
+<div class="ann-overlay" id="annOverlay" hidden>
+  <svg id="drawSvg" class="draw-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+</div>
 
 <canvas id="globalCanvas"></canvas>
 <script src="main.js"></script>
