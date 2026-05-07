@@ -316,9 +316,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   // ── Slider fill track ────────────────────────────────────
   function updateTrack(input) {
     const panel = input.closest('.pw-panel');
-    const dark  = !panel?.classList.contains('pw-panel--newb');
-    const fill  = dark ? 'rgba(255,255,255,0.60)' : 'rgba(0,0,0,0.42)';
-    const fill0 = dark ? 'rgba(255,255,255,0)'    : 'rgba(0,0,0,0)';
+    const dark  = !document.documentElement.classList.contains('theme-light');
+    const fill  = dark ? 'rgba(255,255,255,0.60)' : 'rgba(0,102,255,0.75)';
+    const fill0 = dark ? 'rgba(255,255,255,0)'    : 'rgba(0,102,255,0)';
     const min = +input.min, max = +input.max, val = +input.value;
     const ratio = Math.max(0, Math.min(1, (val - min) / (max - min)));
 
@@ -1115,18 +1115,16 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     chip.style.background = '#000000';
   }());
 
-  // ── Pro / Newb toggle ────────────────────────────────────
+  // ── Pro / Light mode toggle ──────────────────────────────
   const modeToggle = document.getElementById('modeToggle');
 
   function setMode(mode) {
-    const isPro = mode === 'pro';
-    modeToggle?.classList.toggle('mode-toggle--newb', !isPro);
+    const isLight = mode === 'light';
+    modeToggle?.classList.toggle('mode-toggle--light', isLight);
     document.querySelectorAll('.mode-toggle__opt').forEach(btn => {
       btn.classList.toggle('mode-toggle__opt--on', btn.dataset.mode === mode);
     });
-    [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel].forEach(p => {
-      p?.classList.toggle('pw-panel--newb', !isPro);
-    });
+    document.documentElement.classList.toggle('theme-light', isLight);
     document.querySelectorAll('.pw-panel .pw-range').forEach(r => updateTrack(r));
   }
 
@@ -5251,3 +5249,497 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   window.addEventListener('resize', update, { passive: true });
   update();
 })();
+
+// ═══ ANNOTATION SYSTEM
+{
+  const OPEN_EASE  = 'cubic-bezier(0.16,1,0.3,1)';
+  const CLOSE_EASE = 'cubic-bezier(0.4,0,1,1)';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let annotations    = [];
+  let nextId         = 1;
+  let selectedId     = null;
+  let activeTool     = 'pin';
+  let inCommentMode  = false;
+  let wasVisible     = true;   // panelsVisible value when we entered comment mode
+  let pendingImageId = null;
+
+  // ── Element refs ───────────────────────────────────────────────────────────
+  const commentTog    = document.getElementById('commentTog');
+  const commentClose  = document.getElementById('commentClose');
+  const commentPanel  = document.getElementById('commentPanel');
+  const annOverlay    = document.getElementById('annOverlay');
+  const annList       = document.getElementById('annList');
+  const annEmpty      = document.getElementById('annEmpty');
+  const annDetailSec  = document.getElementById('annDetailSec');
+  const annDetailLabel= document.getElementById('annDetailLabel');
+  const annDetailText = document.getElementById('annDetailText');
+  const annJira       = document.getElementById('annJira');
+  const annSlack      = document.getElementById('annSlack');
+  const annJiraBtn    = document.getElementById('annJiraBtn');
+  const annSlackBtn   = document.getElementById('annSlackBtn');
+  const annClear      = document.getElementById('annClear');
+  const annFileInput  = document.getElementById('annFileInput');
+  const modeToggle    = document.getElementById('modeToggle');
+  const pubCluster    = document.getElementById('pubCluster');
+  const appDock       = document.getElementById('appDock');
+
+  // Guard: bail early if required elements are missing
+  if (!commentTog || !annOverlay) {
+    // annotation UI not present in this build
+  } else {
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function allPanels() {
+    return Array.from(document.querySelectorAll('.pw-panel'));
+  }
+
+  function applyTransition(el, props, duration, ease, delay) {
+    if (!el) return;
+    const ms  = duration || 240;
+    const dlm = delay   || 0;
+    el.style.transition = `opacity ${ms}ms ${ease} ${dlm}ms, transform ${ms}ms ${ease} ${dlm}ms`;
+    Object.assign(el.style, props);
+  }
+
+  function fadeHideEl(el, delay) {
+    if (!el) return;
+    applyTransition(el,
+      { opacity: '0', transform: 'translateX(300px)', pointerEvents: 'none' },
+      220, CLOSE_EASE, delay || 0);
+  }
+
+  function fadeShowEl(el, delay) {
+    if (!el) return;
+    el.style.pointerEvents = 'auto';
+    // Prime from off-left so it slides in
+    const current = el.style.transform;
+    if (!current || current === 'none' || current === '') {
+      el.style.transition = 'none';
+      el.style.transform  = 'translateX(-300px)';
+      el.style.opacity    = '0';
+      // force reflow
+      void el.offsetHeight;
+    }
+    applyTransition(el,
+      { opacity: '1', transform: 'translateX(0px)' },
+      280, OPEN_EASE, delay || 0);
+  }
+
+  function fadeOutSimple(el) {
+    if (!el) return;
+    el.style.transition = `opacity 180ms ${CLOSE_EASE}`;
+    el.style.opacity    = '0';
+    el.style.pointerEvents = 'none';
+  }
+
+  function fadeInSimple(el) {
+    if (!el) return;
+    el.style.transition = `opacity 220ms ${OPEN_EASE}`;
+    el.style.opacity    = '1';
+    el.style.pointerEvents = 'auto';
+  }
+
+  // ── Enter / Exit comment mode ──────────────────────────────────────────────
+  function enterCommentMode() {
+    if (inCommentMode) return;
+    inCommentMode = true;
+    wasVisible    = panelsVisible;
+
+    commentTog && commentTog.classList.add('comment-tog--on');
+
+    // Hide all panels except commentPanel, staggered
+    allPanels().forEach((p, i) => {
+      if (p === commentPanel) return;
+      fadeHideEl(p, i * 40);
+    });
+
+    // Hide modeToggle and pubCluster
+    fadeOutSimple(modeToggle);
+    fadeOutSimple(pubCluster);
+
+    // Show commentPanel after 80ms
+    if (commentPanel) {
+      commentPanel.style.display = '';
+      fadeShowEl(commentPanel, 80);
+    }
+
+    // Show overlay
+    if (annOverlay) annOverlay.removeAttribute('hidden');
+
+    // Default tool
+    setActiveTool('pin');
+  }
+
+  function exitCommentMode() {
+    if (!inCommentMode) return;
+    inCommentMode = false;
+
+    commentTog && commentTog.classList.remove('comment-tog--on');
+
+    // Hide commentPanel
+    fadeHideEl(commentPanel, 0);
+
+    // Hide overlay
+    if (annOverlay) annOverlay.setAttribute('hidden', '');
+
+    // Restore other panels only if panels were visible when we entered
+    if (wasVisible) {
+      allPanels().forEach((p, i) => {
+        if (p === commentPanel) return;
+        fadeShowEl(p, i * 40);
+      });
+      fadeInSimple(modeToggle);
+      fadeInSimple(pubCluster);
+    }
+  }
+
+  // ── Tool selection ─────────────────────────────────────────────────────────
+  function setActiveTool(tool) {
+    activeTool = tool;
+    if (appDock) {
+      appDock.querySelectorAll('.ann-tool').forEach(btn => {
+        btn.classList.toggle('ann-tool--on', btn.dataset.tool === tool);
+      });
+    }
+    if (annOverlay) {
+      const cursors = { pin: 'crosshair', box: 'crosshair', text: 'text', image: 'copy' };
+      annOverlay.style.cursor = cursors[tool] || 'crosshair';
+    }
+  }
+
+  if (appDock) {
+    appDock.addEventListener('click', e => {
+      const btn = e.target.closest('.ann-tool');
+      if (!btn) return;
+      setActiveTool(btn.dataset.tool);
+    });
+  }
+
+  // ── Annotation CRUD ────────────────────────────────────────────────────────
+  function addAnnotation(type, x, y, w, h) {
+    const id  = nextId++;
+    const ann = { id, type, x: x || 0, y: y || 0, w: w || 0, h: h || 0,
+                  text: '', jira: '', slack: '', imageDataUrl: '' };
+    annotations.push(ann);
+    renderDot(ann);
+    renderCard(ann);
+    syncEmpty();
+    return ann;
+  }
+
+  function deleteAnnotation(id) {
+    annotations = annotations.filter(a => a.id !== id);
+    const dot  = annOverlay && annOverlay.querySelector(`[data-ann-id="${id}"]`);
+    if (dot) dot.remove();
+    const card = annList && annList.querySelector(`[data-card-id="${id}"]`);
+    if (card) card.remove();
+    if (selectedId === id) {
+      selectedId = null;
+      if (annDetailSec) annDetailSec.setAttribute('hidden', '');
+    }
+    syncEmpty();
+  }
+
+  function getAnnotation(id) {
+    return annotations.find(a => a.id === id) || null;
+  }
+
+  function syncEmpty() {
+    if (!annEmpty || !annList) return;
+    annEmpty.hidden = annotations.length > 0;
+  }
+
+  // ── Dot rendering ──────────────────────────────────────────────────────────
+  function renderDot(ann) {
+    if (!annOverlay) return;
+    const dot  = document.createElement('div');
+    dot.className = `ann-dot ann-dot--${ann.type}`;
+    dot.dataset.annId = ann.id;
+    dot.style.cssText = `left:${ann.x}%;top:${ann.y}%;` +
+      (ann.type === 'box' ? `width:${ann.w}%;height:${ann.h}%;` : '');
+
+    const badge = document.createElement('span');
+    badge.className    = 'ann-badge';
+    badge.textContent  = ann.id;
+    dot.appendChild(badge);
+
+    dot.addEventListener('click', e => {
+      e.stopPropagation();
+      selectAnnotation(ann.id);
+    });
+
+    annOverlay.appendChild(dot);
+    return dot;
+  }
+
+  function updateDot(ann) {
+    if (!annOverlay) return;
+    const dot = annOverlay.querySelector(`[data-ann-id="${ann.id}"]`);
+    if (!dot) return;
+    if (ann.type === 'image' && ann.imageDataUrl) {
+      let img = dot.querySelector('img.ann-thumb');
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'ann-thumb';
+        dot.appendChild(img);
+      }
+      img.src = ann.imageDataUrl;
+    }
+  }
+
+  // ── Card rendering ─────────────────────────────────────────────────────────
+  function renderCard(ann) {
+    if (!annList) return;
+    const card = document.createElement('div');
+    card.className    = 'ann-card';
+    card.dataset.cardId = ann.id;
+
+    const badge = document.createElement('span');
+    badge.className   = 'ann-card__badge';
+    badge.textContent = ann.id;
+
+    const type = document.createElement('span');
+    type.className   = 'ann-card__type';
+    type.textContent = ann.type.toUpperCase();
+
+    const preview = document.createElement('span');
+    preview.className   = 'ann-card__text';
+    preview.textContent = ann.text ? ann.text.slice(0, 40) : '';
+
+    const del = document.createElement('button');
+    del.className   = 'ann-card__del';
+    del.textContent = '×';
+    del.addEventListener('click', e => {
+      e.stopPropagation();
+      deleteAnnotation(ann.id);
+    });
+
+    card.append(badge, type, preview, del);
+    card.addEventListener('click', () => selectAnnotation(ann.id));
+    annList.appendChild(card);
+    return card;
+  }
+
+  function updateCardPreview(id) {
+    if (!annList) return;
+    const ann  = getAnnotation(id);
+    const card = annList.querySelector(`[data-card-id="${id}"]`);
+    if (!ann || !card) return;
+    const preview = card.querySelector('.ann-card__text');
+    if (preview) preview.textContent = ann.text ? ann.text.slice(0, 40) : '';
+  }
+
+  // ── Selection ──────────────────────────────────────────────────────────────
+  function selectAnnotation(id) {
+    selectedId = id;
+    const ann = getAnnotation(id);
+
+    // Toggle card selection
+    if (annList) {
+      annList.querySelectorAll('.ann-card').forEach(c => {
+        c.classList.toggle('ann-card--selected', parseInt(c.dataset.cardId, 10) === id);
+      });
+    }
+
+    // Toggle dot selection
+    if (annOverlay) {
+      annOverlay.querySelectorAll('.ann-dot').forEach(d => {
+        d.classList.toggle('ann-dot--selected', parseInt(d.dataset.annId, 10) === id);
+      });
+    }
+
+    if (!ann) {
+      if (annDetailSec) annDetailSec.setAttribute('hidden', '');
+      return;
+    }
+
+    if (annDetailSec) annDetailSec.removeAttribute('hidden');
+    if (annDetailLabel) annDetailLabel.textContent = `#${id}`;
+    if (annDetailText) annDetailText.value = ann.text  || '';
+    if (annJira)       annJira.value        = ann.jira  || '';
+    if (annSlack)      annSlack.value       = ann.slack || '';
+  }
+
+  // ── Overlay mouse interactions ─────────────────────────────────────────────
+  let boxDrawing  = false;
+  let boxStartX   = 0;
+  let boxStartY   = 0;
+  let boxEl       = null;
+
+  annOverlay.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    const rect   = annOverlay.getBoundingClientRect();
+    const fracX  = (e.clientX - rect.left) / rect.width  * 100;
+    const fracY  = (e.clientY - rect.top)  / rect.height * 100;
+
+    if (activeTool === 'pin') {
+      if (e.target !== annOverlay) return;
+      const ann = addAnnotation('pin', fracX, fracY);
+      selectAnnotation(ann.id);
+
+    } else if (activeTool === 'box') {
+      if (e.target !== annOverlay) return;
+      boxDrawing = true;
+      boxStartX  = fracX;
+      boxStartY  = fracY;
+
+      boxEl = document.createElement('div');
+      boxEl.className = 'ann-dot ann-dot--box ann-dot--drawing';
+      boxEl.style.cssText = `left:${fracX}%;top:${fracY}%;width:0%;height:0%;`;
+      annOverlay.appendChild(boxEl);
+
+    } else if (activeTool === 'text') {
+      if (e.target !== annOverlay) return;
+      const ann = addAnnotation('text', fracX, fracY);
+      selectAnnotation(ann.id);
+      if (annDetailText) setTimeout(() => annDetailText.focus(), 50);
+
+    } else if (activeTool === 'image') {
+      if (e.target !== annOverlay) return;
+      const ann = addAnnotation('image', fracX, fracY);
+      selectAnnotation(ann.id);
+      pendingImageId = ann.id;
+      if (annFileInput) annFileInput.click();
+    }
+  });
+
+  annOverlay.addEventListener('mousemove', e => {
+    if (!boxDrawing || !boxEl) return;
+    const rect  = annOverlay.getBoundingClientRect();
+    const fracX = (e.clientX - rect.left) / rect.width  * 100;
+    const fracY = (e.clientY - rect.top)  / rect.height * 100;
+    const x = Math.min(fracX, boxStartX);
+    const y = Math.min(fracY, boxStartY);
+    const w = Math.abs(fracX - boxStartX);
+    const h = Math.abs(fracY - boxStartY);
+    boxEl.style.left   = `${x}%`;
+    boxEl.style.top    = `${y}%`;
+    boxEl.style.width  = `${w}%`;
+    boxEl.style.height = `${h}%`;
+  });
+
+  annOverlay.addEventListener('mouseup', e => {
+    if (!boxDrawing || !boxEl) return;
+    boxDrawing = false;
+
+    const rect  = annOverlay.getBoundingClientRect();
+    const fracX = (e.clientX - rect.left) / rect.width  * 100;
+    const fracY = (e.clientY - rect.top)  / rect.height * 100;
+    const x = Math.min(fracX, boxStartX);
+    const y = Math.min(fracY, boxStartY);
+    const w = Math.abs(fracX - boxStartX);
+    const h = Math.abs(fracY - boxStartY);
+
+    boxEl.remove();
+    boxEl = null;
+
+    if (w > 1 && h > 1) {
+      const ann   = addAnnotation('box', x, y, w, h);
+      // The renderDot already added the dot; but we need to update its badge
+      // (it was already added via addAnnotation → renderDot)
+      selectAnnotation(ann.id);
+    }
+  });
+
+  // ── Detail panel bindings ──────────────────────────────────────────────────
+  if (annDetailText) {
+    annDetailText.addEventListener('input', () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann) return;
+      ann.text = annDetailText.value;
+      updateCardPreview(ann.id);
+    });
+  }
+
+  if (annJira) {
+    annJira.addEventListener('input', () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann) return;
+      ann.jira = annJira.value;
+    });
+  }
+
+  if (annSlack) {
+    annSlack.addEventListener('input', () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann) return;
+      ann.slack = annSlack.value;
+    });
+  }
+
+  if (annJiraBtn) {
+    annJiraBtn.addEventListener('click', () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann || !ann.jira) return;
+      window.open('https://jira.corp.adobe.com/browse/' + ann.jira.trim(), '_blank');
+    });
+  }
+
+  if (annSlackBtn) {
+    annSlackBtn.addEventListener('click', () => {
+      const ann = getAnnotation(selectedId);
+      if (!ann) return;
+      const ticket  = (ann.jira  || '').trim();
+      const message = (ann.slack || '').trim();
+      const combined = ticket ? `[${ticket}] ${message}` : message;
+      navigator.clipboard.writeText(combined).then(() => {
+        const orig = annSlackBtn.textContent;
+        annSlackBtn.textContent = '✓';
+        setTimeout(() => { annSlackBtn.textContent = orig; }, 1400);
+      });
+    });
+  }
+
+  if (annClear) {
+    annClear.addEventListener('click', () => {
+      annotations = [];
+      nextId      = 1;
+      selectedId  = null;
+      if (annOverlay) annOverlay.querySelectorAll('.ann-dot').forEach(d => d.remove());
+      if (annList)    annList.innerHTML = '';
+      if (annDetailSec) annDetailSec.setAttribute('hidden', '');
+      syncEmpty();
+    });
+  }
+
+  if (annFileInput) {
+    annFileInput.addEventListener('change', () => {
+      const file = annFileInput.files && annFileInput.files[0];
+      if (!file || pendingImageId === null) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const ann = getAnnotation(pendingImageId);
+        if (ann) {
+          ann.imageDataUrl = ev.target.result;
+          updateDot(ann);
+        }
+        pendingImageId = null;
+      };
+      reader.readAsDataURL(file);
+      annFileInput.value = '';
+    });
+  }
+
+  // ── Comment toggle button ──────────────────────────────────────────────────
+  commentTog.addEventListener('click', () => {
+    if (inCommentMode) {
+      exitCommentMode();
+    } else {
+      enterCommentMode();
+    }
+  });
+
+  if (commentClose) {
+    commentClose.addEventListener('click', () => {
+      exitCommentMode();
+    });
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  syncEmpty();
+  if (annDetailSec) annDetailSec.setAttribute('hidden', '');
+
+  } // end guard
+}
+// ═══ END ANNOTATION SYSTEM

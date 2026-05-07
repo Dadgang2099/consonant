@@ -1112,7 +1112,7 @@ body {
 .scope-modal__cancel:hover { color: rgba(255,255,255,0.5); }
 
 /* ═══════════════════════════════════════════════════════════
-   MODE TOGGLE — Pro / Newb pill
+   MODE TOGGLE — Pro / Light pill
    ═══════════════════════════════════════════════════════════ */
 .mode-toggle {
   position: fixed;
@@ -1161,8 +1161,15 @@ body {
   transition: left 0.25s cubic-bezier(0.23,1,0.32,1);
   pointer-events: none;
 }
-.mode-toggle--newb .mode-toggle__pill {
+.mode-toggle--light .mode-toggle__pill {
   left: calc(50%);
+}
+
+.mode-toggle__icon {
+  width: 13px;
+  height: 13px;
+  display: block;
+  pointer-events: none;
 }
 
 .mode-toggle__opt {
@@ -1534,28 +1541,407 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   NEWB MODE — same dark glass, just fewer controls
+   LIGHT MODE — panel chrome flips to frosted white glass
    ═══════════════════════════════════════════════════════════ */
-/* Newb panel uses same dark glass — only difference is the
-   chromatic accent shifts warmer/more accessible */
-.pw-panel--newb::before {
+html.theme-light .pw-panel {
+  background: rgba(242,245,252,0.95);
+  border: 0.5px solid rgba(0,0,0,0.12);
+  box-shadow:
+    0 0 0 0.5px rgba(0,60,255,0.08),
+    0 4px 8px rgba(0,0,0,0.10),
+    0 20px 60px rgba(0,0,0,0.24),
+    inset 0 0.5px 0 rgba(255,255,255,1);
+}
+html.theme-light .pw-panel::before {
   background: linear-gradient(
     130deg,
-    rgba(80,180,255,0.20) 0%,
-    rgba(255,255,255,0.03) 40%,
-    rgba(255,160,80,0.10) 70%,
-    rgba(80,255,180,0.12) 100%
+    rgba(0,102,255,0.10) 0%,
+    rgba(255,255,255,0.55) 35%,
+    rgba(255,60,180,0.05) 70%,
+    rgba(0,200,255,0.08) 100%
   );
 }
-.pw-panel--newb .pw-panel__title {
-  color: rgba(255,255,255,0.65);
-  letter-spacing: 0.28em;
+html.theme-light .pw-panel__title      { color: rgba(0,0,0,0.72); }
+html.theme-light .pw-panel__hdr        { border-bottom: 0.5px solid rgba(0,0,0,0.10); }
+html.theme-light .pw-panel__title--input:not([readonly]) {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,102,255,0.50);
+  color: #1d1d1f;
 }
-/* Hide Pro-only typography controls in Newb mode */
-.pw-panel--newb [data-pro-only] { display: none !important; }
-/* Newb-only callouts: hidden by default, shown in Newb mode */
-[data-newb-only] { display: none; }
-.pw-panel--newb [data-newb-only] { display: block !important; }
+html.theme-light .pw-icon-btn          { color: rgba(0,0,0,0.45); }
+html.theme-light .pw-icon-btn:hover    { color: rgba(0,0,0,0.88); }
+html.theme-light .pw-panel__edit       { color: rgba(0,0,0,0.40); }
+html.theme-light .pw-panel__edit:hover { color: rgba(0,102,255,1); background: rgba(0,102,255,0.06); }
+html.theme-light .pw-sec               { border-bottom: 0.5px solid rgba(0,0,0,0.08); }
+html.theme-light .pw-sec__label        { color: rgba(0,0,0,0.52); }
+html.theme-light .pw-sec__hdr:hover .pw-sec__label { color: rgba(0,0,0,0.75); }
+html.theme-light .pw-sec__tog          { color: rgba(0,0,0,0.35); }
+html.theme-light .pw-sec__hdr:hover .pw-sec__tog   { color: rgba(0,0,0,0.65); }
+html.theme-light .pw-key               { color: rgba(0,0,0,0.55); }
+html.theme-light .pw-num               { color: rgba(0,0,0,0.90); }
+html.theme-light .pw-unit              { color: rgba(0,0,0,0.42); }
+html.theme-light .pw-range {
+  background: rgba(0,0,0,0.08);
+  border: 0.5px solid rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.12), inset 0 -0.5px 0 rgba(255,255,255,0.6);
+  background-image: linear-gradient(to right, rgba(0,102,255,0.75) 0%, rgba(0,102,255,0.75) 0%, rgba(0,0,0,0.08) 0%);
+}
+html.theme-light .pw-range::-webkit-slider-thumb {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,1);
+}
+html.theme-light .pw-select {
+  background: rgba(255,255,255,0.70);
+  border: 0.5px solid rgba(0,0,0,0.14);
+  color: rgba(0,0,0,0.80);
+}
+html.theme-light .pw-select option { background: #fff; color: #1d1d1f; }
+html.theme-light .pw-textinput {
+  background: rgba(255,255,255,0.70);
+  border: 0.5px solid rgba(0,0,0,0.14);
+  color: rgba(0,0,0,0.88);
+}
+html.theme-light .pw-textinput:focus {
+  border-color: rgba(0,102,255,0.55);
+  background: rgba(255,255,255,0.90);
+}
+html.theme-light .pw-seg             { background: rgba(0,0,0,0.06); }
+html.theme-light .pw-seg__btn        { color: rgba(0,0,0,0.40); }
+html.theme-light .pw-seg__btn:not(.pw-seg__btn--on):hover { color: rgba(0,0,0,0.70); }
+html.theme-light .pw-seg__btn--on    { background: rgba(255,255,255,0.85); color: rgba(0,0,0,0.88); }
+html.theme-light .pw-btn {
+  background: rgba(255,255,255,0.65);
+  border: 0.5px solid rgba(0,0,0,0.14);
+  color: rgba(0,0,0,0.62);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(0,0,0,0.10);
+}
+html.theme-light .pw-btn:hover {
+  background: rgba(255,255,255,0.90);
+  color: rgba(0,0,0,0.90);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,1), 0 2px 8px rgba(0,0,0,0.14);
+}
+html.theme-light .pw-debug {
+  color: rgba(0,0,0,0.30);
+  border-top: 0.5px solid rgba(0,0,0,0.08);
+}
+html.theme-light .pw-editable {
+  color: rgba(0,0,0,0.85);
+  background: rgba(255,255,255,0.60);
+  border: 0.5px solid rgba(0,0,0,0.10);
+}
+html.theme-light .pw-panel__body--scroll {
+  scrollbar-color: rgba(0,0,0,0.15) transparent;
+}
+html.theme-light .pw-panel__body--scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
+/* Toggle flips to match */
+html.theme-light .mode-toggle {
+  background: rgba(242,245,252,0.95);
+  border: 0.5px solid rgba(0,0,0,0.12);
+  box-shadow:
+    0 0 0 0.5px rgba(0,60,255,0.08),
+    0 4px 20px rgba(0,0,0,0.18),
+    inset 0 0.5px 0 rgba(255,255,255,1);
+}
+html.theme-light .mode-toggle::before { background: none; }
+html.theme-light .mode-toggle__pill {
+  background: rgba(255,255,255,0.85);
+  border: 0.5px solid rgba(0,0,0,0.12);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,1), 0 1px 4px rgba(0,0,0,0.12);
+}
+html.theme-light .mode-toggle__opt    { color: rgba(0,0,0,0.40); }
+html.theme-light .mode-toggle__opt:hover:not(.mode-toggle__opt--on) { color: rgba(0,0,0,0.68); }
+html.theme-light .mode-toggle__opt--on { color: rgba(0,0,0,0.90); }
+
+/* ═══════════════════════════════════════════════════════════
+   5TH DOCK CIRCLE — Comment / Annotation toggle
+   ═══════════════════════════════════════════════════════════ */
+.comment-tog {
+  position: relative;
+  z-index: 1;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  background: rgba(7, 8, 13, 0.84);
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+  box-shadow:
+    0 0 0 0.5px rgba(110,140,255,0.18),
+    0 12px 48px rgba(0,0,0,0.75),
+    inset 0 0.5px 0 rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.22s, border-color 0.22s, box-shadow 0.22s;
+  padding: 0;
+  cursor: pointer;
+  color: rgba(255,255,255,0.85);
+}
+.comment-tog:hover { opacity: 1; }
+.comment-tog--on {
+  opacity: 1;
+  border-color: rgba(255,159,10,0.55);
+  box-shadow:
+    0 0 0 0.5px rgba(255,159,10,0.35),
+    0 16px 56px rgba(0,0,0,0.80),
+    0 0 48px rgba(255,159,10,0.14),
+    inset 0 0.5px 0 rgba(255,255,255,0.22);
+}
+.comment-tog__plate {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  border: 0.5px solid rgba(255,255,255,0.16);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.14), 0 1px 4px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.comment-tog--on .comment-tog__plate {
+  background: rgba(255,159,10,0.16);
+  border-color: rgba(255,159,10,0.30);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMMENT PANEL — left-side, amber accent
+   ═══════════════════════════════════════════════════════════ */
+.comment-panel {
+  left: 20px;
+  right: auto;
+}
+
+/* Tool palette */
+.ann-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 4px;
+  padding: 10px 12px 8px;
+}
+.ann-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 2px 7px;
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.40);
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+.ann-tool:hover { color: rgba(255,255,255,0.72); background: rgba(255,255,255,0.08); }
+.ann-tool--on {
+  background: rgba(255,159,10,0.15);
+  border-color: rgba(255,159,10,0.40);
+  color: rgba(255,159,10,0.95);
+}
+
+/* Annotation list */
+.ann-list {
+  padding: 0 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ann-empty {
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.22);
+  text-align: center;
+  padding: 14px 8px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+.ann-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.07);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ann-card:hover { background: rgba(255,255,255,0.08); }
+.ann-card--selected {
+  background: rgba(255,159,10,0.10);
+  border-color: rgba(255,159,10,0.30);
+}
+.ann-card__badge {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.70);
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ann-card--selected .ann-card__badge {
+  background: rgba(255,159,10,0.30);
+  color: rgba(255,159,10,1);
+}
+.ann-card__type {
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 7px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.22);
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+.ann-card__text {
+  flex: 1;
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.50);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ann-card__del {
+  background: none; border: none;
+  color: rgba(255,255,255,0.15);
+  font-size: 11px; cursor: pointer;
+  padding: 0 2px; line-height: 1;
+  transition: color 0.12s;
+  flex-shrink: 0;
+}
+.ann-card__del:hover { color: rgba(255,70,70,0.85); }
+
+/* Detail section */
+.ann-detail-sec .pw-sec__body { padding: 6px 12px 10px; }
+.ann-detail-body { display: flex; flex-direction: column; gap: 6px; }
+.ann-comment-ta  { width: 100%; resize: none; min-height: 52px; }
+
+.ann-int-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 24px;
+  align-items: center;
+  gap: 5px;
+}
+.ann-int-btn {
+  background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  color: rgba(255,255,255,0.45);
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  padding: 0; flex-shrink: 0;
+}
+.ann-int-btn:hover { background: rgba(255,159,10,0.18); color: rgba(255,159,10,0.95); border-color: rgba(255,159,10,0.35); }
+
+/* Footer */
+.ann-footer { padding: 4px 12px 12px; }
+
+/* ═══════════════════════════════════════════════════════════
+   ANNOTATION OVERLAY + DOTS
+   ═══════════════════════════════════════════════════════════ */
+.ann-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482999; /* just below panels */
+  cursor: crosshair;
+}
+.ann-overlay[hidden] { display: none; }
+
+.ann-dot {
+  position: absolute;
+  pointer-events: all;
+  cursor: pointer;
+}
+/* Pin */
+.ann-dot--pin {
+  width: 24px; height: 24px;
+  transform: translate(-50%, -100%);
+}
+.ann-dot--pin .ann-badge {
+  position: absolute; top: 0; left: 0;
+  width: 24px; height: 24px;
+}
+.ann-dot--pin .ann-badge::after {
+  content: '';
+  position: absolute;
+  bottom: -6px; left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid rgba(255,159,10,0.95);
+}
+/* Box */
+.ann-dot--box {
+  border: 2px dashed rgba(255,159,10,0.75);
+  border-radius: 2px;
+  background: rgba(255,159,10,0.04);
+  pointer-events: all;
+}
+.ann-dot--drawing { pointer-events: none; border-style: dotted; opacity: 0.6; }
+.ann-dot--box .ann-badge {
+  position: absolute; top: -12px; left: -12px;
+  width: 20px; height: 20px; font-size: 8px;
+}
+/* Text */
+.ann-dot--text {
+  transform: translate(-50%, -50%);
+  min-width: 60px;
+}
+.ann-dot--text .ann-badge {
+  position: absolute; top: -10px; left: -10px;
+  width: 20px; height: 20px; font-size: 8px;
+}
+/* Image */
+.ann-dot--image {
+  width: 24px; height: 24px;
+  transform: translate(-50%, -100%);
+}
+.ann-dot--image .ann-badge {
+  position: absolute; top: 0; left: 0;
+  width: 24px; height: 24px;
+}
+
+/* Shared badge */
+.ann-badge {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(255,159,10,0.95);
+  color: rgba(0,0,0,0.80);
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  pointer-events: none;
+  flex-shrink: 0;
+  user-select: none;
+}
+.ann-dot--selected .ann-badge {
+  background: rgba(255,220,0,1);
+  box-shadow: 0 0 0 2px rgba(255,220,0,0.4), 0 2px 8px rgba(0,0,0,0.4);
+}
+.ann-dot--selected.ann-dot--box {
+  border-color: rgba(255,220,0,0.9);
+  background: rgba(255,220,0,0.06);
+}
+
+/* Image thumbnail on pin */
+.ann-thumb {
+  display: block;
+  width: 40px; height: 40px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1.5px solid rgba(255,159,10,0.7);
+  margin-top: 2px;
+  margin-left: -8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
 
 /* ── Back button ── */
 .back-btn {
@@ -2698,7 +3084,8 @@ body {
 .app-dock > .panel-tog,
 .app-dock > .ai-bar,
 .app-dock > .fx-knob,
-.app-dock > .tl-tog { overflow: visible; }
+.app-dock > .tl-tog,
+.app-dock > .comment-tog { overflow: visible; }
 /* The AI bar GLASS still needs its own clip for the morph icon mask
    and the inner pill background. */
 .ai-bar__glass { overflow: hidden; }
@@ -2743,7 +3130,8 @@ body {
    Same snap-spring as the eye-collapse path. */
 .app-dock--chat-mode > .panel-tog,
 .app-dock--chat-mode > .fx-knob,
-.app-dock--chat-mode > .tl-tog {
+.app-dock--chat-mode > .tl-tog,
+.app-dock--chat-mode > .comment-tog {
   width: 0;
   max-width: 0;
   opacity: 0;
@@ -3004,7 +3392,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   top: calc(-1 * var(--tl-tag-h));
-  width: 268px;                       /* dock + ~10px each side */
+  width: 330px;                       /* dock + ~10px each side */
   height: var(--tl-tag-h);
   /* Near-opaque fill identical to the panel so the bump and panel
      read as one solid color regardless of what page content is
@@ -3048,7 +3436,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   top: calc(-1 * var(--tl-tag-h, 76px));
-  width: 248px;              /* matches bump interior — hugs circles */
+  width: 310px;              /* matches bump interior — hugs circles */
   height: var(--tl-tag-h, 76px);
   z-index: 3;
   display: flex;
