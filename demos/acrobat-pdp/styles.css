@@ -430,7 +430,7 @@ ul { list-style: none; }
   cursor: default;
 }
 .bento-cell:hover {
-  transform: scale(1.03);
+  transform: translateY(calc(var(--cp-bento-hover-lift) * -1));
   box-shadow: 0 3px 6px 0 rgba(0,0,0,.16);
 }
 .bento-cell--half  { grid-column: span 3; min-height: 440px; }
@@ -443,7 +443,7 @@ ul { list-style: none; }
   overflow: hidden;
 }
 .bento-cell__copy { padding: 32px 40px 40px; transition: transform var(--cp-bento-duration) var(--ease); }
-.bento-cell:hover .bento-cell__copy { transform: translateY(-6px); }
+.bento-cell:hover .bento-cell__copy { transform: translateY(calc(var(--cp-bento-hover-lift) * -1.5)); }
 .bento-cell__copy h3 {
   font-size: 22px; font-weight: 800; letter-spacing: -.3px; line-height: 1.2; margin-bottom: 10px;
 }
