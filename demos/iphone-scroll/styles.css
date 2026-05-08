@@ -1665,14 +1665,12 @@ html.theme-light .mode-toggle__opt:hover:not(.mode-toggle__opt--on) { color: rgb
 html.theme-light .mode-toggle__opt--on { color: rgba(0,0,0,0.90); }
 
 /* ── Light mode: top-left nav chrome ── */
-html.theme-light .back-btn,
 html.theme-light .undo-btn {
   background: rgba(242,245,252,0.92);
   border: 1px solid rgba(0,0,0,0.10);
   box-shadow: 0 0 0 0.5px rgba(0,0,0,0.04) inset, 0 2px 14px rgba(0,0,0,0.10);
   color: rgba(0,0,0,0.50);
 }
-html.theme-light .back-btn:hover,
 html.theme-light .undo-btn:not(:disabled):hover {
   color: rgba(0,0,0,0.88);
   box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08) inset, 0 4px 20px rgba(0,0,0,0.14);
@@ -2244,17 +2242,23 @@ html.theme-light .ann-card__text  { color: rgba(0,0,0,0.55); }
 html.theme-light .ann-card__del   { color: rgba(0,0,0,0.18); }
 
 /* ── Light mode: dock AI send button (the + FAB) ── */
-html.theme-light .ai-bar__send {
+/* Light mode: the collapsed glass shell needs to match other dock circles */
+html.theme-light .ai-bar--collapsed .ai-bar__glass {
   background: rgba(242,245,252,0.92);
   border-color: rgba(0,0,0,0.10);
-  color: rgba(0,0,0,0.55);
   box-shadow:
     0 2px 6px rgba(0,0,0,0.08),
     0 8px 28px rgba(0,0,0,0.10),
     inset 0 0.5px 0 rgba(255,255,255,1);
 }
+html.theme-light .ai-bar__send {
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.10);
+  color: rgba(0,0,0,0.55);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.8), 0 1px 4px rgba(0,0,0,0.06);
+}
 html.theme-light .ai-bar__send:hover:not(:disabled) {
-  background: rgba(230,235,248,0.95);
+  background: rgba(0,0,0,0.10);
   color: rgba(0,0,0,0.88);
 }
 
@@ -2282,6 +2286,8 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 .ann-dot--pin .ann-badge {
   position: absolute; top: 0; left: 0;
   width: 24px; height: 24px;
+  background: var(--ann-color, rgba(255,159,10,0.95));
+  border-radius: 50%;
 }
 .ann-dot--pin .ann-badge::after {
   content: '';
@@ -2290,13 +2296,13 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   transform: translateX(-50%);
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 7px solid rgba(255,159,10,0.95);
+  border-top: 7px solid var(--ann-color, rgba(255,159,10,0.95));
 }
 /* Box */
 .ann-dot--box {
-  border: 2px dashed rgba(255,159,10,0.75);
+  border: 2px dashed var(--ann-color, rgba(255,159,10,0.75));
   border-radius: 2px;
-  background: rgba(255,159,10,0.04);
+  background: color-mix(in srgb, var(--ann-color, rgba(255,159,10,1)) 8%, transparent);
   pointer-events: all;
 }
 .ann-dot--drawing { pointer-events: none; border-style: dotted; opacity: 0.6; }
@@ -2359,37 +2365,6 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 }
 
 /* ── Back button ── */
-.back-btn {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 9999;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(18,18,22,0.90);
-  backdrop-filter: blur(24px) saturate(1.5);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
-  border: 1px solid rgba(255,255,255,0.11);
-  box-shadow:
-    0 0 0 0.5px rgba(255,255,255,0.06) inset,
-    0 2px 14px rgba(0,0,0,0.45);
-  color: rgba(255,255,255,0.50);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.15s, box-shadow 0.15s, transform 0.12s;
-}
-.back-btn:hover {
-  color: rgba(255,255,255,0.88);
-  box-shadow:
-    0 0 0 0.5px rgba(255,255,255,0.14) inset,
-    0 4px 20px rgba(0,0,0,0.55);
-}
-.back-btn:active { transform: scale(0.88); }
-
 /* ── Undo button — glass circle matching pub-cluster at rest ── */
 .undo-btn {
   position: fixed;
@@ -3078,6 +3053,11 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   gap: 0;
   justify-content: center;
   cursor: pointer;
+}
+/* Make collapsed send button match the 36px inner-plate size of other dock circles */
+.ai-bar--collapsed .ai-bar__send {
+  width: 36px;
+  height: 36px;
 }
 
 /* Morph icon — geometry animated by JS spring, no CSS transitions on d */

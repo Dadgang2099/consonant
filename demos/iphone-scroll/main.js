@@ -1550,7 +1550,6 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   const OPEN_EASE   = 'cubic-bezier(0.16,1,0.3,1)';
 
   const chromeEls = () => [
-    document.getElementById('backBtn'),
     document.getElementById('undoBtn'),
     document.getElementById('aiBar'),
     document.getElementById('fxKnob'),
@@ -2127,11 +2126,6 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   }, true);
 
   undoBtn?.addEventListener('click', doUndo);
-
-  document.getElementById('backBtn')?.addEventListener('click', () => {
-    if (window.history.length > 1) history.back();
-    else window.close();
-  });
 
   document.addEventListener('keydown', e => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey &&
@@ -5417,7 +5411,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       const cursors = { pin: 'crosshair', box: 'crosshair', draw: 'crosshair' };
       annOverlay.style.cursor = cursors[tool] || 'crosshair';
     }
-    if (annColors) annColors.classList.toggle('ann-colors--on', tool === 'draw');
+    if (annColors) annColors.classList.add('ann-colors--on');
   }
 
   // ── Color picker ──────────────────────────────────────────────────────────
@@ -5451,6 +5445,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     const id  = nextId++;
     const ann = { id, type, x: x || 0, y: y || 0, w: w || 0, h: h || 0,
                   text: '', images: [], figmaUrl: '',
+                  color: drawColor,
                   strokes: [], drawColor: drawColor,
                   jiraProject: '', jiraKey: '', slackChannel: '', slackMention: '', imageDataUrl: '' };
     annotations.push(ann);
@@ -5494,6 +5489,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     dot.dataset.annId = ann.id;
     dot.style.cssText = `left:${ann.x}%;top:${ann.y}%;` +
       (ann.type === 'box' ? `width:${ann.w}%;height:${ann.h}%;` : '');
+    if (ann.color) dot.style.setProperty('--ann-color', ann.color);
 
     const badge = document.createElement('span');
     badge.className    = 'ann-badge';
@@ -5643,6 +5639,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   let boxDrawing  = false;
   let boxStartX   = 0;
   let boxStartY   = 0;
+  let boxCurX     = 0;
+  let boxCurY     = 0;
   let boxEl       = null;
 
   // Draw tool state
@@ -5728,14 +5726,12 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   annOverlay.addEventListener('mousemove', e => {
     if (boxDrawing && boxEl) {
       const rect  = annOverlay.getBoundingClientRect();
-      const fracX = (e.clientX - rect.left) / rect.width  * 100;
-      const fracY = (e.clientY - rect.top)  / rect.height * 100;
-      const x = Math.min(fracX, boxStartX);
-      const y = Math.min(fracY, boxStartY);
-      boxEl.style.left   = `${Math.min(fracX, boxStartX)}%`;
-      boxEl.style.top    = `${Math.min(fracY, boxStartY)}%`;
-      boxEl.style.width  = `${Math.abs(fracX - boxStartX)}%`;
-      boxEl.style.height = `${Math.abs(fracY - boxStartY)}%`;
+      boxCurX = (e.clientX - rect.left) / rect.width  * 100;
+      boxCurY = (e.clientY - rect.top)  / rect.height * 100;
+      boxEl.style.left   = `${Math.min(boxCurX, boxStartX)}%`;
+      boxEl.style.top    = `${Math.min(boxCurY, boxStartY)}%`;
+      boxEl.style.width  = `${Math.abs(boxCurX - boxStartX)}%`;
+      boxEl.style.height = `${Math.abs(boxCurY - boxStartY)}%`;
     }
     if (drawingStroke && currentPolyline) {
       const [fx, fy] = svgCoords(e);
@@ -5750,9 +5746,13 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
 
   annOverlay.addEventListener('mouseup', e => {
     if (boxDrawing && boxEl) {
-      const h = Math.abs(fracY - boxStartY);
+      const w = Math.abs(boxCurX - boxStartX);
+      const h = Math.abs(boxCurY - boxStartY);
+      const x = Math.min(boxCurX, boxStartX);
+      const y = Math.min(boxCurY, boxStartY);
       boxEl.remove();
       boxEl = null;
+      boxDrawing = false;
       if (w > 1 && h > 1) {
         const ann = addAnnotation('box', x, y, w, h);
         selectAnnotation(ann.id);
