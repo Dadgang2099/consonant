@@ -4977,30 +4977,17 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   /* No border-radius — Apple original uses hard corners */
 }
 
-/* ── Overshoot wraps — taller than card, parallax target ── */
+/* ── Overshoot wraps — parallax target, sizes to image content ── */
 .s3-triptych__wrap {
   position: absolute;
   left: 0;
   right: 0;
+  top: 0;
   will-change: transform;
 }
 
-/* Left (440×1437): fill column width, overshoot 120px total.
-   Image starts at top of wrap; JS slides wrap -120px → 0 as section scrolls. */
-.s3-triptych__card--left .s3-triptych__wrap {
-  top: 0;
-  height: calc(100% + 120px);
-}
-/* Center (803×1327): overshoot 160px above AND below (320px total).
-   Wrap centered on card; JS slides ±160px. */
-.s3-triptych__card--center .s3-triptych__wrap {
-  top: -160px;
-  height: calc(100% + 320px);
-}
-/* Right (330×654): contained — phone floats with generous inset.
-   Smaller 80px overshoot for subtle parallax. */
+/* Right (330×654): contained — phone floats with generous inset. */
 .s3-triptych__card--right .s3-triptych__wrap {
-  top: 0;
   height: calc(100% + 80px);
   display: flex;
   align-items: center;
@@ -5009,16 +4996,15 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   box-sizing: border-box;
 }
 
-/* Left + center: images fill wrap edge-to-edge */
+/* Left + center: full natural-aspect-ratio — wrap auto-sizes to image height,
+   card overflow:hidden clips it. Use panel --tx/--ty/--scale to reposition. */
 .s3-triptych__card--left img,
 .s3-triptych__card--center img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
   display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  object-fit: unset;
 }
 
 /* Right: phone silhouette floats contained, centered */
