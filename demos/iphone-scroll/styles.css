@@ -5240,13 +5240,15 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   height: 300vh;
 }
 
-/* Sticky viewport — lenses overflow clipped here */
+/* Sticky viewport — lenses overflow clipped here.
+   clip-path starts at inset(100% 0 0 0) = fully hidden; JS lifts it on scroll. */
 .s5-camera__sticky {
   position: sticky;
   top: 0;
   height: 100vh;
   overflow: hidden;
   background: #111;
+  clip-path: inset(100% 0 0 0);
 }
 
 /* ── Lens cluster ─────────────────────────────────────────── */

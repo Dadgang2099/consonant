@@ -6211,23 +6211,27 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   onScroll();
 }());
 
-// ─── Section 5: Pro camera system — dual-counter rotation ─────────────────
-// Outer centroid wrapper rotates from the triangle centroid of the 3 lens centers.
-// Each inner div counter-rotates from its own center — net: lenses spin in place
-// while the trio orbits. Matches Apple iPhone 11 Pro original ±15° scroll range.
+// ─── Section 5: Pro camera system — garage door + dual-counter rotation ──────
+// Three phases driven by px scrolled past section top (not total transit):
+//   Phase 1 — 0→1vh:   Garage door lifts. Clip inset(100%→0%) reveals bottom→top.
+//                       Lenses locked at -15° while door opens.
+//   Phase 2 — 1vh→3vh: Cluster rotates -15°→+15° from triangle centroid.
+//                       Each inner lens counter-rotates +15°→-15° (spins in place).
+//   Copy     — 1.2vh→1.6vh: fade + slide up during early Phase 2.
 (function cameraSection() {
-  const section  = document.getElementById('s5Camera');
+  const section    = document.getElementById('s5Camera');
   if (!section) return;
 
+  const sticky     = section.querySelector('.s5-camera__sticky');
   const centroid   = document.getElementById('cameraCentroid');
   const lensInners = section.querySelectorAll('.s5-camera__lens-inner');
   const copy       = document.getElementById('cameraCopy');
 
-  let raf = false;
+  let raf       = false;
   let originSet = false;
 
-  // Compute the geometric centroid of the 3 lens centers and set it as
-  // transform-origin on the centroid div so the cluster rotates from that point.
+  // Geometric centroid of the 3 lens centers → transform-origin for cluster rotation.
+  // All positions relative to the centroid div's top-left, in px.
   function setCentroidOrigin() {
     const clRect  = centroid.getBoundingClientRect();
     const lenses  = section.querySelectorAll('.s5-camera__lens');
@@ -6243,7 +6247,6 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     centroid.style.transformOrigin = `${cx.toFixed(1)}px ${cy.toFixed(1)}px`;
   }
 
-  // easeInOutSine — matches Apple's original easing function
   function easeInOutSin(t) {
     return -(Math.cos(Math.PI * t) - 1) / 2;
   }
@@ -6251,27 +6254,34 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   function tick() {
     if (!originSet) { setCentroidOrigin(); originSet = true; }
 
-    const rect = section.getBoundingClientRect();
-    const vh   = window.innerHeight;
+    const rect    = section.getBoundingClientRect();
+    const vh      = window.innerHeight;
 
-    // progress: 0 = section bottom enters viewport, 1 = section top exits viewport
-    const raw = (vh - rect.top) / (vh + rect.height);
-    const p   = Math.max(0, Math.min(1, raw));
-    const pe  = easeInOutSin(p);
+    // scrolled: px the section has traveled past the top of the viewport.
+    // 0 when section top first touches viewport top; grows as user scrolls.
+    // When section is below viewport (rect.top > 0), scrolled = 0.
+    const scrolled = Math.max(0, -rect.top);
 
-    // Cluster: rotate from -15° to +15° across full scroll travel
-    const angle = (pe - 0.5) * 30; // -15 → +15
+    // ── Phase 1: Garage door lift (scrolled: 0 → vh) ──────────────
+    // clip-path inset(X% 0 0 0): X=100 = nothing visible, X=0 = fully open.
+    // Content revealed bottom-to-top as X falls — "door lifts".
+    const doorPe = easeInOutSin(Math.min(1, scrolled / vh));
+    sticky.style.clipPath = `inset(${((1 - doorPe) * 100).toFixed(2)}% 0 0 0)`;
+
+    // ── Phase 2: Cluster rotation (scrolled: vh → 3vh) ─────────────
+    // Outer centroid: -15° at start, +15° at end (eased).
+    // Inner lenses: exact opposite — net effect = each lens spins in place.
+    const rotP  = Math.max(0, Math.min(1, (scrolled - vh) / (2 * vh)));
+    const rotPe = easeInOutSin(rotP);
+    const angle = (rotPe - 0.5) * 30; // -15 → +15
     centroid.style.transform = `rotate(${angle.toFixed(3)}deg)`;
-
-    // Each lens inner: exact opposite rotation around its own center
     lensInners.forEach(li => {
       li.style.transform = `rotate(${(-angle).toFixed(3)}deg)`;
     });
 
-    // Copy: fade + slide up. Starts at p=0.12, fully visible at p=0.28.
-    const copyRaw = (p - 0.12) / 0.16;
-    const copyP   = Math.max(0, Math.min(1, copyRaw));
-    const copyPe  = easeInOutSin(copyP);
+    // ── Copy: fade + slide up (scrolled: 1.2vh → 1.6vh) ───────────
+    const copyP  = Math.max(0, Math.min(1, (scrolled - vh * 1.2) / (vh * 0.4)));
+    const copyPe = easeInOutSin(copyP);
     copy.style.opacity   = copyPe.toFixed(3);
     copy.style.transform = `translateY(${((1 - copyPe) * 32).toFixed(1)}px)`;
 
