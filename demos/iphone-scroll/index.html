@@ -720,9 +720,9 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════
-     SECTION 4 — TAKE A CLOSER LOOK
+     SECTION 4 — TAKE A CLOSER LOOK (skipped per design)
      ═══════════════════════════════════════════════════════════ -->
-<section class="s4-closer" aria-label="Take a closer look">
+<section class="s4-closer" aria-label="Take a closer look" style="display:none">
   <div class="s4-closer__grid">
     <div class="s4-closer__text">
       <h2 class="s4-closer__headline">Take a closer look.</h2>
@@ -734,6 +734,51 @@
            alt="Triple camera system macro"
            aria-hidden="true">
     </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 5 — PRO CAMERA SYSTEM (rotating lenses)
+     300vh scroll travel, sticky 100vh viewport
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s5-camera" id="s5Camera" aria-label="Pro camera system">
+  <div class="s5-camera__sticky">
+
+    <!-- cluster: viewport-clipped overflow region -->
+    <div class="s5-camera__cluster">
+      <!-- layout: static offset so middle lens centers on viewport -->
+      <div class="s5-camera__layout">
+        <!-- centroid: JS sets transform-origin + rotate() here -->
+        <div class="s5-camera__centroid" id="cameraCentroid">
+
+          <div class="s5-camera__lens s5-camera__lens--top">
+            <div class="s5-camera__lens-inner" id="lensInner1">
+              <img src="assets/camera_top.jpg" alt="" aria-hidden="true">
+            </div>
+          </div>
+
+          <div class="s5-camera__lens s5-camera__lens--middle">
+            <div class="s5-camera__lens-inner" id="lensInner2">
+              <img src="assets/camera_middle.jpg" alt="" aria-hidden="true">
+            </div>
+          </div>
+
+          <div class="s5-camera__lens s5-camera__lens--bottom">
+            <div class="s5-camera__lens-inner" id="lensInner3">
+              <img src="assets/camera_bottom.jpg" alt="" aria-hidden="true">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- copy: fades + slides up from 20vh scroll into section -->
+    <div class="s5-camera__copy" id="cameraCopy">
+      <p class="s5-camera__eyebrow">Pro camera system</p>
+      <h2 class="s5-camera__headline">We&#x2019;ve three&#x2011;upped<br>ourselves.</h2>
+    </div>
+
   </div>
 </section>
 

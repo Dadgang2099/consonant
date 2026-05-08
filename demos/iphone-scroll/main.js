@@ -6209,3 +6209,81 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   window.addEventListener('resize', onScroll, { passive: true });
   onScroll();
 }());
+
+// ─── Section 5: Pro camera system — dual-counter rotation ─────────────────
+// Outer centroid wrapper rotates from the triangle centroid of the 3 lens centers.
+// Each inner div counter-rotates from its own center — net: lenses spin in place
+// while the trio orbits. Matches Apple iPhone 11 Pro original ±15° scroll range.
+(function cameraSection() {
+  const section  = document.getElementById('s5Camera');
+  if (!section) return;
+
+  const centroid   = document.getElementById('cameraCentroid');
+  const lensInners = section.querySelectorAll('.s5-camera__lens-inner');
+  const copy       = document.getElementById('cameraCopy');
+
+  let raf = false;
+  let originSet = false;
+
+  // Compute the geometric centroid of the 3 lens centers and set it as
+  // transform-origin on the centroid div so the cluster rotates from that point.
+  function setCentroidOrigin() {
+    const clRect  = centroid.getBoundingClientRect();
+    const lenses  = section.querySelectorAll('.s5-camera__lens');
+    const centers = Array.from(lenses).map(l => {
+      const r = l.getBoundingClientRect();
+      return {
+        x: r.left + r.width  / 2 - clRect.left,
+        y: r.top  + r.height / 2 - clRect.top,
+      };
+    });
+    const cx = centers.reduce((s, c) => s + c.x, 0) / centers.length;
+    const cy = centers.reduce((s, c) => s + c.y, 0) / centers.length;
+    centroid.style.transformOrigin = `${cx.toFixed(1)}px ${cy.toFixed(1)}px`;
+  }
+
+  // easeInOutSine — matches Apple's original easing function
+  function easeInOutSin(t) {
+    return -(Math.cos(Math.PI * t) - 1) / 2;
+  }
+
+  function tick() {
+    if (!originSet) { setCentroidOrigin(); originSet = true; }
+
+    const rect = section.getBoundingClientRect();
+    const vh   = window.innerHeight;
+
+    // progress: 0 = section bottom enters viewport, 1 = section top exits viewport
+    const raw = (vh - rect.top) / (vh + rect.height);
+    const p   = Math.max(0, Math.min(1, raw));
+    const pe  = easeInOutSin(p);
+
+    // Cluster: rotate from -15° to +15° across full scroll travel
+    const angle = (pe - 0.5) * 30; // -15 → +15
+    centroid.style.transform = `rotate(${angle.toFixed(3)}deg)`;
+
+    // Each lens inner: exact opposite rotation around its own center
+    lensInners.forEach(li => {
+      li.style.transform = `rotate(${(-angle).toFixed(3)}deg)`;
+    });
+
+    // Copy: fade + slide up. Starts at p=0.12, fully visible at p=0.28.
+    const copyRaw = (p - 0.12) / 0.16;
+    const copyP   = Math.max(0, Math.min(1, copyRaw));
+    const copyPe  = easeInOutSin(copyP);
+    copy.style.opacity   = copyPe.toFixed(3);
+    copy.style.transform = `translateY(${((1 - copyPe) * 32).toFixed(1)}px)`;
+
+    raf = false;
+  }
+
+  function onScroll() {
+    if (raf) return;
+    raf = true;
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', () => { originSet = false; onScroll(); }, { passive: true });
+  onScroll();
+}());

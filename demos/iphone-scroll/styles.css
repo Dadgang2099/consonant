@@ -5229,6 +5229,122 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   SECTION 5 — PRO CAMERA SYSTEM
+   300vh scroll travel; sticky 100vh; dual-counter rotation
+   ═══════════════════════════════════════════════════════════ */
+
+.s5-camera {
+  position: relative;
+  z-index: 5;
+  background: #111;
+  height: 300vh;
+}
+
+/* Sticky viewport — lenses overflow clipped here */
+.s5-camera__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #111;
+}
+
+/* ── Lens cluster ─────────────────────────────────────────── */
+/* Covers entire sticky viewport; clips lenses at edges */
+.s5-camera__cluster {
+  position: absolute;
+  inset: 0;
+}
+
+/* Static layout offset: mirrors Apple's -175px left offset so the
+   middle lens (right:0 of layout) lands at viewport center-right */
+.s5-camera__layout {
+  position: absolute;
+  left: -175px;
+  /* vertically centered — independent of the rotation transform below */
+  top: 50%;
+  translate: 0 -50%;
+  width: calc(100vw + 530px); /* viewport + left overflow + right overflow */
+  height: max(200vh, 1600px);
+}
+
+/* Rotation target: JS sets transform-origin to triangle centroid,
+   scroll drives rotate(±15deg). translate is on .layout above
+   so we can modify transform here without fighting CSS. */
+.s5-camera__centroid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+/* Individual circular lens — all 3 images are 736×733px */
+.s5-camera__lens {
+  position: absolute;
+  width: min(736px, 52vw);
+  height: min(733px, calc(52vw * 733 / 736));
+}
+
+/* Triangle arrangement matching Apple's original */
+.s5-camera__lens--top    { top: 0;   left: 0; }
+.s5-camera__lens--middle { top: 50%; right: 0; margin-top: min(-366px, -26vw); }
+.s5-camera__lens--bottom { bottom: 0; left: 0; }
+
+/* Inner: counter-rotates around own center so each lens spins in place */
+.s5-camera__lens-inner {
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.s5-camera__lens-inner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Images are square JPEGs with circular lens content on dark bg —
+     no border-radius needed; dark corners blend with #111 bg */
+}
+
+/* ── Copy overlay ─────────────────────────────────────────── */
+.s5-camera__copy {
+  position: absolute;
+  bottom: 80px;
+  left: 60px;
+  opacity: 0;
+  will-change: transform, opacity;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.s5-camera__eyebrow {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: clamp(17px, 1.4vw, 21px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.s5-camera__headline {
+  color: #f5f5f7;
+  font-size: clamp(40px, 4.8vw, 76px);
+  font-weight: 700;
+  letter-spacing: -0.026em;
+  line-height: 1.05;
+}
+
+@media (max-width: 768px) {
+  .s5-camera__copy {
+    bottom: 52px;
+    left: 24px;
+  }
+  .s5-camera__eyebrow { font-size: 15px; }
+  .s5-camera__headline { font-size: 36px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    VIEWPORT TAG — live size + breakpoint chip (bottom-right)
    ═══════════════════════════════════════════════════════════ */
 .vp-tag {
