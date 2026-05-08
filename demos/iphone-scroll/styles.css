@@ -5256,16 +5256,29 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   inset: 0;
 }
 
-/* Static layout offset: mirrors Apple's -175px left offset so the
-   middle lens (right:0 of layout) lands at viewport center-right */
+/* Static layout offset: mirrors Apple's -175px left offset.
+   Width formula keeps middle lens (right:0 of layout) at ≈60% of viewport.
+   Large (vw≥1415): 60vw+543px  Small (vw<1415): 86vw+175px  — meet at 1415px. */
 .s5-camera__layout {
   position: absolute;
   left: -175px;
-  /* vertically centered — independent of the rotation transform below */
   top: 50%;
   translate: 0 -50%;
-  width: calc(100vw + 530px); /* viewport + left overflow + right overflow */
+  width: min(calc(60vw + 543px), calc(86vw + 175px));
   height: max(200vh, 1600px);
+}
+
+/* Background static composite — full camera system, no rotation.
+   Sits at top-left of the layout (same origin as the lens cluster).
+   Natural size: 1507×1627px. */
+.s5-camera__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
 }
 
 /* Rotation target: JS sets transform-origin to triangle centroid,

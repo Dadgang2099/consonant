@@ -1576,6 +1576,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     // Slide panels off their respective edges
     const pairs = [
       [shadowPanel,  -300],
+      [cardsPanel,   -300],
       [seqPanel,      300],
       [tweakPanel,    300],
       [contentPanel,  300],
