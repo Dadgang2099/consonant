@@ -4955,46 +4955,95 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 .s3-triptych {
   position: relative;
   z-index: 3;
-  background: #000;
+  background: #111;
   width: 100%;
 }
+
 .s3-triptych__grid {
-  display: grid;
-  grid-template-columns: 38fr 28fr 34fr;
-  gap: 10px;
-  padding: 10px;
-  background: #1c1c1e;
-}
-.s3-triptych__card {
-  overflow: hidden;
-  position: relative;
-  background: #000;
-  height: 75vh;
-  border-radius: 22px;
+  display: flex;
+  gap: 30px;
+  padding: 30px 0;
+  box-sizing: border-box;
+  height: 100vh;
+  max-height: 780px;
+  background: #111;
 }
 
-/* Cards panel goes on the LEFT — keeps Card C unobscured. The
-   masked phone silhouette in Card A hugs the center, so the
-   left margin of the card is dark/empty and the panel sits over
-   that without covering the editable asset. */
-.pw-panel--cards {
-  right: auto;
-  left: 20px;
+.s3-triptych__card {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  flex: 1;
+  /* No border-radius — Apple original uses hard corners */
 }
-.s3-triptych__card img {
+
+/* ── Overshoot wraps — taller than card, parallax target ── */
+.s3-triptych__wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+/* Left (440×1437): fill column width, overshoot 120px total.
+   Image starts at top of wrap; JS slides wrap -120px → 0 as section scrolls. */
+.s3-triptych__card--left .s3-triptych__wrap {
+  top: 0;
+  height: calc(100% + 120px);
+}
+/* Center (803×1327): overshoot 160px above AND below (320px total).
+   Wrap centered on card; JS slides ±160px. */
+.s3-triptych__card--center .s3-triptych__wrap {
+  top: -160px;
+  height: calc(100% + 320px);
+}
+/* Right (330×654): contained — phone floats with generous inset.
+   Smaller 80px overshoot for subtle parallax. */
+.s3-triptych__card--right .s3-triptych__wrap {
+  top: 0;
+  height: calc(100% + 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  box-sizing: border-box;
+}
+
+/* Left + center: images fill wrap edge-to-edge */
+.s3-triptych__card--left img,
+.s3-triptych__card--center img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  /* CSS-var driven layout. Anchor (--ox/--oy) is the scale pivot
-     set by the ANCHOR picker — independent of position. Translate
-     (--tx/--ty) is the X POS / Y POS sliders' job. */
   object-position: center center;
+  display: block;
+}
+
+/* Right: phone silhouette floats contained, centered */
+.s3-triptych__card--right img {
+  position: relative;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 265px;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Panel CSS vars still drive per-card transform on all images */
+.s3-triptych__card img {
   transform-origin: var(--ox, 50%) var(--oy, 50%);
   transform: translate(var(--tx, 0%), var(--ty, 0%)) scale(var(--scale, 1)) rotate(var(--rot, 0deg));
   opacity: var(--opa, 1);
   transition: transform 0.12s ease, opacity 0.12s ease;
-  will-change: transform, opacity;
+}
+
+/* Cards panel goes on the LEFT — keeps Card C unobscured */
+.pw-panel--cards {
+  right: auto;
+  left: 20px;
 }
 
 /* ── Alignment picker — 5-dot quincunx (4 corners + center).
@@ -5091,18 +5140,21 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 734px) {
   .s3-triptych__grid {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    gap: 4px;
+    padding: 4px 0;
   }
-  .s3-triptych__card--left {
-    grid-column: 1 / -1;
+  .s3-triptych__card {
     height: 50vw;
+    flex: none;
+    width: 100%;
   }
-  .s3-triptych__card--center,
   .s3-triptych__card--right {
-    height: 40vw;
+    height: 70vw;
   }
 }
 

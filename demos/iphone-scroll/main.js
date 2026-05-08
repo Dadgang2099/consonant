@@ -6162,3 +6162,50 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   } // end guard
 }
 // ═══ END ANNOTATION SYSTEM
+
+// ═══ TRIPTYCH PARALLAX ═══════════════════════════════════════════
+(function triptychParallax() {
+  const section = document.querySelector('.s3-triptych');
+  if (!section) return;
+
+  // [wrap element, half-range in px]
+  // Left:   120px total travel (±60px)
+  // Middle: 320px total travel (±160px) — starts offset so top: -160px is home
+  // Right:   80px total travel (±40px)
+  const panels = [
+    { el: document.getElementById('tripWrap1'), range: 60,  startOffset: 0   },
+    { el: document.getElementById('tripWrap2'), range: 160, startOffset: 0   },
+    { el: document.getElementById('tripWrap3'), range: 40,  startOffset: 0   },
+  ].filter(d => d.el);
+
+  let raf = false;
+
+  function tick() {
+    const rect = section.getBoundingClientRect();
+    const vh   = window.innerHeight;
+
+    // progress: 0 = section bottom just entered viewport bottom
+    //           1 = section top just exited viewport top
+    const progress = (vh - rect.top) / (vh + rect.height);
+    const p = Math.max(0, Math.min(1, progress));
+
+    panels.forEach(({ el, range }) => {
+      // At p=0: translateY = +range (image at bottom of travel, shows top content)
+      // At p=1: translateY = -range (image at top of travel, shows bottom content)
+      const ty = range - p * range * 2;
+      el.style.transform = `translateY(${ty.toFixed(2)}px)`;
+    });
+
+    raf = false;
+  }
+
+  function onScroll() {
+    if (raf) return;
+    raf = true;
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  onScroll();
+}());
