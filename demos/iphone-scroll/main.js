@@ -6528,11 +6528,11 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   let originSet = false;
 
   // Camera rig state — driven by panel sliders
-  const G = { x: 0, y: 0, scale: 1 };
+  const G = { x: 92, y: 0, scale: 2.36 };
   const L = [
-    { x: 0, y: 0, scale: 1, rot: 0 },
-    { x: 0, y: 0, scale: 1, rot: 0 },
-    { x: 0, y: 0, scale: 1, rot: 0 },
+    { x:  1, y:   5, scale: 1, rot: 0 },
+    { x:  6, y:  32, scale: 1, rot: 0 },
+    { x: -7, y: 147, scale: 1, rot: 0 },
   ];
 
   function setCentroidOrigin() {
