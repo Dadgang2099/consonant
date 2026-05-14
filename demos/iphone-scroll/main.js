@@ -6607,6 +6607,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     const inp = document.getElementById(id);
     const num = document.getElementById(valId);
     if (!inp || !num) return;
+    // Seed state and display from HTML value on load
+    obj[key] = parseFloat(inp.value);
+    num.textContent = decimals === 0 ? Math.round(obj[key]) : obj[key].toFixed(decimals);
     inp.addEventListener('input', () => {
       obj[key] = parseFloat(inp.value);
       num.textContent = decimals === 0 ? Math.round(obj[key]) : obj[key].toFixed(decimals);
