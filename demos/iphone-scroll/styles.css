@@ -264,7 +264,7 @@ body {
   top: 64px;
   right: 20px;
   z-index: 2147483000;  /* near max int — guarantees on top of everything */
-  width: 296px;
+  width: 320px;
   border-radius: 14px;
   overflow: hidden;
   /* Glass base */
@@ -434,7 +434,7 @@ body {
 
 /* Alignment panel body — direct padding (no pw-sec wrapper) */
 #tweakBody {
-  padding: 8px 14px 28px;
+  padding: 8px 14px 36px;
   gap: 0;
 }
 #tweakBody .pw-row {
@@ -455,7 +455,7 @@ body {
 #ctrlBody .pw-actions,
 #shadowBody .pw-actions,
 #seqBody .pw-actions {
-  padding: 6px 8px 12px;
+  padding: 6px 14px 20px;
   margin-top: 6px;
 }
 
@@ -465,6 +465,8 @@ body {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
+  /* Bottom padding keeps actions buttons above the corner-hatch zone */
+  padding-bottom: 36px;
 }
 .pw-panel__body--scroll::-webkit-scrollbar { width: 3px; }
 .pw-panel__body--scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
@@ -1351,7 +1353,7 @@ body {
    SEQUENCE panel body
    ═══════════════════════════════════════════════════════════ */
 #seqBody {
-  padding: 8px 14px 28px;
+  padding: 8px 14px 36px;
   gap: 0;
 }
 #seqBody .pw-row {
@@ -1361,7 +1363,7 @@ body {
 
 /* Cards panel body — same padding rhythm as seq/shadow/tweak */
 #cardsBody {
-  padding: 8px 14px 28px;
+  padding: 8px 14px 36px;
   gap: 0;
 }
 #cardsBody .pw-row {
@@ -1369,7 +1371,21 @@ body {
   min-height: 26px;
 }
 #cardsBody .pw-actions {
-  padding: 6px 8px 12px;
+  padding: 6px 14px 20px;
+  margin-top: 6px;
+}
+
+/* Camera panel body — explicit padding; rows are direct children (no pw-sec wrapper) */
+#cameraBody {
+  padding: 8px 14px 36px;
+  gap: 0;
+}
+#cameraBody .pw-row {
+  margin-bottom: 4px;
+  min-height: 26px;
+}
+#cameraBody .pw-actions {
+  padding: 6px 0 20px;
   margin-top: 6px;
 }
 #seqBody .pw-debug {
@@ -1472,18 +1488,36 @@ body {
 /* ── Panel resize handles — lower-right and lower-left ──── */
 .pw-panel__resize {
   position: absolute;
-  bottom: 0;
-  width: 28px;
-  height: 28px;
-  cursor: nwse-resize;
+  top: 0;
+  bottom: 24px; /* stop above the corner-hatch zone */
+  width: 8px;
+  cursor: ew-resize;
   z-index: 100;
   user-select: none;
   -webkit-user-select: none;
 }
-.pw-panel__resize--right { right: 0; cursor: nwse-resize; }
-.pw-panel__resize--left  { left: 0;  cursor: nesw-resize; }
+.pw-panel__resize--right { right: 0; }
+.pw-panel__resize--left  { left: 0; }
 
-/* resize handles are invisible hit-areas */
+/* Glow edge — visible line that appears on hover to signal the drag edge */
+.pw-panel__resize::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(56, 210, 255, 0);
+  transition: background 0.18s;
+  pointer-events: none;
+}
+.pw-panel__resize--right::after { right: 1px; }
+.pw-panel__resize--left::after  { left: 1px; }
+.pw-panel__resize:hover::after,
+.pw-panel--resizing .pw-panel__resize::after {
+  background: rgba(56, 210, 255, 0.55);
+  box-shadow: 0 0 6px rgba(56, 210, 255, 0.35);
+}
 
 /* ── Corner hatches — bottom-left + bottom-right only ──────────── */
 .pw-corner {
@@ -1494,12 +1528,12 @@ body {
   z-index: 50;
 }
 .pw-corner--bl {
-  bottom: 6px; left: 6px;
+  bottom: 10px; left: 10px;
   border-bottom: 1px solid rgba(210,212,218,0.30);
   border-left:   1px solid rgba(210,212,218,0.30);
 }
 .pw-corner--br {
-  bottom: 6px; right: 6px;
+  bottom: 10px; right: 10px;
   border-bottom: 1px solid rgba(210,212,218,0.30);
   border-right:  1px solid rgba(210,212,218,0.30);
 }
@@ -2268,10 +2302,97 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 .ann-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2147482999; /* just below panels */
+  z-index: 9000; /* above page content, below tl-panel dock (9999) and pw-panels (2147483000) */
   cursor: crosshair;
 }
 .ann-overlay[hidden] { display: none; }
+
+/* ══════════════════════════════════════════════════════════
+   GRAB TOOL — direct-manipulation selection + scale handles
+   z-index: 9500 (above ann-overlay 9000, below pw-panels)
+   ══════════════════════════════════════════════════════════ */
+.pw-grab-btn {
+  /* size inherits from pw-icon-btn */
+  transition: color 0.15s, background 0.15s;
+}
+.pw-grab-btn--on {
+  color: rgba(255, 200, 0, 1) !important;
+  background: rgba(255, 200, 0, 0.16) !important;
+  border-radius: 5px;
+}
+
+/* Inline section-level grab buttons — always visible, subtle at rest */
+.pw-sec-grab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  margin-left: 4px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.18);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.pw-sec-grab-btn:hover { color: rgba(255, 200, 0, 1); background: rgba(255, 200, 0, 0.12); }
+.pw-sec-grab-btn--on { color: rgba(255, 200, 0, 1) !important; background: rgba(255, 200, 0, 0.15) !important; }
+
+/* Section grab button position — between label and toggle, push toggle to the right */
+.pw-sec__hdr { gap: 4px; }
+.pw-sec__tog { margin-left: auto; }
+
+/* Global cursor override while grab mode is active */
+html.grab-tool-active,
+html.grab-tool-active * { cursor: crosshair !important; }
+html.grab-tool-active .pw-panel,
+html.grab-tool-active .pw-panel * { cursor: default !important; }
+html.grab-tool-active .pw-grab-sel__body { cursor: grab !important; }
+html.grab-tool-active.grab-dragging .pw-grab-sel__body { cursor: grabbing !important; }
+html.grab-tool-active .pw-grab-handle { cursor: inherit !important; }
+
+/* Disable CSS transitions while actively dragging for zero latency */
+html.grab-dragging .s3-triptych__card img { transition: none !important; }
+
+/* Selection box */
+.pw-grab-sel {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9500;
+  border: 1.5px solid rgba(255, 200, 0, 0.9);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+}
+.pw-grab-sel[hidden] { display: none; }
+
+/* Invisible padding around the box so clicks near the border hit the body */
+.pw-grab-sel__body {
+  position: absolute;
+  inset: -6px;
+  pointer-events: all;
+}
+
+/* Scale handles — 9×9 white squares at corners/edge midpoints */
+.pw-grab-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: #fff;
+  border: 1.5px solid rgba(255, 200, 0, 0.9);
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  pointer-events: all;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+.pw-grab-handle--tl { top: 0;    left: 0;    cursor: nwse-resize; }
+.pw-grab-handle--tc { top: 0;    left: 50%;  cursor: ns-resize;   }
+.pw-grab-handle--tr { top: 0;    left: 100%; cursor: nesw-resize; }
+.pw-grab-handle--ml { top: 50%;  left: 0;    cursor: ew-resize;   }
+.pw-grab-handle--mr { top: 50%;  left: 100%; cursor: ew-resize;   }
+.pw-grab-handle--bl { top: 100%; left: 0;    cursor: nesw-resize; }
+.pw-grab-handle--bc { top: 100%; left: 50%;  cursor: ns-resize;   }
+.pw-grab-handle--br { top: 100%; left: 100%; cursor: nwse-resize; }
 
 .ann-dot {
   position: absolute;
@@ -2350,6 +2471,33 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 .ann-dot--selected.ann-dot--box {
   border-color: rgba(255,220,0,0.9);
   background: rgba(255,220,0,0.06);
+}
+
+/* ── Flag wiggle — badge pivots from base like a waving flag ── */
+@keyframes ann-flag-wave {
+  0%, 100% { transform: rotate(-7deg); }
+  50%       { transform: rotate( 7deg); }
+}
+.ann-dot--wiggle .ann-badge {
+  animation: ann-flag-wave 0.45s cubic-bezier(.36,.07,.19,.97) infinite;
+  transform-origin: center bottom;
+}
+
+/* ── Move mode — triple-click to grab ── */
+.ann-dot--moving {
+  cursor: grab !important;
+  z-index: 10;
+}
+.ann-dot--moving .ann-badge {
+  animation: none;
+  box-shadow:
+    0 0 0 3px var(--ann-color, rgba(255,159,10,0.95)),
+    0 0 14px var(--ann-color, rgba(255,159,10,0.45)),
+    0 2px 8px rgba(0,0,0,0.4);
+}
+.ann-dot--grabbing,
+.ann-dot--grabbing * {
+  cursor: grabbing !important;
 }
 
 /* Image thumbnail on pin */
@@ -4962,7 +5110,7 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 .s3-triptych__grid {
   display: flex;
   gap: 30px;
-  padding: 30px 0;
+  padding: 30px;
   box-sizing: border-box;
   height: 100vh;
   max-height: 780px;
@@ -5018,16 +5166,26 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   object-fit: contain;
 }
 
-/* Panel CSS vars still drive per-card transform on all images */
+/* Panel CSS vars still drive per-card transform on all images.
+   --grab-sx / --grab-sy: set by grab tool for non-uniform scale.
+   When not set they fall back to --scale (uniform). */
 .s3-triptych__card img {
   transform-origin: var(--ox, 50%) var(--oy, 50%);
-  transform: translate(var(--tx, 0%), var(--ty, 0%)) scale(var(--scale, 1)) rotate(var(--rot, 0deg));
+  transform: translate(var(--tx, 0%), var(--ty, 0%))
+             scaleX(var(--grab-sx, var(--scale, 1)))
+             scaleY(var(--grab-sy, var(--scale, 1)))
+             rotate(var(--rot, 0deg));
   opacity: var(--opa, 1);
   transition: transform 0.12s ease, opacity 0.12s ease;
 }
 
 /* Cards panel goes on the LEFT — keeps Card C unobscured */
 .pw-panel--cards {
+  right: auto;
+  left: 20px;
+}
+
+.pw-panel--camera {
   right: auto;
   left: 20px;
 }
@@ -5230,25 +5388,40 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 
 /* ═══════════════════════════════════════════════════════════
    SECTION 5 — PRO CAMERA SYSTEM
-   300vh scroll travel; sticky 100vh; dual-counter rotation
+   z-index: 2 sits BEHIND triptych (z-index:3). Triptych scrolls
+   over it, revealing camera beneath. Section height provides
+   exactly the scroll travel for triptych to exit cleanly:
+     height = 100vh (visible) + min(100vh,780px) (scroll travel)
+     margin-top = -min(100vh,780px)  (overlap triptych)
+   Net page contribution = 100vh. Scroll ends when triptych exits.
    ═══════════════════════════════════════════════════════════ */
 
 .s5-camera {
   position: relative;
-  z-index: 5;
-  background: #111;
-  height: 300vh;
+  z-index: 2;
+  background: #000;
+  height: calc(100vh + min(100vh, 780px));
+  margin-top: max(-100vh, -780px);
 }
 
-/* Sticky viewport — lenses overflow clipped here.
-   clip-path starts at inset(100% 0 0 0) = fully hidden; JS lifts it on scroll. */
+/* Sticky viewport — lenses overflow clipped here. */
 .s5-camera__sticky {
   position: sticky;
   top: 0;
   height: 100vh;
   overflow: hidden;
-  background: #111;
-  clip-path: inset(100% 0 0 0);
+  background: #000;
+}
+
+/* Depth vignette — overlays cluster, z-index 3 so it paints above lenses */
+.s5-camera__shadow {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 110% 75% at 60% 50%, transparent 30%, rgba(0,0,0,0.6) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, transparent 18%, transparent 78%, rgba(0,0,0,0.38) 100%);
 }
 
 /* ── Lens cluster ─────────────────────────────────────────── */
@@ -5256,31 +5429,35 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 .s5-camera__cluster {
   position: absolute;
   inset: 0;
+  will-change: transform;
 }
 
-/* Static layout offset: mirrors Apple's -175px left offset.
-   Width formula keeps middle lens (right:0 of layout) at ≈60% of viewport.
-   Large (vw≥1415): 60vw+543px  Small (vw<1415): 86vw+175px  — meet at 1415px. */
+/* Layout: centered in the sticky viewport.
+   Explicit width from aspect-ratio avoids width:auto ambiguity on abs elements.
+   JS panel X/Y/SCALE apply an additional transform on top. */
 .s5-camera__layout {
   position: absolute;
-  left: -175px;
+  left: 50%;
   top: 50%;
-  translate: 0 -50%;
-  width: min(calc(60vw + 543px), calc(86vw + 175px));
-  height: max(200vh, 1600px);
+  translate: -50% -50%;
+  height: 88vh;
+  width: calc(88vh * 1507 / 1627);
 }
 
-/* Background static composite — full camera system, no rotation.
-   Sits at top-left of the layout (same origin as the lens cluster).
-   Natural size: 1507×1627px. */
+/* Background static composite — aspect ratio matches layout exactly,
+   so object-fit:fill fills without distortion.
+   Brightness boost: the source image is near-black rings on black;
+   3× makes the housing structure legible on the dark bg. */
 .s5-camera__bg {
   position: absolute;
   top: 0;
   left: 0;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: fill;
   pointer-events: none;
+  filter: brightness(3) contrast(1.1);
 }
 
 /* Rotation target: JS sets transform-origin to triangle centroid,
@@ -5293,17 +5470,38 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   will-change: transform;
 }
 
-/* Individual circular lens — all 3 images are 736×733px */
+/* ── Lenses: pixel-locked to camera_hero_static.jpg (1507×1627).
+   All coords use factor = 88vh/1627 so they track the bg image exactly.
+   clip-path circle = SVG circular mask; counter-rotation happens on .lens-inner
+   so the clip stays fixed while the lens content rotates inside it. */
 .s5-camera__lens {
   position: absolute;
-  width: min(736px, 52vw);
-  height: min(733px, calc(52vw * 733 / 736));
+  clip-path: circle(50% at 50% 50%);
 }
 
-/* Triangle arrangement matching Apple's original */
-.s5-camera__lens--top    { top: 0;   left: 0; }
-.s5-camera__lens--middle { top: 50%; right: 0; margin-top: min(-366px, -26vw); }
-.s5-camera__lens--bottom { bottom: 0; left: 0; }
+/* Top lens  — bg image center (364, 366)px, radius 354px */
+.s5-camera__lens--top {
+  width:  calc(88vh * 708 / 1627);
+  height: calc(88vh * 708 / 1627);
+  top:    calc(88vh *  12 / 1627);
+  left:   calc(88vh *  10 / 1627);
+}
+
+/* Middle lens — bg image center (1121, 745)px, radius 375px */
+.s5-camera__lens--middle {
+  width:  calc(88vh * 750 / 1627);
+  height: calc(88vh * 750 / 1627);
+  top:    calc(88vh * 370 / 1627);
+  left:   calc(88vh * 746 / 1627);
+}
+
+/* Bottom lens — bg image center (380, 985)px, radius 355px */
+.s5-camera__lens--bottom {
+  width:  calc(88vh * 710 / 1627);
+  height: calc(88vh * 710 / 1627);
+  top:    calc(88vh * 630 / 1627);
+  left:   calc(88vh *  25 / 1627);
+}
 
 /* Inner: counter-rotates around own center so each lens spins in place */
 .s5-camera__lens-inner {
@@ -5326,7 +5524,8 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
 .s5-camera__copy {
   position: absolute;
   bottom: 80px;
-  left: 60px;
+  left: max(60px, 8vw);
+  max-width: min(560px, 44vw);
   opacity: 0;
   will-change: transform, opacity;
   z-index: 2;
@@ -5348,15 +5547,26 @@ html.theme-light .ai-bar__send:hover:not(:disabled) {
   font-weight: 700;
   letter-spacing: -0.026em;
   line-height: 1.05;
+  margin-bottom: 20px;
+}
+
+.s5-camera__body {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(15px, 1.2vw, 19px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {
   .s5-camera__copy {
     bottom: 52px;
     left: 24px;
+    max-width: calc(100vw - 48px);
   }
   .s5-camera__eyebrow { font-size: 15px; }
   .s5-camera__headline { font-size: 36px; }
+  .s5-camera__body { font-size: 15px; }
 }
 
 /* ═══════════════════════════════════════════════════════════

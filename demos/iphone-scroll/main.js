@@ -187,7 +187,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         const { tx, ty, phoneW } = placePhone(slideFraction);
 
         phoneImg.style.width     = `${phoneW}px`;
-        phoneImg.style.transform = `translate(${tx}px, ${ty}px)`;
+        const _psx = parseFloat(phoneImg.style.getPropertyValue('--grab-sx')) || 1;
+        const _psy = parseFloat(phoneImg.style.getPropertyValue('--grab-sy')) || 1;
+        phoneImg.style.transform = `translate(${tx}px, ${ty}px) scaleX(${_psx}) scaleY(${_psy})`;
 
         if (phoneHeadline) {
           phoneHeadline.style.opacity = Math.min(Math.max((p2 - 0.12) / 0.28, 0), 1);
@@ -315,25 +317,28 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
 
   // ── Slider fill track ────────────────────────────────────
   function updateTrack(input) {
-    const panel = input.closest('.pw-panel');
     const dark  = !document.documentElement.classList.contains('theme-light');
     const fill  = dark ? 'rgba(255,255,255,0.60)' : 'rgba(0,102,255,0.75)';
     const fill0 = dark ? 'rgba(255,255,255,0)'    : 'rgba(0,102,255,0)';
     const min = +input.min, max = +input.max, val = +input.value;
     const ratio = Math.max(0, Math.min(1, (val - min) / (max - min)));
 
+    // Use getBoundingClientRect for sub-pixel accuracy; fall back to offsetWidth.
+    // If still zero the panel isn't laid out yet — skip and let ResizeObserver
+    // fire once layout settles.
+    const w = input.getBoundingClientRect().width || input.offsetWidth;
+    if (!w) return;
+
     // True thumb-center in element-% space (WebKit insets thumb by half its
     // width from each track edge, so raw ratio ≠ visual center position).
-    const w   = input.offsetWidth || 200;
-    const tW  = 20;       // must match CSS thumb width
+    const tW   = 20;      // must match CSS thumb width
     const capR = tW / 2;  // 10 px
-    const cx  = capR + (w - tW) * ratio;
-    const tp  = (cx / w * 100).toFixed(3);
+    const cx   = capR + (w - tW) * ratio;
+    const tp   = (cx / w * 100).toFixed(3);
 
     // Cap dome: round right end of the fill bar.
     const cap = `radial-gradient(circle ${capR}px at ${tp}% 50%, ${fill} 80%, ${fill0} 100%)`;
-    // Bar: solid fill that softly fades over the full thumb diameter so there
-    // is never a hard edge visible at any thumb opacity during hover/rolloff.
+    // Bar: solid fill that softly fades over the full thumb diameter.
     const bar = `linear-gradient(to right, ${fill} calc(${tp}% - ${capR}px), ${fill0} calc(${tp}% + ${capR}px))`;
 
     input.style.backgroundImage    = `${cap}, ${bar}`;
@@ -341,8 +346,23 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     input.style.backgroundPosition = '';
     input.style.backgroundRepeat   = '';
   }
+
+  // Expose globally so other IIFEs (resize handler) can call it
+  window.__pwUpdateTrack = updateTrack;
+
+  // ResizeObserver: recompute every slider's fill whenever a panel changes size.
+  // This fires on both explicit JS width changes AND CSS-driven layout shifts.
+  if (window.ResizeObserver) {
+    document.querySelectorAll('.pw-panel').forEach(panel => {
+      new ResizeObserver(() => {
+        panel.querySelectorAll('.pw-range').forEach(r => updateTrack(r));
+      }).observe(panel);
+    });
+  }
+
   document.querySelectorAll('.pw-range').forEach(r => {
-    updateTrack(r);
+    // Defer initial paint one frame so layout is fully settled before reading width
+    requestAnimationFrame(() => updateTrack(r));
     r.addEventListener('input', () => updateTrack(r));
     r.addEventListener('wheel', e => {
       e.preventDefault();
@@ -404,6 +424,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   bindToggle('ctrlToggle',    'ctrlBody');
   bindToggle('seqToggle',     'seqBody');
   bindToggle('cardsToggle',   'cardsBody');
+  bindToggle('cameraToggle',  'cameraBody');
 
   // ── Panel switch + shadow opacity ────────────────────────
   // Portal every .pw-panel out of .stage (which is position:sticky and
@@ -418,9 +439,10 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   const tweakPanel   = document.getElementById('tweakPanel');
   const contentPanel = document.getElementById('contentPanel');
   const cardsPanel   = document.getElementById('cardsPanel');
+  const cameraPanel  = document.getElementById('cameraPanel');
 
-  // All right-side panels start hidden via inline style
-  [seqPanel, tweakPanel, contentPanel, cardsPanel].forEach(p => {
+  // All panels start hidden via inline style
+  [seqPanel, tweakPanel, contentPanel, cardsPanel, cameraPanel].forEach(p => {
     if (!p) return;
     p.style.opacity       = '0';
     p.style.pointerEvents = 'none';
@@ -538,12 +560,28 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
         const vh = window.innerHeight;
         // Enter: top crosses 80% of viewport, fully on by 30%
         const enter = c01((vh * 0.80 - r.top) / (vh * 0.50));
-        // Exit: bottom passes above viewport
-        const exit  = c01((0 - r.bottom) / (vh * 0.30));
+        // Exit: bottom passes above viewport (fast 10% window)
+        const exit  = c01((0 - r.bottom) / (vh * 0.10));
         opa = Math.max(0, Math.min(1, enter * (1 - exit)));
       }
+      // Hard kill: once triptych starts scrolling off top, cards panel must die
+      if (tri && tri.getBoundingClientRect().top < 0) opa = 0;
       cardsPanel.style.opacity       = opa;
       cardsPanel.style.pointerEvents = opa < 0.08 ? 'none' : 'auto';
+    }
+
+    // ── camera panel: visible while triptych is exiting (camera revealing) ──
+    if (cameraPanel) {
+      const tri5 = document.querySelector('.s3-triptych');
+      let camOpa = 0;
+      if (tri5) {
+        const tr5 = tri5.getBoundingClientRect();
+        const vh  = window.innerHeight;
+        // Fade in as triptych top crosses above viewport
+        camOpa = c01(-tr5.top / (vh * 0.25));
+      }
+      cameraPanel.style.opacity       = camOpa;
+      cameraPanel.style.pointerEvents = camOpa < 0.08 ? 'none' : 'auto';
     }
   }
   window.addEventListener('scroll', updatePanelVisibility, { passive: true });
@@ -624,7 +662,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   }
 
-  [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel].forEach(p => {
+  [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel, cameraPanel].forEach(p => {
     if (!p) return;
     makeDraggable(p);
   });
@@ -1169,7 +1207,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       headline.style.top       = document.getElementById('lockupTop').value + '%';
       headline.style.padding   = '0 ' + document.getElementById('lockupPad').value + 'px';
       const sc = document.getElementById('lockupScale');
-      headline.style.transform = sc ? `scale(${sc.value / 100})` : '';
+      const _lsx = parseFloat(headline.style.getPropertyValue('--grab-sx')) || 1;
+      const _lsy = parseFloat(headline.style.getPropertyValue('--grab-sy')) || 1;
+      headline.style.transform = sc ? `scale(${sc.value / 100}) scaleX(${_lsx}) scaleY(${_lsy})` : '';
       headline.style.transformOrigin = 'top center';
     }
     hlEl.style.maxWidth     = document.getElementById('lockupMaxW').value + 'px';
@@ -1577,6 +1617,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     const pairs = [
       [shadowPanel,  -300],
       [cardsPanel,   -300],
+      [cameraPanel,  -300],
       [seqPanel,      300],
       [tweakPanel,    300],
       [contentPanel,  300],
@@ -1613,7 +1654,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
 
     // Slide panels back in
-    const allPanels = [shadowPanel, seqPanel, tweakPanel, contentPanel, cardsPanel].filter(Boolean);
+    const allPanels = [shadowPanel, seqPanel, tweakPanel, contentPanel, cardsPanel, cameraPanel].filter(Boolean);
     allPanels.forEach((el, i) => {
       setTimeout(() => {
         el.style.transition = `translate 0.54s ${OPEN_EASE}, opacity 0.48s ${OPEN_EASE}`;
@@ -2300,40 +2341,46 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     panel.addEventListener('mouseleave', () => panel.classList.remove('pw-panel--hovered'));
   });
 
-  // ── Panel resize — drag lower-right or lower-left corner ──
+  // ── Panel resize — full-height edge strips on left and right ──
   document.querySelectorAll('.pw-panel').forEach(panel => {
     const scrollBody = panel.querySelector('.pw-panel__body--scroll');
 
     ['right','left'].forEach(side => {
       const handle = document.createElement('div');
       handle.className = `pw-panel__resize pw-panel__resize--${side}`;
-      handle.title = 'Drag to resize';
       panel.appendChild(handle);
 
-      handle.addEventListener('mousedown', e => {
+      handle.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
         e.preventDefault();
-        const startX   = e.clientX;
-        const startW   = panel.offsetWidth;
+        handle.setPointerCapture(e.pointerId);
 
-        // Resize is WIDTH-ONLY now. Height is content-driven so the panel
-        // can never be dragged shorter than its content (which would clip
-        // the bottom rows) or taller than needed.
+        const startX = e.clientX;
+        const startW = panel.offsetWidth;
+
+        panel.classList.add('pw-panel--resizing');
         panel.style.height = 'auto';
         if (scrollBody) scrollBody.style.maxHeight = 'none';
 
         function onMove(ev) {
-          const dx = ev.clientX - startX;
-          const newW = Math.max(220, Math.min(600, side === 'left' ? startW - dx : startW + dx));
+          const dx  = ev.clientX - startX;
+          const newW = Math.max(220, Math.min(740, side === 'left' ? startW - dx : startW + dx));
           panel.style.width = `${newW}px`;
+          // ResizeObserver handles the recompute; this is a belt-and-suspenders call
+          // through the global since updateTrack lives in a different IIFE scope.
+          if (window.__pwUpdateTrack) {
+            panel.querySelectorAll('.pw-range').forEach(r => window.__pwUpdateTrack(r));
+          }
         }
 
         function onUp() {
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
+          panel.classList.remove('pw-panel--resizing');
+          handle.removeEventListener('pointermove', onMove);
+          handle.removeEventListener('pointerup', onUp);
         }
 
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', onUp);
       });
     });
   });
@@ -3153,6 +3200,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     tweakPanel:   '#c4ff60',
     contentPanel: '#ff5eb0',
     cardsPanel:   '#38d2ff',
+    cameraPanel:  '#bf5fff',
   };
   // shadow* inputs were merged into the PHONE panel; map them by id prefix
   // when the input lives outside the panel DOM (e.g. shadowCPickerHex popover).
@@ -3411,7 +3459,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     const OVERLAY_W  = 48;
     // Match the timeline tree order: PHONE (top, includes shadow rows)
     // → HERO COPY → SCROLL VIDEO → CARDS (triptych below the hero).
-    const panelIds   = ['tweakPanel', 'contentPanel', 'seqPanel', 'cardsPanel'];
+    const panelIds   = ['tweakPanel', 'contentPanel', 'seqPanel', 'cardsPanel', 'cameraPanel'];
 
     // Scrubber hairline — always visible
     const hair = document.createElement('div');
@@ -4591,7 +4639,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     //   PHONE (hero, includes merged shadow rows)  →  HERO COPY
     //   (sits under the phone)  →  SCROLL VIDEO (background)
     //   →  CARDS (below-hero triptych)
-    const panelIds = ['tweakPanel', 'contentPanel', 'seqPanel', 'cardsPanel'];
+    const panelIds = ['tweakPanel', 'contentPanel', 'seqPanel', 'cardsPanel', 'cameraPanel'];
     // assets: [{ panelId, title, props: [{ inputId, label, kfs, isColor }] }]
     // Walk every metric row in every panel — sliders, selects, text inputs,
     // segmented controls AND color rows so the timeline mirrors the panel
@@ -5259,6 +5307,26 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   let wasVisible     = true;   // panelsVisible value when we entered comment mode
   let pendingImageId = null;
 
+  // ── Persistence ────────────────────────────────────────────────────────────
+  const ANN_STORE = 'iphone-scroll-ann-v1';
+
+  function saveAnnotations() {
+    try { localStorage.setItem(ANN_STORE, JSON.stringify({ nextId, annotations })); } catch (_) {}
+  }
+
+  function loadAnnotations() {
+    try {
+      const raw = localStorage.getItem(ANN_STORE);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      annotations = data.annotations || [];
+      nextId      = data.nextId      || 1;
+      annotations.forEach(ann => { renderDot(ann); renderCard(ann); });
+      syncEmpty();
+      updateAnnotationPositions();
+    } catch (_) { annotations = []; nextId = 1; }
+  }
+
   // ── Element refs ───────────────────────────────────────────────────────────
   const commentTog    = document.getElementById('commentTog');
   const commentClose  = document.getElementById('commentClose');
@@ -5286,6 +5354,20 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   const annColors          = document.getElementById('annColors');
   const annColorCustom     = document.getElementById('annColorCustom');
   const drawSvg            = document.getElementById('drawSvg');
+  // drawGroupDoc — translated by scroll; contains strokes on normal-scroll content
+  // drawGroupSticky — no base transform; each polyline gets an individual transform for its sticky range
+  const drawGroupDoc = drawSvg ? (() => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.dataset.group = 'doc';
+    drawSvg.appendChild(g);
+    return g;
+  })() : null;
+  const drawGroupSticky = drawSvg ? (() => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.dataset.group = 'sticky';
+    drawSvg.appendChild(g);
+    return g;
+  })() : null;
   const annClear      = document.getElementById('annClear');
   const annFileInput  = document.getElementById('annFileInput');
   const modeToggle    = document.getElementById('modeToggle');
@@ -5403,8 +5485,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
 
   function setActiveTool(tool) {
     activeTool = tool;
-    if (appDock) {
-      appDock.querySelectorAll('.ann-tool').forEach(btn => {
+    if (commentPanel) {
+      commentPanel.querySelectorAll('.ann-tool').forEach(btn => {
         btn.classList.toggle('ann-tool--on', btn.dataset.tool === tool);
       });
     }
@@ -5433,8 +5515,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     });
   }
 
-  if (appDock) {
-    appDock.addEventListener('click', e => {
+  if (commentPanel) {
+    commentPanel.addEventListener('click', e => {
       const btn = e.target.closest('.ann-tool');
       if (!btn) return;
       setActiveTool(btn.dataset.tool);
@@ -5442,9 +5524,15 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   }
 
   // ── Annotation CRUD ────────────────────────────────────────────────────────
-  function addAnnotation(type, x, y, w, h) {
+  function addAnnotation(type, x, y, w, h, anchorInfo) {
     const id  = nextId++;
+    const ai  = anchorInfo || {};
     const ann = { id, type, x: x || 0, y: y || 0, w: w || 0, h: h || 0,
+                  anchorMode : ai.anchorMode  || 'doc',
+                  docY       : ai.docY        ?? null,
+                  vpY        : ai.vpY         ?? null,
+                  stickyStart: ai.stickyStart ?? null,
+                  stickyEnd  : ai.stickyEnd   ?? null,
                   text: '', images: [], figmaUrl: '',
                   color: drawColor,
                   strokes: [], drawColor: drawColor,
@@ -5453,14 +5541,16 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     renderDot(ann);
     renderCard(ann);
     syncEmpty();
+    saveAnnotations();
     return ann;
   }
 
   function deleteAnnotation(id) {
     annotations = annotations.filter(a => a.id !== id);
     // Remove overlay dot (pin/box) and any SVG draw strokes
-    if (annOverlay) annOverlay.querySelectorAll(`[data-ann-id="${id}"]`).forEach(el => el.remove());
-    if (drawSvg)    drawSvg.querySelectorAll(`[data-ann-id="${id}"]`).forEach(el => el.remove());
+    if (annOverlay)      annOverlay.querySelectorAll(`[data-ann-id="${id}"]`).forEach(el => el.remove());
+    if (drawGroupDoc)    drawGroupDoc.querySelectorAll(`[data-ann-id="${id}"]`).forEach(el => el.remove());
+    if (drawGroupSticky) drawGroupSticky.querySelectorAll(`[data-ann-id="${id}"]`).forEach(el => el.remove());
     if (activeDrawAnn && activeDrawAnn.id === id) activeDrawAnn = null;
     const card = annList && annList.querySelector(`[data-card-id="${id}"]`);
     if (card) card.remove();
@@ -5469,6 +5559,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       if (annDetailSec) annDetailSec.setAttribute('hidden', '');
     }
     syncEmpty();
+    saveAnnotations();
   }
 
   function getAnnotation(id) {
@@ -5486,9 +5577,9 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     // Draw annotations use SVG strokes — no overlay div needed
     if (ann.type === 'draw') { renderDrawStrokes(ann); return; }
     const dot  = document.createElement('div');
-    dot.className = `ann-dot ann-dot--${ann.type}`;
+    dot.className = `ann-dot ann-dot--${ann.type} ann-dot--wiggle`;
     dot.dataset.annId = ann.id;
-    dot.style.cssText = `left:${ann.x}%;top:${ann.y}%;` +
+    dot.style.cssText = `left:${ann.x}%;top:${computeTopPct(ann).toFixed(3)}%;` +
       (ann.type === 'box' ? `width:${ann.w}%;height:${ann.h}%;` : '');
     if (ann.color) dot.style.setProperty('--ann-color', ann.color);
 
@@ -5497,13 +5588,78 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     badge.textContent  = ann.id;
     dot.appendChild(badge);
 
+    // Single click = select; triple-click (3× within 400ms) = move mode
+    let clickCount = 0, clickReset = null;
     dot.addEventListener('click', e => {
       e.stopPropagation();
-      selectAnnotation(ann.id);
+      clickCount++;
+      clearTimeout(clickReset);
+      if (clickCount === 1) selectAnnotation(ann.id);
+      if (clickCount >= 3) {
+        clickCount = 0;
+        enterFlagMoveMode(dot, ann);
+        return;
+      }
+      clickReset = setTimeout(() => { clickCount = 0; }, 400);
     });
 
     annOverlay.appendChild(dot);
     return dot;
+  }
+
+  // Triple-click activates: glow ring appears, drag repositions the flag.
+  // Escape or click-outside cancels without moving.
+  function enterFlagMoveMode(dot, ann) {
+    // Toggle off if already in move mode
+    if (dot.classList.contains('ann-dot--moving')) {
+      dot.classList.remove('ann-dot--moving');
+      return;
+    }
+    dot.classList.remove('ann-dot--wiggle');
+    dot.classList.add('ann-dot--moving');
+
+    function exitMoveMode() {
+      dot.classList.remove('ann-dot--moving', 'ann-dot--grabbing');
+      dot.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown',      onKey);
+      document.removeEventListener('pointerdown',  onOutside);
+    }
+
+    function onPointerDown(e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dot.setPointerCapture(e.pointerId);
+      dot.classList.add('ann-dot--grabbing');
+      const rect = annOverlay.getBoundingClientRect();
+
+      function onMove(e) {
+        ann.x = Math.max(1, Math.min(99, ((e.clientX - rect.left) / rect.width) * 100));
+        if (ann.anchorMode === 'sticky') {
+          ann.vpY = e.clientY / window.innerHeight;
+        } else {
+          ann.docY = e.clientY + window.scrollY;
+        }
+        dot.style.left = ann.x + '%';
+        dot.style.top  = computeTopPct(ann) + '%';
+      }
+      function onUp() {
+        dot.removeEventListener('pointermove', onMove);
+        dot.removeEventListener('pointerup',   onUp);
+        saveAnnotations();
+        exitMoveMode();
+      }
+      dot.addEventListener('pointermove', onMove);
+      dot.addEventListener('pointerup',   onUp);
+    }
+
+    function onKey(e) { if (e.key === 'Escape') exitMoveMode(); }
+    function onOutside(e) { if (!dot.contains(e.target)) exitMoveMode(); }
+
+    dot.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    // Delay outside listener to avoid the triple-click itself triggering it
+    setTimeout(() => document.addEventListener('pointerdown', onOutside), 150);
   }
 
   function updateDot(ann) {
@@ -5636,31 +5792,90 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     });
   }
 
+  // ── Anchor mode detection ─────────────────────────────────────────────────
+  // At drop time: walk DOM under cursor (skipping the ann overlay) to detect
+  // if the cursor is over a position:sticky element that is currently pinned.
+  // Returns {anchorMode:'sticky', vpY, stickyStart, stickyEnd}
+  //      or {anchorMode:'doc',    docY}
+  function detectAnchorMode(clientX, clientY) {
+    const layerEls = new Set(
+      [annOverlay, drawSvg, drawGroupDoc, drawGroupSticky].filter(Boolean)
+    );
+    const els = document.elementsFromPoint(clientX, clientY);
+    for (const el of els) {
+      if (layerEls.has(el)) continue;
+      let cur = el;
+      while (cur && cur !== document.body) {
+        if (layerEls.has(cur)) { cur = null; break; }
+        const st = getComputedStyle(cur);
+        if (st.position === 'sticky') {
+          const par = cur.parentElement;
+          if (!par) break;
+          const parRect      = par.getBoundingClientRect();
+          const parDocTop    = parRect.top + window.scrollY;
+          const parDocBottom = parDocTop + par.offsetHeight;
+          const stickyOff    = parseFloat(st.top) || 0;
+          const stickyStart  = parDocTop - stickyOff;
+          const stickyEnd    = Math.max(stickyStart, parDocBottom - window.innerHeight - stickyOff);
+          if (window.scrollY >= stickyStart && window.scrollY <= stickyEnd) {
+            return { anchorMode: 'sticky', vpY: clientY / window.innerHeight, stickyStart, stickyEnd };
+          }
+        }
+        cur = cur.parentElement;
+      }
+      break; // only inspect first non-overlay element
+    }
+    return { anchorMode: 'doc', docY: clientY + window.scrollY };
+  }
+
+  // Compute the viewport-relative top% for an annotation at the current scroll position.
+  // This is the single source of truth — call it on every scroll or drag update.
+  function computeTopPct(ann) {
+    if (ann.anchorMode === 'sticky' && ann.vpY != null) {
+      const s  = window.scrollY;
+      const dy = s < ann.stickyStart ? (ann.stickyStart - s) / window.innerHeight * 100
+               : s > ann.stickyEnd   ? -(s - ann.stickyEnd)  / window.innerHeight * 100
+               : 0;
+      return ann.vpY * 100 + dy;
+    }
+    return ann.docY != null
+      ? (ann.docY - window.scrollY) / window.innerHeight * 100
+      : ann.y;
+  }
+
   // ── Overlay mouse interactions ─────────────────────────────────────────────
-  let boxDrawing  = false;
-  let boxStartX   = 0;
-  let boxStartY   = 0;
-  let boxCurX     = 0;
-  let boxCurY     = 0;
-  let boxEl       = null;
+  let boxDrawing    = false;
+  let boxStartX     = 0;
+  let boxCurX       = 0;
+  let boxDocStartY  = 0;
+  let boxDocCurY    = 0;
+  let boxAnchor     = null; // detectAnchorMode result captured at box mousedown
+  let boxEl         = null;
 
   // Draw tool state
-  let drawingStroke  = false;
-  let activeDrawAnn  = null;
-  let currentPolyline = null;
+  let drawingStroke       = false;
+  let activeDrawAnn       = null;
+  let currentStrokeAnchor = null; // detectAnchorMode result for the in-progress stroke
+  let currentPolyline     = null;
   let strokePoints    = [];
 
-  function svgCoords(e) {
+  function svgCoords(e, ai) {
     const rect = annOverlay.getBoundingClientRect();
-    return [
-      (e.clientX - rect.left) / rect.width  * 100,
-      (e.clientY - rect.top)  / rect.height * 100,
-    ];
+    const x = (e.clientX - rect.left) / rect.width * 100;
+    // sticky mode: Y in viewport%; doc mode: Y in document viewBox units (scrolled-out space)
+    const y = (ai && ai.anchorMode === 'sticky')
+      ? e.clientY / window.innerHeight * 100
+      : (e.clientY + window.scrollY) / window.innerHeight * 100;
+    return [x, y];
   }
 
   function renderDrawStrokes(ann) {
-    if (!drawSvg) return;
-    drawSvg.querySelectorAll(`[data-ann-id="${ann.id}"]`).forEach(el => el.remove());
+    const grp = ann.anchorMode === 'sticky' ? drawGroupSticky : drawGroupDoc;
+    if (!grp) return;
+    // Remove old polylines for this ann from both groups
+    [drawGroupDoc, drawGroupSticky].forEach(g => {
+      if (g) g.querySelectorAll(`[data-ann-id="${ann.id}"]`).forEach(el => el.remove());
+    });
     (ann.strokes || []).forEach((stroke, si) => {
       const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       pl.setAttribute('points', stroke.points.map(p => p.join(',')).join(' '));
@@ -5671,46 +5886,59 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       pl.setAttribute('stroke-linejoin', 'round');
       pl.setAttribute('data-ann-id', ann.id);
       pl.setAttribute('data-stroke-idx', si);
+      if (ann.anchorMode === 'sticky') {
+        pl.dataset.stickyStart = ann.stickyStart;
+        pl.dataset.stickyEnd   = ann.stickyEnd;
+      }
       pl.style.pointerEvents = 'stroke';
       pl.addEventListener('click', ev => {
         if (activeTool === 'draw') return;
         ev.stopPropagation();
         selectAnnotation(ann.id);
       });
-      drawSvg.appendChild(pl);
+      grp.appendChild(pl);
     });
   }
 
   annOverlay.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
-    const [fracX, fracY] = svgCoords(e);
+    const ai = detectAnchorMode(e.clientX, e.clientY);
+    const [fracX, fracY] = svgCoords(e, ai);
 
     const onCanvas = e.target === annOverlay || e.target === drawSvg || e.target.closest?.('.draw-svg');
 
     if (activeTool === 'pin') {
       if (!onCanvas) return;
-      const ann = addAnnotation('pin', fracX, fracY);
+      const ann = addAnnotation('pin', fracX, fracY, 0, 0, ai);
       selectAnnotation(ann.id);
 
     } else if (activeTool === 'box') {
       if (!onCanvas) return;
-      boxDrawing = true;
-      boxStartX  = fracX;
-      boxStartY  = fracY;
+      boxDrawing   = true;
+      boxStartX    = fracX;
+      boxAnchor    = ai;
+      // For sticky: store viewport Y; for doc: store doc Y
+      boxDocStartY = ai.anchorMode === 'sticky' ? e.clientY : e.clientY + window.scrollY;
+      boxDocCurY   = boxDocStartY;
+      const startTopPct = ai.anchorMode === 'sticky'
+        ? e.clientY / window.innerHeight * 100
+        : (e.clientY + window.scrollY - window.scrollY) / window.innerHeight * 100;
       boxEl = document.createElement('div');
       boxEl.className = 'ann-dot ann-dot--box ann-dot--drawing';
-      boxEl.style.cssText = `left:${fracX}%;top:${fracY}%;width:0%;height:0%;`;
+      boxEl.style.cssText = `left:${fracX}%;top:${startTopPct.toFixed(3)}%;width:0%;height:0%;`;
       annOverlay.appendChild(boxEl);
 
     } else if (activeTool === 'draw') {
-      drawingStroke = true;
-      strokePoints  = [[fracX, fracY]];
+      drawingStroke       = true;
+      currentStrokeAnchor = ai;
+      strokePoints        = [[fracX, fracY]];
       // Start or continue the active draw annotation
       if (!activeDrawAnn) {
-        activeDrawAnn = addAnnotation('draw', fracX, fracY);
+        activeDrawAnn = addAnnotation('draw', fracX, fracY, 0, 0, ai);
         selectAnnotation(activeDrawAnn.id);
       }
-      // Create live polyline
+      // Create live polyline in the correct group
+      const grp = ai.anchorMode === 'sticky' ? drawGroupSticky : drawGroupDoc;
       currentPolyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       currentPolyline.setAttribute('points', `${fracX},${fracY}`);
       currentPolyline.setAttribute('stroke', drawColor);
@@ -5720,22 +5948,33 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       currentPolyline.setAttribute('stroke-linejoin', 'round');
       currentPolyline.setAttribute('data-ann-id', activeDrawAnn.id);
       currentPolyline.style.pointerEvents = 'none';
-      if (drawSvg) drawSvg.appendChild(currentPolyline);
+      if (grp) grp.appendChild(currentPolyline);
     }
   });
 
   annOverlay.addEventListener('mousemove', e => {
     if (boxDrawing && boxEl) {
-      const rect  = annOverlay.getBoundingClientRect();
-      boxCurX = (e.clientX - rect.left) / rect.width  * 100;
-      boxCurY = (e.clientY - rect.top)  / rect.height * 100;
-      boxEl.style.left   = `${Math.min(boxCurX, boxStartX)}%`;
-      boxEl.style.top    = `${Math.min(boxCurY, boxStartY)}%`;
-      boxEl.style.width  = `${Math.abs(boxCurX - boxStartX)}%`;
-      boxEl.style.height = `${Math.abs(boxCurY - boxStartY)}%`;
+      const rect = annOverlay.getBoundingClientRect();
+      boxCurX = (e.clientX - rect.left) / rect.width * 100;
+      if (boxAnchor && boxAnchor.anchorMode === 'sticky') {
+        boxDocCurY = e.clientY; // viewport Y for sticky
+        const topVP = Math.min(boxDocCurY, boxDocStartY) / window.innerHeight * 100;
+        const hVP   = Math.abs(boxDocCurY - boxDocStartY) / window.innerHeight * 100;
+        boxEl.style.top    = `${topVP}%`;
+        boxEl.style.height = `${hVP}%`;
+      } else {
+        boxDocCurY = e.clientY + window.scrollY;
+        const topDocPx = Math.min(boxDocCurY, boxDocStartY);
+        const topVhPct = (topDocPx - window.scrollY) / window.innerHeight * 100;
+        const hVhPct   = Math.abs(boxDocCurY - boxDocStartY) / window.innerHeight * 100;
+        boxEl.style.top    = `${topVhPct}%`;
+        boxEl.style.height = `${hVhPct}%`;
+      }
+      boxEl.style.left  = `${Math.min(boxCurX, boxStartX)}%`;
+      boxEl.style.width = `${Math.abs(boxCurX - boxStartX)}%`;
     }
     if (drawingStroke && currentPolyline) {
-      const [fx, fy] = svgCoords(e);
+      const [fx, fy] = svgCoords(e, currentStrokeAnchor);
       strokePoints.push([fx, fy]);
       // Thin down points for performance (every other point)
       if (strokePoints.length % 2 === 0) {
@@ -5747,17 +5986,23 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
 
   annOverlay.addEventListener('mouseup', e => {
     if (boxDrawing && boxEl) {
-      const w = Math.abs(boxCurX - boxStartX);
-      const h = Math.abs(boxCurY - boxStartY);
-      const x = Math.min(boxCurX, boxStartX);
-      const y = Math.min(boxCurY, boxStartY);
+      const w    = Math.abs(boxCurX - boxStartX);
+      const x    = Math.min(boxCurX, boxStartX);
+      const hVhPct = Math.abs(boxDocCurY - boxDocStartY) / window.innerHeight * 100;
       boxEl.remove();
-      boxEl = null;
+      boxEl      = null;
       boxDrawing = false;
-      if (w > 1 && h > 1) {
-        const ann = addAnnotation('box', x, y, w, h);
+      if (w > 1 && hVhPct > 1) {
+        let ai;
+        if (boxAnchor && boxAnchor.anchorMode === 'sticky') {
+          ai = { ...boxAnchor, vpY: Math.min(boxDocCurY, boxDocStartY) / window.innerHeight };
+        } else {
+          ai = { anchorMode: 'doc', docY: Math.min(boxDocCurY, boxDocStartY) };
+        }
+        const ann = addAnnotation('box', x, 0, w, hVhPct, ai);
         selectAnnotation(ann.id);
       }
+      boxAnchor = null;
     }
 
     if (drawingStroke && currentPolyline && activeDrawAnn) {
@@ -5767,6 +6012,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       if (simplified.length > 1) {
         activeDrawAnn.strokes.push({ points: simplified, color: drawColor });
         renderDrawStrokes(activeDrawAnn);
+        saveAnnotations();
       } else {
         currentPolyline.remove();
       }
@@ -5774,6 +6020,37 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       strokePoints    = [];
     }
   });
+
+  // ── Scroll-weld: reposition all dots and draw strokes on scroll ───────────
+  // computeTopPct() is the single source of truth for each annotation's position.
+  // drawGroupDoc shifts as a whole; drawGroupSticky polylines each carry their own range.
+  function updateAnnotationPositions() {
+    if (annOverlay) {
+      annOverlay.querySelectorAll('.ann-dot').forEach(dot => {
+        const ann = getAnnotation(+dot.dataset.annId);
+        if (!ann) return;
+        dot.style.top = computeTopPct(ann).toFixed(3) + '%';
+      });
+    }
+    // Doc-anchored strokes: shift the whole group
+    if (drawGroupDoc) {
+      const shiftVh = -(window.scrollY / window.innerHeight * 100).toFixed(3);
+      drawGroupDoc.setAttribute('transform', `translate(0 ${shiftVh})`);
+    }
+    // Sticky-anchored strokes: each polyline transforms independently
+    if (drawGroupSticky) {
+      drawGroupSticky.querySelectorAll('polyline[data-sticky-start]').forEach(pl => {
+        const ss = +pl.dataset.stickyStart;
+        const se = +pl.dataset.stickyEnd;
+        const s  = window.scrollY;
+        const dy = s < ss ? (ss - s) / window.innerHeight * 100
+                 : s > se ? -(s - se) / window.innerHeight * 100
+                 : 0;
+        pl.setAttribute('transform', `translate(0 ${dy.toFixed(3)})`);
+      });
+    }
+  }
+  window.addEventListener('scroll', updateAnnotationPositions, { passive: true });
 
   // ── Detail panel bindings ──────────────────────────────────────────────────
   if (annDetailText) {
@@ -5946,8 +6223,8 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   }
 
   // Switching away from draw tool finalises the current annotation session
-  if (appDock) {
-    appDock.addEventListener('click', e => {
+  if (commentPanel) {
+    commentPanel.addEventListener('click', e => {
       const btn = e.target.closest('.ann-tool');
       if (btn && btn.dataset.tool !== 'draw') {
         activeDrawAnn = null; // next draw starts a fresh annotation
@@ -6134,11 +6411,21 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       annotations = [];
       nextId      = 1;
       selectedId  = null;
-      if (annOverlay) annOverlay.querySelectorAll('.ann-dot').forEach(d => d.remove());
+      if (annOverlay)      annOverlay.querySelectorAll('.ann-dot').forEach(d => d.remove());
+      if (drawGroupDoc)    drawGroupDoc.innerHTML    = '';
+      if (drawGroupSticky) drawGroupSticky.innerHTML = '';
       if (annList)    annList.innerHTML = '';
       if (annDetailSec) annDetailSec.setAttribute('hidden', '');
       syncEmpty();
+      try { localStorage.removeItem(ANN_STORE); } catch (_) {}
     });
+  }
+
+  // Auto-save whenever any text field inside the comment panel changes
+  if (commentPanel) {
+    let _saveTimer = null;
+    commentPanel.addEventListener('input',  () => { clearTimeout(_saveTimer); _saveTimer = setTimeout(saveAnnotations, 400); });
+    commentPanel.addEventListener('change', saveAnnotations);
   }
 
   // ── Comment toggle button ──────────────────────────────────────────────────
@@ -6159,6 +6446,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   // ── Init ───────────────────────────────────────────────────────────────────
   syncEmpty();
   if (annDetailSec) annDetailSec.setAttribute('hidden', '');
+  loadAnnotations();
 
   } // end guard
 }
@@ -6211,81 +6499,99 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   onScroll();
 }());
 
-// ─── Section 5: Pro camera system — garage door entry + dual-counter rotation ─
+// ─── Section 5: Pro camera system ─────────────────────────────────────────────
 //
-// GARAGE DOOR: driven by rect.top (section approaching viewport top), not scrolled.
-//   doorRaw = (vh - rect.top) / vh
-//   = 0 when section top is at viewport bottom (just entering)
-//   = 1 when section top is at viewport top (fully entered, about to pin)
-//   clip inset(100%→0%) lifts as section rises — door fully open by the time it pins.
-//   Lenses are locked at -15° during the entire door phase.
+// ARCHITECTURE: Camera section z-index:2 sits BEHIND triptych (z-index:3).
+//   margin-top pulls camera up to overlap triptych. As user scrolls triptych
+//   upward, camera is revealed beneath. Camera stays pinned via sticky.
+//   Scroll ends when triptych fully exits — no extra content below.
 //
-// ROTATION: driven by scrolled = max(0, -rect.top) — px past viewport top.
-//   Cluster rotates -15°→+15° over 1.8vh of pinned scroll.
-//   Each inner lens counter-rotates in exact opposition → spins in place.
+// ANIMATION: driven by triptych.getBoundingClientRect() — not by camera sticky.
+//   As triptych scrolls off (top < 0), cluster slides up slightly (garage door),
+//   lenses counter-rotate, copy fades in.
 //
-// COPY: fades in at 0.3vh→0.7vh of pinned scroll (early rotation phase).
+// CAMERA PANEL: controls global layout offset + per-lens X/Y/scale/rotation.
 (function cameraSection() {
   const section    = document.getElementById('s5Camera');
   if (!section) return;
 
   const sticky     = section.querySelector('.s5-camera__sticky');
+  const cluster    = section.querySelector('.s5-camera__cluster');
+  const layout     = section.querySelector('.s5-camera__layout');
   const centroid   = document.getElementById('cameraCentroid');
+  const lensOuters = section.querySelectorAll('.s5-camera__lens');
   const lensInners = section.querySelectorAll('.s5-camera__lens-inner');
   const copy       = document.getElementById('cameraCopy');
+  const tri        = document.querySelector('.s3-triptych');
 
   let raf       = false;
   let originSet = false;
 
-  // Geometric centroid of the 3 lens centers → transform-origin for cluster rotation.
+  // Camera rig state — driven by panel sliders
+  const G = { x: 0, y: 0, scale: 1 };
+  const L = [
+    { x: 0, y: 0, scale: 1, rot: 0 },
+    { x: 0, y: 0, scale: 1, rot: 0 },
+    { x: 0, y: 0, scale: 1, rot: 0 },
+  ];
+
   function setCentroidOrigin() {
-    const clRect  = centroid.getBoundingClientRect();
-    const lenses  = section.querySelectorAll('.s5-camera__lens');
+    const clRect = centroid.getBoundingClientRect();
+    const lenses = section.querySelectorAll('.s5-camera__lens');
     const centers = Array.from(lenses).map(l => {
       const r = l.getBoundingClientRect();
-      return {
-        x: r.left + r.width  / 2 - clRect.left,
-        y: r.top  + r.height / 2 - clRect.top,
-      };
+      return { x: r.left + r.width / 2 - clRect.left, y: r.top + r.height / 2 - clRect.top };
     });
     const cx = centers.reduce((s, c) => s + c.x, 0) / centers.length;
     const cy = centers.reduce((s, c) => s + c.y, 0) / centers.length;
     centroid.style.transformOrigin = `${cx.toFixed(1)}px ${cy.toFixed(1)}px`;
   }
 
-  function easeInOutSin(t) {
-    return -(Math.cos(Math.PI * t) - 1) / 2;
-  }
+  function easeInOutSin(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
 
   function tick() {
     if (!originSet) { setCentroidOrigin(); originSet = true; }
 
-    const rect = section.getBoundingClientRect();
-    const vh   = window.innerHeight;
+    const triRect = tri ? tri.getBoundingClientRect() : { top: 0 };
+    const triH    = tri ? tri.offsetHeight : 780;
 
-    // ── Garage door lift ───────────────────────────────────────────
-    // doorRaw: 0 = section top at viewport bottom, 1 = section top at viewport top.
-    // Lifts during the section's ENTRY into the viewport — fully open when pinned.
-    const doorRaw = (vh - rect.top) / vh;
-    const doorPe  = easeInOutSin(Math.max(0, Math.min(1, doorRaw)));
-    sticky.style.clipPath = `inset(${((1 - doorPe) * 100).toFixed(2)}% 0 0 0)`;
+    // Camera is always rendered — triptych gap areas are transparent so the
+    // camera_hero_static.jpg shows through the gutters between the three cards.
+    // When triptych hasn't entered view yet nothing leaks (hero/lock cover it).
 
-    // ── Cluster rotation (while section is pinned) ─────────────────
-    // scrolled: 0 when section top hits viewport top; grows as user scrolls.
-    const scrolled = Math.max(0, -rect.top);
-    const rotP     = Math.max(0, Math.min(1, scrolled / (1.8 * vh)));
-    const rotPe    = easeInOutSin(rotP);
-    const angle    = (rotPe - 0.5) * 30; // -15° at rotP=0, +15° at rotP=1
+    // p: 0 = triptych top at viewport top; 1 = triptych fully exited
+    const p  = Math.max(0, Math.min(1, -triRect.top / triH));
+    const pe = easeInOutSin(p);
+
+    // ── Cluster: rotate -15° → +15° as triptych exits ────────────
+    const angle = (pe - 0.5) * 30;
     centroid.style.transform = `rotate(${angle.toFixed(3)}deg)`;
-    lensInners.forEach(li => {
+
+    // ── Per-lens: outer gets X/Y/scale/panel-rot (moves whole circle + clip-path)
+    //             inner gets only counter-rotation (keeps image upright) ────────
+    lensOuters.forEach((lo, i) => {
+      const d = L[i] || { x: 0, y: 0, scale: 1, rot: 0 };
+      const _csx = parseFloat(lo.style.getPropertyValue('--grab-sx')) || 1;
+      const _csy = parseFloat(lo.style.getPropertyValue('--grab-sy')) || 1;
+      lo.style.transform =
+        `translateX(${d.x}px) translateY(${d.y}px) scale(${d.scale.toFixed(3)}) rotate(${d.rot.toFixed(3)}deg) scaleX(${_csx}) scaleY(${_csy})`;
+    });
+    lensInners.forEach((li, i) => {
       li.style.transform = `rotate(${(-angle).toFixed(3)}deg)`;
     });
 
-    // ── Copy: fade + slide up ──────────────────────────────────────
-    const copyP  = Math.max(0, Math.min(1, (scrolled - vh * 0.3) / (vh * 0.4)));
-    const copyPe = easeInOutSin(copyP);
-    copy.style.opacity   = copyPe.toFixed(3);
-    copy.style.transform = `translateY(${((1 - copyPe) * 32).toFixed(1)}px)`;
+    // ── Global layout (panel) ─────────────────────────────────────
+    if (layout) {
+      layout.style.transform = `translateX(${G.x}px) translateY(${G.y}px) scale(${G.scale})`;
+    }
+
+    // ── Copy: fades in during second half of triptych exit ────────
+    if (copy) {
+      const cp  = Math.max(0, Math.min(1, (p - 0.5) / 0.5));
+      const cpe = easeInOutSin(cp);
+      copy.style.opacity   = cpe.toFixed(3);
+      copy.style.transform = `translateY(${((1 - cpe) * 32).toFixed(1)}px)`;
+    }
 
     raf = false;
   }
@@ -6296,7 +6602,490 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     requestAnimationFrame(tick);
   }
 
+  // ── Camera panel wiring ──────────────────────────────────────
+  function wireSlider(id, valId, obj, key, decimals) {
+    const inp = document.getElementById(id);
+    const num = document.getElementById(valId);
+    if (!inp || !num) return;
+    inp.addEventListener('input', () => {
+      obj[key] = parseFloat(inp.value);
+      num.textContent = decimals === 0 ? Math.round(obj[key]) : obj[key].toFixed(decimals);
+      onScroll();
+    });
+  }
+
+  wireSlider('camGX', 'camGXVal', G, 'x', 0);
+  wireSlider('camGY', 'camGYVal', G, 'y', 0);
+  wireSlider('camGS', 'camGSVal', G, 'scale', 2);
+
+  [1, 2, 3].forEach((n, i) => {
+    wireSlider(`camL${n}X`, `camL${n}XVal`, L[i], 'x', 0);
+    wireSlider(`camL${n}Y`, `camL${n}YVal`, L[i], 'y', 0);
+    wireSlider(`camL${n}S`, `camL${n}SVal`, L[i], 'scale', 2);
+    wireSlider(`camL${n}R`, `camL${n}RVal`, L[i], 'rot', 0);
+  });
+
+  const resetBtn = document.getElementById('camReset');
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    G.x = 0; G.y = 0; G.scale = 1;
+    L.forEach(d => { d.x = 0; d.y = 0; d.scale = 1; d.rot = 0; });
+    const ids = ['camGX','camGY','camGS',
+      'camL1X','camL1Y','camL1S','camL1R',
+      'camL2X','camL2Y','camL2S','camL2R',
+      'camL3X','camL3Y','camL3S','camL3R'];
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = el.defaultValue; });
+    const valIds = ['camGXVal','camGYVal','camGSVal',
+      'camL1XVal','camL1YVal','camL1SVal','camL1RVal',
+      'camL2XVal','camL2YVal','camL2SVal','camL2RVal',
+      'camL3XVal','camL3YVal','camL3SVal','camL3RVal'];
+    const defs  = ['0','0','1.00','0','0','1.00','0','0','0','1.00','0','0','0','1.00','0'];
+    valIds.forEach((id, i) => { const el = document.getElementById(id); if (el) el.textContent = defs[i]; });
+    onScroll();
+  });
+
+  const copyAllBtn = document.getElementById('camCopyAll');
+  if (copyAllBtn) copyAllBtn.addEventListener('click', () => {
+    const lines = [
+      `/* GLOBAL */  X:${G.x}px  Y:${G.y}px  Scale:${G.scale.toFixed(2)}`,
+      `/* LENS 1 */  X:${L[0].x}px  Y:${L[0].y}px  Scale:${L[0].scale.toFixed(2)}  Rot:${L[0].rot}deg`,
+      `/* LENS 2 */  X:${L[1].x}px  Y:${L[1].y}px  Scale:${L[1].scale.toFixed(2)}  Rot:${L[1].rot}deg`,
+      `/* LENS 3 */  X:${L[2].x}px  Y:${L[2].y}px  Scale:${L[2].scale.toFixed(2)}  Rot:${L[2].rot}deg`,
+    ].join('\n');
+    navigator.clipboard?.writeText(lines);
+  });
+
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', () => { originSet = false; onScroll(); }, { passive: true });
   onScroll();
+}());
+
+/* ═══════════════════════════════════════════════════════════════════
+   GRAB TOOL — universal direct manipulation across every panel.
+   Click to select any asset, drag to move, handles to scale.
+   Shift = uniform scale, no Shift = free non-uniform scale.
+   ═══════════════════════════════════════════════════════════════════ */
+(function GrabTool() {
+  'use strict';
+
+  const selBox  = document.getElementById('pwGrabSel');
+  if (!selBox) return;
+  const selBody = selBox.querySelector('.pw-grab-sel__body');
+  const handles = Array.from(selBox.querySelectorAll('.pw-grab-handle'));
+
+  /* ── Grabbable target registry ─────────────────────────────────── */
+  // pxToX / pxToY: convert 1 viewport-px drag into slider units.
+  // getYFactor(): computed at drag-start so viewport dims are current.
+  const TARGETS = (() => {
+    const out = [];
+
+    // ── Scroll video (seqPanel) — drag X changes scroll speed ────────
+    const heroVideo = document.getElementById('heroVideo');
+    if (heroVideo) out.push({
+      el: heroVideo, img: heroVideo,
+      panelId: 'seqPanel',
+      ids: { x: 'seqSpeed' },             // drag right = faster
+      pxToX: () => 5 / window.innerWidth, // full-width drag = +5× speed range
+      pxToY: () => 0,
+    });
+
+    // ── iPhone hero (tweakPanel) ──────────────────────────────────────
+    // cx = W/2 + xOff  →  1px drag = 1 xOff unit
+    // cy0 = H/2 + yRef*S  →  1px drag = 1/S yRef unit  (S=Max(W/1894,H/1440))
+    const phoneImg = document.getElementById('phoneImg');
+    if (phoneImg) out.push({
+      el: phoneImg, img: phoneImg,
+      panelId: 'tweakPanel',
+      ids: { x: 'xOffInput', y: 'yRefInput', scale: 'scaleInput' },
+      pxToX: () => 1,
+      pxToY: () => {
+        const W = window.innerWidth, H = window.innerHeight;
+        return 1 / Math.max(W / 1894, H / 1440);
+      },
+    });
+
+    // ── Phone shadow (tweakPanel) — drag moves shadow X/Y, scale = blur ─
+    if (phoneImg) out.push({
+      el: phoneImg, img: phoneImg,
+      panelId: 'tweakPanel',
+      ids: { x: 'shadowX', y: 'shadowY', scale: 'shadowBlur' },
+      pxToX: () => 1,
+      pxToY: () => 1,
+    });
+
+    // ── Camera cluster global (cameraPanel) ─────────────────────────────
+    const camLayout = document.querySelector('.s5-camera__layout');
+    if (camLayout) out.push({
+      el: camLayout, img: camLayout,
+      panelId: 'cameraPanel',
+      ids: { x: 'camGX', y: 'camGY', scale: 'camGS' },
+      pxToX: () => 1,
+      pxToY: () => 1,
+    });
+
+    // ── Content lockup (contentPanel) — whole block Y + scale ────────
+    // lockupTop drives headline.style.top (%). 1px drag = 100/vh % units.
+    const lockupEl = document.getElementById('phoneHeadline');
+    if (lockupEl) out.push({
+      el: lockupEl, img: lockupEl,
+      panelId: 'contentPanel',
+      ids: { y: 'lockupTop', scale: 'lockupScale' },
+      pxToX: () => 0,
+      pxToY: () => 100 / window.innerHeight,
+    });
+
+    // ── Headline text (contentPanel) — drag moves lockup, scale = font size
+    const hlEl = document.getElementById('hlText');
+    if (hlEl) out.push({
+      el: hlEl, img: hlEl,
+      panelId: 'contentPanel',
+      ids: { y: 'lockupTop', scale: 'hlSize' },
+      pxToX: () => 0,
+      pxToY: () => 100 / window.innerHeight,
+    });
+
+    // ── Body text (contentPanel) — drag moves lockup, scale = font size
+    const bdEl = document.getElementById('bdText');
+    if (bdEl) out.push({
+      el: bdEl, img: bdEl,
+      panelId: 'contentPanel',
+      ids: { y: 'lockupTop', scale: 'bdSize' },
+      pxToX: () => 0,
+      pxToY: () => 100 / window.innerHeight,
+    });
+
+    // ── CTA buttons row (contentPanel) — drag moves lockup, scale = gap
+    const ctasRow = document.getElementById('ctasRow');
+    if (ctasRow) out.push({
+      el: ctasRow, img: ctasRow,
+      panelId: 'contentPanel',
+      ids: { y: 'lockupTop', scale: 'ctaGap' },
+      pxToX: () => 0,
+      pxToY: () => 100 / window.innerHeight,
+    });
+
+    // ── Triptych cards (cardsPanel) ───────────────────────────────────
+    [1, 2, 3].forEach(n => {
+      const el  = document.getElementById(`card${n}`);
+      const img = document.getElementById(`card${n}Img`);
+      if (el && img) out.push({
+        el, img,
+        panelId: 'cardsPanel',
+        ids: { x: `card${n}X`, y: `card${n}Y`, scale: `card${n}Scale` },
+        pxToX: () => 100 / (img.getBoundingClientRect().width  || 1),
+        pxToY: () => 100 / (img.getBoundingClientRect().height || 1),
+      });
+    });
+
+    // ── Camera lenses (cameraPanel) ───────────────────────────────────
+    const camSec = document.getElementById('s5Camera');
+    if (camSec) {
+      camSec.querySelectorAll('.s5-camera__lens').forEach((lo, i) => {
+        const n = i + 1;
+        out.push({
+          el: lo, img: lo.querySelector('img') || lo,
+          panelId: 'cameraPanel',
+          ids: { x: `camL${n}X`, y: `camL${n}Y`, scale: `camL${n}S` },
+          pxToX: () => 1,
+          pxToY: () => 1,
+        });
+      });
+    }
+
+    return out;
+  })();
+
+  /* ── Slider helpers ─────────────────────────────────────────────── */
+  const getSlider = id => { const e = document.getElementById(id); return e ? +e.value : 0; };
+  const setSlider = (id, val) => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.value = Math.max(+e.min, Math.min(+e.max, val));
+    e.dispatchEvent(new Event('input', { bubbles: true }));
+    if (window.__pwUpdateTrack) window.__pwUpdateTrack(e);
+  };
+
+  /* ── State ──────────────────────────────────────────────────────── */
+  let grabActive  = false;
+  let activePanel = null;
+  let selTarget   = null;
+  let rafPending  = false;
+
+  /* ── Selection box positioning ──────────────────────────────────── */
+  function placeSelBox(t) {
+    const r = t.el.getBoundingClientRect();
+    selBox.style.cssText =
+      `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+    selBox.hidden = false;
+  }
+  const refreshSelBox = () => { if (selTarget) placeSelBox(selTarget); };
+
+  /* ── Activate / deactivate ──────────────────────────────────────── */
+  function activate(panelId, btn) {
+    if (grabActive && activePanel === panelId) { deactivate(); return; }
+    deactivateClean();
+    grabActive  = true;
+    activePanel = panelId;
+    btn.classList.add('pw-grab-btn--on');
+    document.documentElement.classList.add('grab-tool-active');
+    document.addEventListener('pointerdown', onPagePointerDown, true);
+  }
+
+  function deactivate() {
+    document.querySelectorAll('.pw-grab-btn--on')
+      .forEach(b => b.classList.remove('pw-grab-btn--on'));
+    deactivateClean();
+  }
+
+  function deactivateClean() {
+    grabActive  = false;
+    activePanel = null;
+    selTarget   = null;
+    selBox.hidden = true;
+    document.documentElement.classList.remove('grab-tool-active', 'grab-dragging');
+    document.removeEventListener('pointerdown', onPagePointerDown, true);
+  }
+
+  /* ── Page click → select (capture phase) ───────────────────────── */
+  function onPagePointerDown(e) {
+    if (e.target.closest('.pw-panel') || e.target.closest('#pwGrabSel')) return;
+    const { clientX: x, clientY: y } = e;
+    const hit = TARGETS.find(t => {
+      if (t.panelId !== activePanel) return false;
+      const r = t.el.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    });
+    if (!hit) { selTarget = null; selBox.hidden = true; return; }
+    selTarget = hit;
+    placeSelBox(hit);
+    e.stopPropagation();
+    beginMove(e);  // start drag immediately from same pointerdown
+  }
+
+  /* ── Move drag ──────────────────────────────────────────────────── */
+  function beginMove(e) {
+    if (!selTarget || e.button !== 0) return;
+    const t   = selTarget;
+    const sx  = e.clientX, sy = e.clientY;
+    const tx0 = t.ids.x ? getSlider(t.ids.x) : 0;
+    const ty0 = t.ids.y ? getSlider(t.ids.y) : 0;
+    // Snapshot conversion factors at drag start (viewport may change)
+    const mulX = t.pxToX ? t.pxToX() : 1;
+    const mulY = t.pxToY ? t.pxToY() : 1;
+
+    document.documentElement.classList.add('grab-dragging');
+
+    function onMove(ev) {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          if (t.ids.x && mulX) setSlider(t.ids.x, tx0 + dx * mulX);
+          if (t.ids.y && mulY) setSlider(t.ids.y, ty0 + dy * mulY);
+          refreshSelBox();
+          rafPending = false;
+        });
+      }
+    }
+    function onUp() {
+      document.documentElement.classList.remove('grab-dragging');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup',   onUp);
+  }
+
+  /* ── Scale drag (handles) ───────────────────────────────────────── */
+  function beginScale(e, handle) {
+    if (!selTarget || e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const t   = selTarget;
+    const pos = handle.dataset.pos;
+    const r   = t.el.getBoundingClientRect();
+
+    // Pivot = opposite corner/edge — distance from pivot never crosses zero
+    const PIVOT_FRAC = {
+      tl: [1, 1], tc: [.5, 1], tr: [0, 1],
+      ml: [1, .5],              mr: [0, .5],
+      bl: [1, 0],  bc: [.5, 0], br: [0, 0],
+    };
+    const [pfx, pfy] = PIVOT_FRAC[pos] || [.5, .5];
+    const pivX = r.left + r.width  * pfx;
+    const pivY = r.top  + r.height * pfy;
+
+    const hx = e.clientX, hy = e.clientY;
+    const dxS = hx - pivX, dyS = hy - pivY;
+    const dS  = Math.hypot(dxS, dyS) || 1;
+    const axS = Math.abs(dxS) || 1;
+    const ayS = Math.abs(dyS) || 1;
+
+    const sc0  = getSlider(t.ids.scale);
+    const gsx0 = parseFloat(t.el.style.getPropertyValue('--grab-sx')) || sc0;
+    const gsy0 = parseFloat(t.el.style.getPropertyValue('--grab-sy')) || sc0;
+
+    const isCorner = 'tl tr bl br'.includes(pos);
+    const isEdgeH  = pos === 'ml' || pos === 'mr';
+    const isEdgeV  = pos === 'tc' || pos === 'bc';
+
+    // Clamp to actual slider range — scaleInput is 0–160, card sliders are 0–8
+    const scaleEl = document.getElementById(t.ids.scale);
+    const scMin = scaleEl ? +scaleEl.min : 0;
+    const scMax = scaleEl ? +scaleEl.max : 160;
+    const clampSc = v => Math.max(scMin, Math.min(scMax, v));
+
+    document.documentElement.classList.add('grab-dragging');
+
+    function onMove(ev) {
+      const mx = ev.clientX, my = ev.clientY;
+      const dxC = mx - pivX, dyC = my - pivY;
+      const dC  = Math.hypot(dxC, dyC);
+      const axC = Math.abs(dxC);
+      const ayC = Math.abs(dyC);
+      const free = ev.shiftKey;
+
+      let newSc = sc0, newGsx = gsx0, newGsy = gsy0;
+
+      if (!free) {
+        newSc = clampSc(sc0 * (dC / dS));
+        newGsx = newGsy = newSc;
+      } else if (isCorner) {
+        newGsx = clampSc(gsx0 * axC / axS);
+        newGsy = clampSc(gsy0 * ayC / ayS);
+        newSc  = clampSc((newGsx + newGsy) / 2);
+      } else if (isEdgeH) {
+        newGsx = clampSc(gsx0 * axC / axS);
+        newGsy = gsy0;
+        newSc  = clampSc((newGsx + newGsy) / 2);
+      } else if (isEdgeV) {
+        newGsy = clampSc(gsy0 * ayC / ayS);
+        newGsx = gsx0;
+        newSc  = clampSc((newGsx + newGsy) / 2);
+      }
+
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          if (!free) {
+            t.el.style.removeProperty('--grab-sx');
+            t.el.style.removeProperty('--grab-sy');
+            setSlider(t.ids.scale, newSc);
+          } else {
+            t.el.style.setProperty('--grab-sx', newGsx);
+            t.el.style.setProperty('--grab-sy', newGsy);
+            setSlider(t.ids.scale, newSc);
+          }
+          refreshSelBox();
+          rafPending = false;
+        });
+      }
+    }
+
+    function onUp(ev) {
+      document.documentElement.classList.remove('grab-dragging');
+      if (!ev.shiftKey) {
+        t.el.style.removeProperty('--grab-sx');
+        t.el.style.removeProperty('--grab-sy');
+      }
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup',   onUp);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
+    }
+
+    handle.setPointerCapture?.(e.pointerId);
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup',   onUp);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup',   onUp);
+  }
+
+  /* ── Wire panel-header grab buttons ────────────────────────────── */
+  document.querySelectorAll('.pw-grab-btn').forEach(btn => {
+    const panelId = btn.dataset.grabPanel;
+    if (panelId) btn.addEventListener('click', () => activate(panelId, btn));
+  });
+
+  /* ── Wire inline section grab buttons ──────────────────────────── */
+  let secGrabHoverTimer = null;
+  document.querySelectorAll('.pw-sec-grab-btn[data-grab-target]').forEach(btn => {
+    const key = btn.dataset.grabTarget;
+    // Match by any slider id in the target's ids object
+    const target = TARGETS.find(t => Object.values(t.ids).includes(key));
+    if (!target) return;
+
+    btn.addEventListener('pointerenter', () => {
+      clearTimeout(secGrabHoverTimer);
+      selTarget = target;
+      placeSelBox(target);
+    });
+
+    btn.addEventListener('pointerleave', () => {
+      if (btn.classList.contains('pw-sec-grab-btn--on')) return;
+      secGrabHoverTimer = setTimeout(() => {
+        if (!document.querySelector('.pw-sec-grab-btn--on')) {
+          selTarget = null;
+          selBox.hidden = true;
+        }
+      }, 200);
+    });
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const wasOn = btn.classList.contains('pw-sec-grab-btn--on');
+      document.querySelectorAll('.pw-sec-grab-btn--on').forEach(b => b.classList.remove('pw-sec-grab-btn--on'));
+      if (wasOn) {
+        selTarget = null;
+        selBox.hidden = true;
+      } else {
+        btn.classList.add('pw-sec-grab-btn--on');
+        selTarget = target;
+        placeSelBox(target);
+      }
+    });
+  });
+
+  /* Keep hover preview fresh when section grab is locked and element moves */
+  selBody.addEventListener('pointerenter', () => clearTimeout(secGrabHoverTimer));
+
+  /* ── Wire selection body — works with both panel-level and section-level grab ── */
+  selBody.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || !selTarget) return;
+    e.preventDefault();
+    beginMove(e);
+  });
+
+  /* ── Wire scale handles ─────────────────────────────────────────── */
+  handles.forEach(h => {
+    h.addEventListener('pointerdown', e => beginScale(e, h));
+  });
+
+  /* ── Keep selection box aligned on scroll / resize ──────────────── */
+  window.addEventListener('scroll', refreshSelBox, { passive: true });
+  window.addEventListener('resize', refreshSelBox);
+
+  /* ── Keyboard shortcuts ─────────────────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && grabActive) { deactivate(); return; }
+    // G key activates the first visible grab button
+    if ((e.key === 'g' || e.key === 'G') && !e.target.matches('input,textarea,select')) {
+      const btn = document.querySelector('.pw-grab-btn');
+      if (btn) btn.click();
+    }
+  });
+
+  /* ── Reset grab-sx/sy when SCALE slider is moved manually ───────── */
+  [1, 2, 3].forEach(n => {
+    const inp = document.getElementById(`card${n}Scale`);
+    if (!inp) return;
+    inp.addEventListener('input', () => {
+      const card = document.getElementById(`card${n}`);
+      if (card) {
+        card.style.removeProperty('--grab-sx');
+        card.style.removeProperty('--grab-sy');
+      }
+    });
+  });
+
 }());

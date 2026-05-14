@@ -51,7 +51,12 @@
               </svg>
             </button>
           </div>
-          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="seqToggle">−</button></div>
+          <div class="pw-panel__hdr-right">
+            <button class="pw-icon-btn pw-grab-btn" data-grab-panel="seqPanel" title="Grab & move (G)" aria-label="Grab tool">
+              <svg width="11" height="13" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg>
+            </button>
+            <button class="pw-icon-btn" id="seqToggle">−</button>
+          </div>
         </header>
         <div class="pw-panel__body" id="seqBody">
           <div class="pw-row">
@@ -120,7 +125,12 @@
               </svg>
             </button>
           </div>
-          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="tweakToggle">−</button></div>
+          <div class="pw-panel__hdr-right">
+            <button class="pw-icon-btn pw-grab-btn" data-grab-panel="tweakPanel" title="Grab & move (G)" aria-label="Grab tool">
+              <svg width="11" height="13" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg>
+            </button>
+            <button class="pw-icon-btn" id="tweakToggle">−</button>
+          </div>
         </header>
         <div class="pw-panel__body" id="tweakBody">
           <div class="pw-row" data-pro-only>
@@ -172,6 +182,7 @@
               <ellipse cx="6.5" cy="10.5" rx="3.8" ry="1.1" fill="currentColor" opacity="0.38"/>
             </svg>
             <span>SHADOW</span>
+            <button class="pw-sec-grab-btn" data-grab-target="shadowX" title="Grab shadow" tabindex="-1" aria-label="Grab shadow"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
           </div>
           <div class="pw-row">
             <span class="pw-key">BLUR</span>
@@ -243,7 +254,12 @@
               </svg>
             </button>
           </div>
-          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="ctrlToggle">−</button></div>
+          <div class="pw-panel__hdr-right">
+            <button class="pw-icon-btn pw-grab-btn" data-grab-panel="contentPanel" title="Grab & move (G)" aria-label="Grab tool">
+              <svg width="11" height="13" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg>
+            </button>
+            <button class="pw-icon-btn" id="ctrlToggle">−</button>
+          </div>
         </header>
         <div class="pw-panel__body pw-panel__body--scroll" id="ctrlBody">
 
@@ -251,6 +267,7 @@
           <section class="pw-sec" id="secHeadline">
             <div class="pw-sec__hdr" data-sec="secHeadline">
               <span class="pw-sec__label">HEADLINE</span>
+              <button class="pw-sec-grab-btn" data-grab-target="hlSize" title="Grab headline" tabindex="-1" aria-label="Grab headline"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
               <span class="pw-sec__tog">−</span>
             </div>
             <div class="pw-sec__body">
@@ -295,6 +312,7 @@
           <section class="pw-sec" id="secBody">
             <div class="pw-sec__hdr" data-sec="secBody">
               <span class="pw-sec__label">BODY</span>
+              <button class="pw-sec-grab-btn" data-grab-target="bdSize" title="Grab body text" tabindex="-1" aria-label="Grab body text"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
               <span class="pw-sec__tog">−</span>
             </div>
             <div class="pw-sec__body">
@@ -337,6 +355,7 @@
           <section class="pw-sec" id="secButtons">
             <div class="pw-sec__hdr" data-sec="secButtons">
               <span class="pw-sec__label">BUTTONS</span>
+              <button class="pw-sec-grab-btn" data-grab-target="ctaGap" title="Grab CTA row" tabindex="-1" aria-label="Grab CTA row"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
               <span class="pw-sec__tog">−</span>
             </div>
             <div class="pw-sec__body">
@@ -371,6 +390,7 @@
           <section class="pw-sec" id="secLockup">
             <div class="pw-sec__hdr" data-sec="secLockup">
               <span class="pw-sec__label">LOCKUP</span>
+              <button class="pw-sec-grab-btn" data-grab-target="lockupScale" title="Grab lockup" tabindex="-1" aria-label="Grab lockup"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
               <span class="pw-sec__tog">−</span>
             </div>
             <div class="pw-sec__body">
@@ -466,7 +486,12 @@
               </svg>
             </button>
           </div>
-          <div class="pw-panel__hdr-right"><button class="pw-icon-btn" id="cardsToggle">−</button></div>
+          <div class="pw-panel__hdr-right">
+            <button class="pw-icon-btn pw-grab-btn" data-grab-panel="cardsPanel" title="Grab & move (G)" aria-label="Grab tool">
+              <svg width="11" height="13" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg>
+            </button>
+            <button class="pw-icon-btn" id="cardsToggle">−</button>
+          </div>
         </header>
         <div class="pw-panel__body pw-panel__body--scroll" id="cardsBody">
 
@@ -476,6 +501,7 @@
               <rect x="1" y="2" width="3.5" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
             </svg>
             <span>CARD A</span>
+            <button class="pw-sec-grab-btn" data-grab-target="card1Scale" title="Grab card A" tabindex="-1" aria-label="Grab card A"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
           </div>
           <div class="pw-row pw-row--scale">
             <span class="pw-key">SCALE</span>
@@ -529,6 +555,7 @@
               <rect x="5" y="2" width="3" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
             </svg>
             <span>CARD B</span>
+            <button class="pw-sec-grab-btn" data-grab-target="card2Scale" title="Grab card B" tabindex="-1" aria-label="Grab card B"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
           </div>
           <div class="pw-row pw-row--scale">
             <span class="pw-key">SCALE</span>
@@ -582,6 +609,7 @@
               <rect x="8.5" y="2" width="3.5" height="9" rx="0.6" stroke="currentColor" stroke-width="1.1"/>
             </svg>
             <span>CARD C</span>
+            <button class="pw-sec-grab-btn" data-grab-target="card3Scale" title="Grab card C" tabindex="-1" aria-label="Grab card C"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
           </div>
           <div class="pw-row pw-row--scale">
             <span class="pw-key">SCALE</span>
@@ -637,6 +665,172 @@
         </div>
       </div>
     </div><!-- /cardsPanel -->
+
+    <!-- ─── Pro Camera Rig Panel ──────────────────────────── -->
+    <div class="pw-panel pw-panel--camera" id="cameraPanel">
+      <canvas class="pw-panel__gl" id="cameraGl"></canvas>
+      <div class="pw-panel__inner">
+        <header class="pw-panel__hdr">
+          <div class="pw-panel__hdr-left">
+            <svg class="pw-panel__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="7.5" r="3.2" stroke="currentColor" stroke-width="1.1"/>
+              <circle cx="6.5" cy="7.5" r="1.3" fill="currentColor" opacity="0.6"/>
+              <path d="M4.2 4.2h4.6l.7 1.3H3.5z" fill="currentColor" opacity="0.55"/>
+            </svg>
+            <input class="pw-panel__title pw-panel__title--input" type="text" data-asset-for="cameraPanel" value="pro camera" spellcheck="false" autocomplete="off" readonly>
+            <button class="pw-panel__edit" type="button" aria-label="Rename asset" title="Rename">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M 8.5 1.5 L 10.5 3.5 L 4 10 L 1.5 10.5 L 2 8 Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="pw-panel__hdr-right">
+            <button class="pw-icon-btn pw-grab-btn" data-grab-panel="cameraPanel" title="Grab & move (G)" aria-label="Grab tool">
+              <svg width="11" height="13" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg>
+            </button>
+            <button class="pw-icon-btn" id="cameraToggle">−</button>
+          </div>
+        </header>
+        <div class="pw-panel__body pw-panel__body--scroll" id="cameraBody">
+
+          <!-- GLOBAL -->
+          <div class="pw-section-divider">
+            <svg class="pw-section-divider__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.1"/>
+              <circle cx="6.5" cy="6.5" r="1.8" fill="currentColor" opacity="0.5"/>
+            </svg>
+            <span>GLOBAL</span>
+            <button class="pw-sec-grab-btn" data-grab-target="camGS" title="Grab camera cluster" tabindex="-1" aria-label="Grab camera cluster"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X POS</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camGX" min="-600" max="600" step="1" value="0"></div>
+            <span class="pw-num" id="camGXVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camGX" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y POS</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camGY" min="-500" max="500" step="1" value="0"></div>
+            <span class="pw-num" id="camGYVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camGY" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camGS" min="0.3" max="2.5" step="0.01" value="1"></div>
+            <span class="pw-num" id="camGSVal">1.00</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="camGS" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+
+          <!-- LENS 1 (top) -->
+          <div class="pw-section-divider">
+            <svg class="pw-section-divider__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.1"/>
+              <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <span>LENS 1</span>
+            <button class="pw-sec-grab-btn" data-grab-target="camL1S" title="Grab lens 1" tabindex="-1" aria-label="Grab lens 1"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL1X" min="-300" max="300" step="1" value="0"></div>
+            <span class="pw-num" id="camL1XVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camL1X" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL1Y" min="-300" max="300" step="1" value="0"></div>
+            <span class="pw-num" id="camL1YVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camL1Y" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL1S" min="0.1" max="3" step="0.01" value="1"></div>
+            <span class="pw-num" id="camL1SVal">1.00</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="camL1S" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">ROTATE</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL1R" min="-180" max="180" step="1" value="0"></div>
+            <span class="pw-num" id="camL1RVal">0</span><span class="pw-unit">°</span>
+            <button class="pw-cp" data-target="camL1R" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+
+          <!-- LENS 2 (middle) -->
+          <div class="pw-section-divider">
+            <svg class="pw-section-divider__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.1"/>
+              <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <span>LENS 2</span>
+            <button class="pw-sec-grab-btn" data-grab-target="camL2S" title="Grab lens 2" tabindex="-1" aria-label="Grab lens 2"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL2X" min="-300" max="300" step="1" value="0"></div>
+            <span class="pw-num" id="camL2XVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camL2X" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL2Y" min="-300" max="300" step="1" value="0"></div>
+            <span class="pw-num" id="camL2YVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camL2Y" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL2S" min="0.1" max="3" step="0.01" value="1"></div>
+            <span class="pw-num" id="camL2SVal">1.00</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="camL2S" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">ROTATE</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL2R" min="-180" max="180" step="1" value="0"></div>
+            <span class="pw-num" id="camL2RVal">0</span><span class="pw-unit">°</span>
+            <button class="pw-cp" data-target="camL2R" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+
+          <!-- LENS 3 (bottom) -->
+          <div class="pw-section-divider">
+            <svg class="pw-section-divider__ico" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.1"/>
+              <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+            <span>LENS 3</span>
+            <button class="pw-sec-grab-btn" data-grab-target="camL3S" title="Grab lens 3" tabindex="-1" aria-label="Grab lens 3"><svg width="9" height="11" viewBox="0 0 11 13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7V3.2a.85.85 0 0 1 1.7 0V7"/><path d="M5.2 4.2V2.7a.85.85 0 0 1 1.7 0v1.5"/><path d="M6.9 4.2V2.7a.85.85 0 0 1 1.7 0V5"/><path d="M8.6 5V4.2a.85.85 0 0 1 1.7 0v3.6a3 3 0 0 1-3 3H5.5a3.3 3.3 0 0 1-3.3-3.3V7a.85.85 0 0 1 1.7 0"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">X</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL3X" min="-300" max="300" step="1" value="0"></div>
+            <span class="pw-num" id="camL3XVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camL3X" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">Y</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL3Y" min="-300" max="300" step="1" value="0"></div>
+            <span class="pw-num" id="camL3YVal">0</span><span class="pw-unit">px</span>
+            <button class="pw-cp" data-target="camL3Y" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">SCALE</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL3S" min="0.1" max="3" step="0.01" value="1"></div>
+            <span class="pw-num" id="camL3SVal">1.00</span><span class="pw-unit">×</span>
+            <button class="pw-cp" data-target="camL3S" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+          <div class="pw-row">
+            <span class="pw-key">ROTATE</span>
+            <div class="pw-slider-wrap"><input type="range" class="pw-range" id="camL3R" min="-180" max="180" step="1" value="0"></div>
+            <span class="pw-num" id="camL3RVal">0</span><span class="pw-unit">°</span>
+            <button class="pw-cp" data-target="camL3R" title="Copy"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><rect x="3.5" y="0.5" width="7" height="7" rx="1.2" stroke="currentColor"/><rect x="0.5" y="3.5" width="7" height="7" rx="1.2" stroke="currentColor" fill="rgba(0,0,0,0)"/></svg></button>
+          </div>
+
+          <div class="pw-actions">
+            <button class="pw-btn" id="camReset">Reset</button>
+            <button class="pw-btn pw-btn--primary" id="camCopyAll">Copy all</button>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /cameraPanel -->
 
     <!-- ─── Viewport tag — live size + breakpoint chip ──────── -->
     <div class="vp-tag" id="vpTag" aria-label="Viewport size">
@@ -744,16 +938,19 @@
 <section class="s5-camera" id="s5Camera" aria-label="Pro camera system">
   <div class="s5-camera__sticky">
 
+    <!-- depth vignette — darkens edges, makes lenses pop -->
+    <div class="s5-camera__shadow" aria-hidden="true"></div>
+
     <!-- cluster: viewport-clipped overflow region -->
     <div class="s5-camera__cluster">
-      <!-- layout: static offset so middle lens centers on viewport -->
+      <!-- layout: centered in sticky viewport -->
       <div class="s5-camera__layout">
 
-        <!-- background: static composite of full camera system — stays non-rotating -->
-        <img class="s5-camera__bg" src="assets/camera_hero_static.jpg" alt="" aria-hidden="true">
-
-        <!-- centroid: JS sets transform-origin + rotate() here -->
+        <!-- centroid: JS sets transform-origin + rotate() here.
+             bg is INSIDE so it co-rotates with the lens overlays. -->
         <div class="s5-camera__centroid" id="cameraCentroid">
+
+          <img class="s5-camera__bg" src="assets/camera_hero_static.jpg" alt="" aria-hidden="true">
 
           <div class="s5-camera__lens s5-camera__lens--top">
             <div class="s5-camera__lens-inner" id="lensInner1">
@@ -781,6 +978,7 @@
     <div class="s5-camera__copy" id="cameraCopy">
       <p class="s5-camera__eyebrow">Pro camera system</p>
       <h2 class="s5-camera__headline">We&#x2019;ve three&#x2011;upped<br>ourselves.</h2>
+      <p class="s5-camera__body">Ultra Wide. Wide. Telephoto. Three cameras that give you an unprecedented set of tools, so you can compose shots you never thought possible.</p>
     </div>
 
   </div>
@@ -1207,6 +1405,20 @@
 </div>
 
 <canvas id="globalCanvas"></canvas>
+
+<!-- ── Grab tool: selection box + handles ── -->
+<div id="pwGrabSel" class="pw-grab-sel" hidden aria-hidden="true">
+  <div class="pw-grab-sel__body"></div>
+  <div class="pw-grab-handle pw-grab-handle--tl" data-pos="tl"></div>
+  <div class="pw-grab-handle pw-grab-handle--tc" data-pos="tc"></div>
+  <div class="pw-grab-handle pw-grab-handle--tr" data-pos="tr"></div>
+  <div class="pw-grab-handle pw-grab-handle--ml" data-pos="ml"></div>
+  <div class="pw-grab-handle pw-grab-handle--mr" data-pos="mr"></div>
+  <div class="pw-grab-handle pw-grab-handle--bl" data-pos="bl"></div>
+  <div class="pw-grab-handle pw-grab-handle--bc" data-pos="bc"></div>
+  <div class="pw-grab-handle pw-grab-handle--br" data-pos="br"></div>
+</div>
+
 <script src="main.js"></script>
 </body>
 </html>
