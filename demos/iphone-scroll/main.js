@@ -390,6 +390,31 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   });
 
+  // Keep a panel fully inside the viewport (call after expand or initial place)
+  function clampPanel(p) {
+    if (!p) return;
+    requestAnimationFrame(() => {
+      const r  = p.getBoundingClientRect();
+      const vw = window.innerWidth, vh = window.innerHeight, mg = 8;
+      // Compute current top/left, falling back to bounding rect
+      let t = parseFloat(p.style.top)  || r.top;
+      let l = parseFloat(p.style.left) || (r.left !== 0 ? r.left : null);
+      // Clamp bottom edge
+      if (r.bottom > vh - mg) t = Math.max(mg, vh - r.height - mg);
+      // Clamp top edge
+      if (t < mg) t = mg;
+      p.style.top = t + 'px';
+      // Clamp right edge (only if left-positioned; CSS right:20px panels are fine)
+      if (l !== null) {
+        if (l + r.width > vw - mg) l = vw - r.width - mg;
+        if (l < mg) l = mg;
+        p.style.left = l + 'px';
+      } else if (r.right > vw - mg) {
+        p.style.right = mg + 'px';
+      }
+    });
+  }
+
   // ── Panel toggle (minimize) ──────────────────────────────
   function bindToggle(toggleId, bodyId) {
     const btn  = document.getElementById(toggleId);
@@ -417,6 +442,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
             f.style.top = (ft + delta) + 'px';
           });
         }
+        if (!hidden) clampPanel(panel);
       }
     });
   }
@@ -425,6 +451,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   bindToggle('seqToggle',     'seqBody');
   bindToggle('cardsToggle',   'cardsBody');
   bindToggle('cameraToggle',  'cameraBody');
+  bindToggle('s6Toggle',      's6Body');
 
   // ── Panel switch + shadow opacity ────────────────────────
   // Portal every .pw-panel out of .stage (which is position:sticky and
@@ -440,9 +467,10 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   const contentPanel = document.getElementById('contentPanel');
   const cardsPanel   = document.getElementById('cardsPanel');
   const cameraPanel  = document.getElementById('cameraPanel');
+  const s6Panel      = document.getElementById('s6Panel');
 
   // All panels start hidden via inline style
-  [seqPanel, tweakPanel, contentPanel, cardsPanel, cameraPanel].forEach(p => {
+  [seqPanel, tweakPanel, contentPanel, cardsPanel, cameraPanel, s6Panel].forEach(p => {
     if (!p) return;
     p.style.opacity       = '0';
     p.style.pointerEvents = 'none';
@@ -465,15 +493,17 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       if (el === contentPanel && tweakPanel) {
         const tweakLeft   = sharedPanelPos?.left ?? tweakPanel.offsetLeft;
         const tweakBottom = tweakPanel.offsetTop + tweakPanel.offsetHeight;
+        const mg = 8, vh = window.innerHeight;
         el.style.left  = tweakLeft + 'px';
-        el.style.top   = (tweakBottom + 12) + 'px';
+        el.style.top   = Math.min(tweakBottom + 12, vh - el.offsetHeight - mg) + 'px';
         el.style.right = 'auto';
         el.dataset.draggable = '1';
         // Mark as stacked beneath tweak so dragging tweak carries it along
         el.dataset.stackedUnder = 'tweakPanel';
       } else if (sharedPanelPos) {
-        el.style.left  = sharedPanelPos.left + 'px';
-        el.style.top   = sharedPanelPos.top  + 'px';
+        const mg = 8, vw = window.innerWidth, vh = window.innerHeight;
+        el.style.left  = Math.min(sharedPanelPos.left, vw - el.offsetWidth  - mg) + 'px';
+        el.style.top   = Math.min(sharedPanelPos.top,  vh - el.offsetHeight - mg) + 'px';
         el.style.right = 'auto';
         el.dataset.draggable = '1';
       }
@@ -583,6 +613,26 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
       cameraPanel.style.opacity       = camOpa;
       cameraPanel.style.pointerEvents = camOpa < 0.08 ? 'none' : 'auto';
     }
+
+    // ── s6 panel: appears once the 360 sequence begins (triptych fully gone) ──
+    if (s6Panel) {
+      const tri6 = document.querySelector('.s3-triptych');
+      if (tri6) {
+        const triH6    = tri6.offsetHeight;
+        const tr6      = tri6.getBoundingClientRect();
+        const extra6   = Math.max(0, -(tr6.top + triH6));
+        const q6       = Math.min(1, extra6 / (3 * window.innerHeight));
+        const s6Opa    = c01((q6 - 0.05) / 0.1);   // independent of stay — s6 is past phone exit
+        s6Panel.style.opacity       = s6Opa.toFixed(3);
+        s6Panel.style.pointerEvents = s6Opa > 0.08 ? 'auto' : 'none';
+        if (s6Opa > 0 && !s6Panel.dataset.draggable) {
+          s6Panel.style.right = '24px';
+          s6Panel.style.top   = '80px';
+          s6Panel.style.left  = 'auto';
+          s6Panel.dataset.draggable = '1';
+        }
+      }
+    }
   }
   window.addEventListener('scroll', updatePanelVisibility, { passive: true });
   updatePanelVisibility();
@@ -662,7 +712,7 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
     });
   }
 
-  [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel, cameraPanel].forEach(p => {
+  [seqPanel, shadowPanel, tweakPanel, contentPanel, cardsPanel, cameraPanel, s6Panel].forEach(p => {
     if (!p) return;
     makeDraggable(p);
   });
@@ -908,27 +958,24 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   })();
 
   // ── Section accordion ────────────────────────────────────
+  // Open state max-height is CSS-driven (400px baseline) — no JS measurement.
   document.querySelectorAll('.pw-sec__hdr').forEach(hdr => {
     const sec  = document.getElementById(hdr.dataset.sec);
     const body = sec?.querySelector('.pw-sec__body');
     const tog  = hdr.querySelector('.pw-sec__tog');
     if (!body || !tog) return;
-    body.style.maxHeight = body.scrollHeight + 'px';
     hdr.addEventListener('click', () => {
       const isCollapsed = sec.classList.toggle('pw-sec--collapsed');
       tog.textContent   = isCollapsed ? '+' : '−';
-      body.style.maxHeight = isCollapsed ? '0px' : body.scrollHeight + 'px';
     });
   });
 
   // Collapse all content sections except the first on initial load
   document.querySelectorAll('#ctrlBody .pw-sec').forEach((sec, i) => {
     if (i === 0) return;
-    const body = sec.querySelector('.pw-sec__body');
-    const tog  = sec.querySelector('.pw-sec__tog');
+    const tog = sec.querySelector('.pw-sec__tog');
     sec.classList.add('pw-sec--collapsed');
-    if (tog)  tog.textContent        = '+';
-    if (body) body.style.maxHeight   = '0px';
+    if (tog) tog.textContent = '+';
   });
 
   // ── Sequence panel bindings ──────────────────────────────
@@ -1501,11 +1548,9 @@ window._scrollCfg = { ph1Mult: 3, lensIn: 0.20, lensOut: 0.80, lensPeak: 0.97 };
   // ── Comp double-click → section focus ───────────────────
   function openSec(sec) {
     if (!sec || !sec.classList.contains('pw-sec--collapsed')) return;
-    const body = sec.querySelector('.pw-sec__body');
-    const tog  = sec.querySelector('.pw-sec__tog');
+    const tog = sec.querySelector('.pw-sec__tog');
     sec.classList.remove('pw-sec--collapsed');
-    if (tog)  tog.textContent      = '−';
-    if (body) body.style.maxHeight = body.scrollHeight + 'px';
+    if (tog) tog.textContent = '−';
   }
 
   function flashSec(secId) {
@@ -3201,6 +3246,7 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     contentPanel: '#ff5eb0',
     cardsPanel:   '#38d2ff',
     cameraPanel:  '#bf5fff',
+    s6Panel:      '#ffcc44',
   };
   // shadow* inputs were merged into the PHONE panel; map them by id prefix
   // when the input lives outside the panel DOM (e.g. shadowCPickerHex popover).
@@ -6523,6 +6569,27 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
   const lensInners = section.querySelectorAll('.s5-camera__lens-inner');
   const copy       = document.getElementById('cameraCopy');
   const tri        = document.querySelector('.s3-triptych');
+  const s6Scrim    = document.getElementById('s6Scrim');
+  const s6Canvas   = document.getElementById('s6PhoneCanvas');
+  const s6Ctx      = s6Canvas ? s6Canvas.getContext('2d') : null;
+
+  // s6 sequence config — driven by panel sliders
+  const S6 = { scrimOpa: 0.78, split: 33, startY: 60, endY: -8, phoneX: 0, phoneH: 72, phoneOpa: 1.0 };
+
+  // Preload PNG sequence frames
+  const S6_FRAMES = 64;
+  const s6Imgs    = [];
+  let   s6Loaded  = 0;
+  if (s6Canvas) {
+    s6Canvas.width  = 540;
+    s6Canvas.height = 960;
+    for (let i = 1; i <= S6_FRAMES; i++) {
+      const img = new Image();
+      img.onload = () => s6Loaded++;
+      img.src = `assets/phone_360/frame_${String(i).padStart(3,'0')}.webp`;
+      s6Imgs.push(img);
+    }
+  }
 
   let raf       = false;
   let originSet = false;
@@ -6586,11 +6653,39 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
     }
 
     // ── Copy: fades in during second half of triptych exit ────────
+    const cp  = Math.max(0, Math.min(1, (p - 0.5) / 0.5));
+    const cpe = easeInOutSin(cp);
+
+    // ── s6 sequence: extra scroll beyond triptych fully gone ──────
+    const extraPx  = Math.max(0, -(triRect.top + triH));
+    const q        = Math.min(1, extraPx / (3 * window.innerHeight));
+    const splitF   = S6.split / 100;
+    const q1       = Math.min(1, q / Math.max(splitF, 0.01));
+    const q1e      = easeInOutSin(q1);
+    const q2       = Math.min(1, Math.max(0, (q - splitF) / Math.max(1 - splitF, 0.01)));
+    const q2e      = easeInOutSin(q2);
+
     if (copy) {
-      const cp  = Math.max(0, Math.min(1, (p - 0.5) / 0.5));
-      const cpe = easeInOutSin(cp);
-      copy.style.opacity   = cpe.toFixed(3);
+      copy.style.opacity   = (cpe * (1 - q1e)).toFixed(3);
       copy.style.transform = `translateY(${((1 - cpe) * 32).toFixed(1)}px)`;
+    }
+
+    if (s6Scrim) {
+      s6Scrim.style.opacity = (q1e * S6.scrimOpa).toFixed(3);
+    }
+
+    if (s6Canvas && s6Ctx) {
+      const frameIdx = Math.min(S6_FRAMES - 1, Math.floor(q2 * S6_FRAMES));
+      const img = s6Imgs[frameIdx];
+      if (img && img.complete && img.naturalWidth) {
+        s6Ctx.clearRect(0, 0, 540, 960);
+        s6Ctx.drawImage(img, 0, 0, 540, 960);
+      }
+      s6Canvas.style.height = S6.phoneH + 'vh';
+      const vOpa = Math.min(1, q2 / 0.08) * S6.phoneOpa;
+      const vY   = (1 - q2e) * S6.startY + S6.endY;
+      s6Canvas.style.opacity   = vOpa.toFixed(3);
+      s6Canvas.style.transform = `translate(calc(-50% + ${S6.phoneX}%), ${vY.toFixed(2)}vh)`;
     }
 
     raf = false;
@@ -6655,6 +6750,38 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       `/* LENS 3 */  X:${L[2].x}px  Y:${L[2].y}px  Scale:${L[2].scale.toFixed(2)}  Rot:${L[2].rot}deg`,
     ].join('\n');
     navigator.clipboard?.writeText(lines);
+  });
+
+  // ── s6 panel slider wiring ───────────────────────────────────
+  wireSlider('s6ScrimOpa', 's6ScrimOpaNum', S6, 'scrimOpa', 2);
+  wireSlider('s6Split',    's6SplitNum',    S6, 'split',    0);
+  wireSlider('s6StartY',   's6StartYNum',   S6, 'startY',   0);
+  wireSlider('s6EndY',     's6EndYNum',     S6, 'endY',     0);
+  wireSlider('s6PhoneX',   's6PhoneXNum',   S6, 'phoneX',   0);
+  wireSlider('s6PhoneH',   's6PhoneHNum',   S6, 'phoneH',   0);
+  wireSlider('s6PhoneOpa', 's6PhoneOpaNum', S6, 'phoneOpa', 2);
+
+  const s6ResetBtn = document.getElementById('s6Reset');
+  if (s6ResetBtn) s6ResetBtn.addEventListener('click', () => {
+    const defs = { scrimOpa: 0.78, split: 33, startY: 60, endY: -8, phoneX: 0, phoneH: 72, phoneOpa: 1.0 };
+    Object.assign(S6, defs);
+    [['s6ScrimOpa', defs.scrimOpa], ['s6Split', defs.split], ['s6StartY', defs.startY],
+     ['s6EndY', defs.endY], ['s6PhoneX', defs.phoneX], ['s6PhoneH', defs.phoneH],
+     ['s6PhoneOpa', defs.phoneOpa]].forEach(([id, v]) => {
+      const el = document.getElementById(id); if (el) el.value = v;
+    });
+    [['s6ScrimOpaNum', defs.scrimOpa.toFixed(2)], ['s6SplitNum', defs.split],
+     ['s6StartYNum', defs.startY], ['s6EndYNum', defs.endY], ['s6PhoneXNum', defs.phoneX],
+     ['s6PhoneHNum', defs.phoneH], ['s6PhoneOpaNum', defs.phoneOpa.toFixed(2)]].forEach(([id, v]) => {
+      const el = document.getElementById(id); if (el) el.textContent = v;
+    });
+    onScroll();
+  });
+
+  const s6CopyAllBtn = document.getElementById('s6CopyAll');
+  if (s6CopyAllBtn) s6CopyAllBtn.addEventListener('click', () => {
+    const txt = `scrimOpa:${S6.scrimOpa.toFixed(2)}  split:${S6.split}%  startY:${S6.startY}vh  endY:${S6.endY}vh  phoneX:${S6.phoneX}%  phoneH:${S6.phoneH}vh  phoneOpa:${S6.phoneOpa.toFixed(2)}`;
+    navigator.clipboard?.writeText(txt);
   });
 
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -6793,6 +6920,18 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
         });
       });
     }
+
+    // ── 360 sequence phone canvas (s6Panel) ───────────────────────────
+    // x → s6PhoneX (% offset, range -40…40); y → s6StartY (vh, range 0…120)
+    // scale → s6PhoneH (vh, range 20…120)
+    const s6CanvasEl = document.getElementById('s6PhoneCanvas');
+    if (s6CanvasEl) out.push({
+      el: s6CanvasEl, img: s6CanvasEl,
+      panelId: 's6Panel',
+      ids: { x: 's6PhoneX', y: 's6StartY', scale: 's6PhoneH' },
+      pxToX: () => 0.2,                      // 200px drag ≈ full ±40% range
+      pxToY: () => 100 / window.innerHeight,  // 1px = 1vh at 100vh viewport
+    });
 
     return out;
   })();
@@ -7090,5 +7229,69 @@ Controls: scaleInput(20-160) yRefInput(-500–2000) xOffInput(-600–600) phoneO
       }
     });
   });
+
+  // ── Asset Hover System ────────────────────────────────────────────────
+  // getBoundingClientRect hit-test so pointer-events:none elements (phone,
+  // headline) are still detectable. Panels remain scroll-driven as before.
+  {
+    const AC_ASSETS = [
+      { el: video,                                                      label: 'hero_reel.mp4'       },
+      { el: phoneImg,                                                   label: 'iPhone_14_Pro.png'   },
+      { el: phoneHeadline,                                              label: 'Content_Overlay'     },
+      { el: document.querySelector('.s3-triptych__card--left'),         label: 'triptych_left.jpg'   },
+      { el: document.querySelector('.s3-triptych__card--center'),       label: 'triptych_middle.jpg' },
+      { el: document.querySelector('.s3-triptych__card--right'),        label: 'triptych_right.jpg'  },
+      { el: document.querySelector('.s5-camera__lens--top'),            label: 'lens_wide.png'       },
+      { el: document.querySelector('.s5-camera__lens--middle'),         label: 'lens_main.png'       },
+      { el: document.querySelector('.s5-camera__lens--bottom'),         label: 'lens_telephoto.png'  },
+      { el: document.getElementById('s6PhoneCanvas'),                   label: 'phone_360.webp'      },
+    ].filter(a => a.el);
+
+    AC_ASSETS.forEach(a => a.el.classList.add('pw-asset-target'));
+
+    // BoundingRect hit-test — works even when pointer-events:none
+    function acFindAsset(mx, my) {
+      return AC_ASSETS.find(a => {
+        const r = a.el.getBoundingClientRect();
+        return mx >= r.left && mx <= r.right && my >= r.top && my <= r.bottom;
+      });
+    }
+
+    // Check opacity via getComputedStyle (avoids rAF timing issue)
+    function acAssetVisible(asset) {
+      if (asset.el === phoneImg || asset.el === phoneHeadline) {
+        return parseFloat(window.getComputedStyle(asset.el).opacity) >= 0.1;
+      }
+      return true;
+    }
+
+    const acTag = document.createElement('div');
+    acTag.className = 'pw-asset-tag';
+    acTag.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(acTag);
+    let acTagTimer = null;
+
+    let acHovered = null;
+    document.addEventListener('mousemove', e => {
+      const asset = acFindAsset(e.clientX, e.clientY);
+      if (asset && acAssetVisible(asset)) {
+        if (asset !== acHovered) {
+          if (acHovered) acHovered.el.classList.remove('pw-asset-target--hover');
+          acHovered = asset;
+          asset.el.classList.add('pw-asset-target--hover');
+          const r = asset.el.getBoundingClientRect();
+          acTag.textContent = asset.label;
+          acTag.style.left  = (r.left + r.width / 2) + 'px';
+          acTag.style.top   = Math.max(8, r.top - 32) + 'px';
+          clearTimeout(acTagTimer);
+          acTag.classList.add('pw-asset-tag--on');
+        }
+      } else if (acHovered) {
+        acHovered.el.classList.remove('pw-asset-target--hover');
+        acHovered = null;
+        acTagTimer = setTimeout(() => acTag.classList.remove('pw-asset-tag--on'), 100);
+      }
+    }, { passive: true });
+  }
 
 }());
