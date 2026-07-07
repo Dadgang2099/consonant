@@ -12,7 +12,7 @@ panels of real controls float over a live webpage and let a designer adjust anim
 typography, layout, and imagery in real time — with a timeline to keyframe any value against scroll position.
 
 The live URL is **https://justus.agency** (redirects to `/demos/iphone-scroll/`).
-The repo is at `/Users/ecoakley/Desktop/consonant` on the local machine.
+The repo is at `/Users/ecoakley/dev/projects/consonant` on the local machine.
 The working branch is `feat/iphone-scroll-hero`.
 
 ---
@@ -20,11 +20,11 @@ The working branch is `feat/iphone-scroll-hero`.
 ## Running Locally
 
 ```
-cd /Users/ecoakley/Desktop/consonant/demos/iphone-scroll
+cd /Users/ecoakley/dev/projects/consonant/demos/iphone-scroll
 node server.js
 ```
 
-Then open `http://localhost:3000`. No build step. No npm install required for the demo itself.
+Then open `http://localhost:3737`. No build step. No npm install required for the demo itself.
 
 The repo uses Nx and has a `package.json` at the root, but the demo is vanilla JS/CSS/HTML
 and runs standalone.
@@ -36,7 +36,7 @@ and runs standalone.
 **There is no auto-deploy.** Pushing to GitHub does NOT trigger Vercel.
 
 ```
-cd /Users/ecoakley/Desktop/consonant
+cd /Users/ecoakley/dev/projects/consonant
 vercel --prod --yes
 git push personal feat/iphone-scroll-hero
 ```

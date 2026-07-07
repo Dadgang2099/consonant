@@ -514,6 +514,7 @@ body {
 .pw-sec__body {
   padding: 0 14px 10px;
   overflow: hidden;
+  max-height: 400px;  /* CSS default for open state — no JS measurement needed */
   transition: max-height 0.25s cubic-bezier(0.23,1,0.32,1),
               opacity    0.2s  cubic-bezier(0.23,1,0.32,1),
               padding    0.2s  cubic-bezier(0.23,1,0.32,1);
@@ -1386,6 +1387,18 @@ body {
 }
 #cameraBody .pw-actions {
   padding: 6px 0 20px;
+  margin-top: 6px;
+}
+#s6Body {
+  padding: 8px 0 36px;
+  gap: 0;
+}
+#s6Body .pw-row {
+  margin-bottom: 4px;
+  min-height: 26px;
+}
+#s6Body .pw-actions {
+  padding: 6px 14px 20px;
   margin-top: 6px;
 }
 #seqBody .pw-debug {
@@ -5400,8 +5413,33 @@ html.grab-dragging .s3-triptych__card img { transition: none !important; }
   position: relative;
   z-index: 2;
   background: #000;
-  height: calc(100vh + min(100vh, 780px));
+  height: calc(400vh + min(100vh, 780px));
   margin-top: max(-100vh, -780px);
+}
+
+/* ── s6 phone-360 sequence — lives inside s5-camera__sticky ── */
+.s6-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+.s6-phone-canvas {
+  position: absolute;
+  z-index: 5;
+  /* intrinsic 9:16 aspect (540×960 source frames) — CSS scales it */
+  height: 72vh;
+  width: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 60vh);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 /* Sticky viewport — lenses overflow clipped here. */
@@ -5618,4 +5656,50 @@ html.grab-dragging .s3-triptych__card img { transition: none !important; }
 .vp-tag__tier--s { background: rgba(255,158,80,0.18);  border-color: rgba(255,158,80,0.42);  color: #ffd9b8; }
 .vp-tag__tier--m { background: rgba(196,255,96,0.16);  border-color: rgba(196,255,96,0.40);  color: #e9ffc6; }
 .vp-tag__tier--l { background: rgba(56,210,255,0.18);  border-color: rgba(56,210,255,0.42);  color: #cdf2ff; }
+
+/* ── Asset Click System ──────────────────────────────── */
+/* Phone and headline start invisible (CSS opacity:0) but lack pointer-events:none,
+   so they would swallow clicks on the video below them.
+   Make them non-interactive by default; JS re-enables when scroll makes them visible. */
+.phone-image   { pointer-events: none; }
+.phone-headline { pointer-events: none; }
+
+.pw-asset-target { cursor: pointer; }
+.pw-asset-target--hover {
+  filter: drop-shadow(0 0 18px rgba(255, 200, 0, 0.65));
+  transition: filter 0.15s ease;
+}
+
+/* Triptych cards have overflow:hidden — use box-shadow (not clipped by own overflow) */
+.s3-triptych__card.pw-asset-target--hover {
+  filter: none;
+  box-shadow: 0 0 0 2px rgba(255, 200, 0, 0.8), 0 0 24px rgba(255, 200, 0, 0.28);
+}
+
+/* Camera lenses have clip-path:circle — brightness shows within clip; drop-shadow may extend outside */
+.s5-camera__lens.pw-asset-target--hover {
+  filter: brightness(1.18) drop-shadow(0 0 14px rgba(255, 200, 0, 0.6));
+  transition: filter 0.15s ease;
+}
+
+/* Panel entrance fade in asset-click mode */
+.pw-panel { transition: opacity 0.2s ease; }
+
+/* Floating asset label tag */
+.pw-asset-tag {
+  position: fixed;
+  z-index: 2147483000;
+  font: 500 10px/1 'SF Mono', ui-monospace, monospace;
+  letter-spacing: 0.05em;
+  color: rgba(255, 200, 0, 1);
+  background: rgba(12, 12, 14, 0.92);
+  padding: 4px 8px 5px;
+  border-radius: 4px;
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.pw-asset-tag--on { opacity: 1; }
 .vp-tag__tier--xl{ background: rgba(255,94,176,0.18);  border-color: rgba(255,94,176,0.42);  color: #ffd0e6; }
