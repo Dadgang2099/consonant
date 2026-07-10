@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ButterMax — Buttery-smooth interfaces, maxed out</title>
+<meta name="description" content="ButterMax renders your UI at a locked 120fps. Stand-in demo mirror." />
+<style>
+  /* ============================================================
+     ButterMax — stand-in demo mirror
+     Design tokens: warm ivory / warm near-black grounds,
+     single gold accent, system type stacks (no webfont CDN).
+     ============================================================ */
+  :root {
+    --bg:        #FCF8F0;
+    --surface:   #FFFDF8;
+    --surface-2: #F4ECDC;
+    --text:      #211C14;
+    --text-soft: #6B6250;
+    --border:    #E7DCC7;
+    --accent:    #EAA000;
+    --accent-strong: #C77E00;
+    --accent-ink: #2A1E00;
+    --good:      #2E7D53;
+
+    --shadow-sm: 0 1px 2px rgba(40,30,10,.06), 0 2px 8px rgba(40,30,10,.05);
+    --shadow-md: 0 8px 30px rgba(40,30,10,.10);
+    --shadow-lg: 0 24px 60px rgba(40,30,10,.16);
+
+    --maxw: 1180px;
+    --pad: clamp(20px, 5vw, 64px);
+    --radius: 18px;
+    --radius-sm: 12px;
+
+    --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-serif: ui-serif, Georgia, "Times New Roman", serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+    --ease: cubic-bezier(.22,.61,.36,1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #17130C;
+      --surface:   #201A11;
+      --surface-2: #2A2216;
+      --text:      #F7EFDF;
+      --text-soft: #B6A98D;
+      --border:    #362C1C;
+      --accent:    #FFC24B;
+      --accent-strong: #FFD27A;
+      --accent-ink: #2A1E00;
+      --good:      #6FD39B;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+      --shadow-md: 0 10px 34px rgba(0,0,0,.45);
+      --shadow-lg: 0 28px 70px rgba(0,0,0,.6);
+    }
+  }
+  /* Explicit toggle wins over the media query in both directions */
+  :root[data-theme="light"] {
+    --bg:#FCF8F0; --surface:#FFFDF8; --surface-2:#F4ECDC; --text:#211C14;
+    --text-soft:#6B6250; --border:#E7DCC7; --accent:#EAA000; --accent-strong:#C77E00;
+    --accent-ink:#2A1E00; --good:#2E7D53;
+    --shadow-sm:0 1px 2px rgba(40,30,10,.06),0 2px 8px rgba(40,30,10,.05);
+    --shadow-md:0 8px 30px rgba(40,30,10,.10); --shadow-lg:0 24px 60px rgba(40,30,10,.16);
+  }
+  :root[data-theme="dark"] {
+    --bg:#17130C; --surface:#201A11; --surface-2:#2A2216; --text:#F7EFDF;
+    --text-soft:#B6A98D; --border:#362C1C; --accent:#FFC24B; --accent-strong:#FFD27A;
+    --accent-ink:#2A1E00; --good:#6FD39B;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 10px 34px rgba(0,0,0,.45);
+    --shadow-lg:0 28px 70px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  button { font-family: inherit; cursor: pointer; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--pad); }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent-strong); font-weight: 600;
+  }
+  h1,h2,h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -.02em; line-height: 1.05; text-wrap: balance; margin: 0; }
+  h2 { font-size: clamp(28px, 4.4vw, 46px); }
+  h3 { font-size: 20px; letter-spacing: -.01em; }
+  p { margin: 0; }
+  section { padding-block: clamp(56px, 9vw, 118px); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 22px; border-radius: 999px;
+    font-weight: 700; font-size: 15px; border: 1px solid transparent;
+    transition: transform .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease), border-color .18s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow-sm); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent-strong); transform: translateY(-2px); }
+  .btn-block { width: 100%; justify-content: center; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+  /* ---------- Announcement bar ---------- */
+  .bar {
+    background: var(--accent-ink); color: #FFE9BE;
+    font-size: 13.5px; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 9px 44px; position: relative;
+  }
+  :root[data-theme="light"] .bar { background:#2A1E00; }
+  .bar strong { color: #FFC24B; }
+  .bar[hidden] { display: none; }
+  .bar-close {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: 0; color: #FFE9BE; font-size: 18px;
+    width: 30px; height: 30px; border-radius: 8px; line-height: 1;
+  }
+  .bar-close:hover { background: rgba(255,255,255,.12); }
+
+  /* ---------- Nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 60;
+    transition: background .3s var(--ease), box-shadow .3s var(--ease), border-color .3s;
+    border-bottom: 1px solid transparent;
+  }
+  .nav.scrolled {
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 66px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+  .brand .dot { width: 26px; height: 26px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; box-shadow: var(--shadow-sm); }
+  .brand .dot svg { width: 16px; height: 16px; }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { font-size: 15px; color: var(--text-soft); font-weight: 500; transition: color .16s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { display: flex; align-items: center; gap: 12px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); display: grid; place-items: center;
+    transition: border-color .16s, transform .16s;
+  }
+  .icon-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .theme-sun { display: none; } .theme-moon { display: block; }
+  :root[data-theme="dark"] .theme-sun { display:block; } :root[data-theme="dark"] .theme-moon { display:none; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .theme-sun{display:block;} :root:not([data-theme="light"]) .theme-moon{display:none;} }
+
+  .hamburger { display: none; }
+
+  /* mobile menu panel */
+  .mobile-menu {
+    position: fixed; inset: 0 0 0 auto; width: min(320px, 84vw); z-index: 80;
+    background: var(--surface); border-left: 1px solid var(--border);
+    transform: translateX(100%); transition: transform .34s var(--ease);
+    padding: 84px 26px 26px; display: flex; flex-direction: column; gap: 6px;
+    box-shadow: var(--shadow-lg);
+  }
+  .mobile-menu.open { transform: translateX(0); }
+  .mobile-menu a { padding: 12px 8px; font-size: 18px; font-weight: 600; border-bottom: 1px solid var(--border); }
+  .scrim { position: fixed; inset: 0; background: rgba(10,7,0,.42); z-index: 70; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; padding-top: clamp(40px, 6vw, 70px); overflow: clip; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(28px,4vw,56px); align-items: center; }
+  .hero h1 { font-size: clamp(38px, 6.4vw, 76px); }
+  .hero h1 .swash { font-family: var(--font-serif); font-weight: 700; font-style: italic; color: var(--accent-strong); letter-spacing: -.02em; }
+  .hero-sub { margin-top: 22px; font-size: clamp(17px,2.2vw,20px); color: var(--text-soft); max-width: 30ch; }
+  .hero-cta { margin-top: 30px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .hero-meta { margin-top: 26px; display: flex; gap: 22px; flex-wrap: wrap; font-size: 13.5px; color: var(--text-soft); }
+  .hero-meta b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .hero-visual {
+    position: relative; border-radius: 24px; overflow: hidden;
+    background: linear-gradient(160deg, #241a08, #0e0b05);
+    border: 1px solid var(--border); box-shadow: var(--shadow-lg);
+    aspect-ratio: 4/3.4;
+  }
+  .hero-visual canvas { width: 100%; height: 100%; display: block; }
+  .fps-chip {
+    position: absolute; left: 16px; top: 16px; z-index: 3;
+    font-family: var(--font-mono); font-size: 12px; color: #FFE9BE;
+    background: rgba(0,0,0,.4); border: 1px solid rgba(255,194,75,.35);
+    padding: 7px 11px; border-radius: 999px; display: flex; align-items: center; gap: 8px;
+    backdrop-filter: blur(4px);
+  }
+  .fps-chip .led { width: 8px; height: 8px; border-radius: 50%; background: #6FD39B; box-shadow: 0 0 8px #6FD39B; }
+  .fps-chip b { color: #FFC24B; font-variant-numeric: tabular-nums; }
+
+  /* reveal animation */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+  /* ---------- Marquee ---------- */
+  .logos { padding-block: clamp(30px, 5vw, 52px); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); }
+  .logos p { text-align: center; color: var(--text-soft); font-size: 13px; font-family: var(--font-mono); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 22px; }
+  .marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .marquee-track { display: flex; gap: 56px; width: max-content; animation: scroll 30s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+  .marquee .logo { font-family: var(--font-serif); font-size: 24px; font-weight: 700; color: var(--text-soft); opacity: .8; white-space: nowrap; }
+  @keyframes scroll { to { transform: translateX(-50%); } }
+
+  /* ---------- Section heading ---------- */
+  .head { max-width: 620px; margin-bottom: clamp(36px, 5vw, 56px); }
+  .head.center { margin-inline: auto; text-align: center; }
+  .head .eyebrow { display: block; margin-bottom: 14px; }
+  .head p { margin-top: 16px; color: var(--text-soft); font-size: 18px; }
+
+  /* ---------- Bento features ---------- */
+  .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 26px; box-shadow: var(--shadow-sm);
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s;
+    will-change: transform;
+  }
+  .card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+  .card.tilt:hover { transform: perspective(800px) translateY(-6px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
+  .card .ic { width: 46px; height: 46px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 16%, var(--surface)); display: grid; place-items: center; margin-bottom: 16px; }
+  .card .ic svg { width: 24px; height: 24px; color: var(--accent-strong); }
+  .card h3 { margin-bottom: 8px; }
+  .card p { color: var(--text-soft); font-size: 15px; }
+  .col-3 { grid-column: span 3; } .col-2 { grid-column: span 2; } .col-4 { grid-column: span 4; }
+  .card.feature-big { display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 14%, var(--surface)), var(--surface)); }
+
+  /* ---------- Steps ---------- */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; counter-reset: step; }
+  .step { position: relative; padding: 28px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
+  .step .num { font-family: var(--font-serif); font-size: 44px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .step h3 { margin: 14px 0 8px; } .step p { color: var(--text-soft); font-size: 15px; }
+  .step .line { position: absolute; top: 44px; right: -22px; width: 22px; height: 2px; background: var(--border); }
+  .step:last-child .line { display: none; }
+
+  /* ---------- Before/After slider ---------- */
+  .demo { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: clamp(20px,3vw,34px); box-shadow: var(--shadow-md); }
+  .ba { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 16/8; user-select: none; touch-action: none; cursor: ew-resize; }
+  .ba .panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; }
+  .ba .after { background: linear-gradient(135deg, #2b1f07, #171008); color: #FFE9BE; place-items: center end; text-align: right; padding-right: 7%; }
+  .ba .before { background: repeating-linear-gradient(135deg, #3a3a3a, #3a3a3a 10px, #333 10px, #333 20px); color: #eee; clip-path: inset(0 50% 0 0); place-items: center start; text-align: left; padding-left: 7%; }
+  .ba .tag { position: absolute; top: 14px; font-family: var(--font-mono); font-size: 12px; padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.45); }
+  .ba .before .tag { left: 14px; } .ba .after .tag { right: 14px; color:#FFC24B; }
+  .ba .big { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px,6vw,60px); font-variant-numeric: tabular-nums; }
+  .ba .lbl { font-size: 13px; opacity: .8; margin-top: 6px; }
+  .ba-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; background: var(--accent); transform: translateX(-50%); z-index: 5; }
+  .ba-handle::after { content: "⇄"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 18px; box-shadow: var(--shadow-md); }
+
+  /* ---------- Stats ---------- */
+  .stats { background: var(--accent-ink); color: #FFE9BE; border-radius: 26px; padding: clamp(30px,5vw,56px); }
+  :root[data-theme="light"] .stats { background: #241A02; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; text-align: center; }
+  .stat .n { font-family: var(--font-serif); font-weight: 700; font-size: clamp(38px,6vw,60px); color: #FFC24B; font-variant-numeric: tabular-nums; line-height: 1; }
+  .stat .l { margin-top: 10px; font-size: 14px; color: #D8C4A0; }
+
+  /* ---------- Testimonials ---------- */
+  .quotes { position: relative; }
+  .quote-view { overflow: hidden; border-radius: 22px; }
+  .quote-track { display: flex; transition: transform .5s var(--ease); }
+  .quote { min-width: 100%; padding: clamp(28px,4vw,52px); background: var(--surface); border: 1px solid var(--border); border-radius: 22px; }
+  .quote blockquote { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px,2.8vw,30px); letter-spacing: -.01em; line-height: 1.3; margin: 0 0 22px; text-wrap: balance; }
+  .quote .who { display: flex; align-items: center; gap: 14px; }
+  .quote .av { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-strong)); display: grid; place-items: center; font-weight: 800; color: var(--accent-ink); font-family: var(--font-serif); }
+  .quote .who b { display: block; } .quote .who span { color: var(--text-soft); font-size: 14px; }
+  .q-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; }
+  .q-dots { display: flex; gap: 8px; }
+  .q-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); border: 0; transition: background .2s, width .2s; }
+  .q-dot.active { background: var(--accent); width: 24px; border-radius: 999px; }
+
+  /* ---------- Pricing ---------- */
+  .price-toggle { display: inline-flex; align-items: center; gap: 12px; margin: 0 auto 40px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .price-toggle button { border: 0; background: transparent; color: var(--text-soft); padding: 8px 16px; border-radius: 999px; transition: all .2s; }
+  .price-toggle button.active { background: var(--accent); color: var(--accent-ink); }
+  .price-toggle .save { font-family: var(--font-mono); font-size: 11px; color: var(--good); }
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+  .tier { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; display: flex; flex-direction: column; gap: 18px; }
+  .tier.pop { border-color: var(--accent); box-shadow: var(--shadow-md); position: relative; }
+  .tier.pop::before { content: "Most popular"; position: absolute; top: -12px; left: 30px; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+  .tier .name { font-family: var(--font-mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-soft); }
+  .tier .amt { font-family: var(--font-display); font-weight: 800; font-size: 46px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .tier .amt small { font-size: 15px; font-weight: 500; color: var(--text-soft); font-family: var(--font-body); }
+  .tier ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; font-size: 15px; }
+  .tier li { display: flex; gap: 10px; color: var(--text-soft); }
+  .tier li svg { width: 18px; height: 18px; color: var(--accent-strong); flex: none; margin-top: 3px; }
+
+  /* ---------- FAQ ---------- */
+  .faq { max-width: 780px; margin-inline: auto; }
+  .qa { border-bottom: 1px solid var(--border); }
+  .qa-q { width: 100%; background: transparent; border: 0; text-align: left; padding: 22px 4px; display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 18px; font-weight: 600; color: var(--text); font-family: var(--font-display); }
+  .qa-q .chev { flex: none; width: 24px; height: 24px; transition: transform .3s var(--ease); color: var(--accent-strong); }
+  .qa.open .qa-q .chev { transform: rotate(180deg); }
+  .qa-a { max-height: 0; overflow: hidden; transition: max-height .35s var(--ease); }
+  .qa-a p { padding: 0 4px 22px; color: var(--text-soft); }
+
+  /* ---------- CTA ---------- */
+  .cta-band { text-align: center; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, var(--surface)), var(--surface)); border: 1px solid var(--border); border-radius: 28px; padding: clamp(40px,7vw,80px) var(--pad); box-shadow: var(--shadow-md); }
+  .cta-band h2 { font-size: clamp(30px,5vw,52px); }
+  .cta-band p { margin: 16px auto 0; color: var(--text-soft); max-width: 46ch; font-size: 18px; }
+  .cta-band .hero-cta { justify-content: center; margin-top: 30px; }
+
+  /* ---------- Footer ---------- */
+  footer { border-top: 1px solid var(--border); background: var(--surface); padding-block: clamp(46px,6vw,72px); }
+  .foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 30px; }
+  .foot-brand p { color: var(--text-soft); font-size: 14px; margin-top: 14px; max-width: 32ch; }
+  .foot-col h4 { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-soft); margin: 0 0 14px; }
+  .foot-col a { display: block; color: var(--text-soft); font-size: 15px; padding: 5px 0; transition: color .16s; }
+  .foot-col a:hover { color: var(--accent-strong); }
+  .news { display: flex; gap: 8px; margin-top: 12px; }
+  .news input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 14px; }
+  .news input:focus-visible { outline: 2px solid var(--accent); }
+  .foot-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-soft); font-size: 13.5px; }
+
+  .to-top { position: fixed; right: 22px; bottom: 22px; z-index: 50; width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); border: 0; display: grid; place-items: center; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transform: translateY(12px); transition: opacity .3s, transform .3s; }
+  .to-top.show { opacity: 1; pointer-events: auto; transform: none; }
+  .to-top svg { width: 20px; height: 20px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    .nav-links, .nav-cta .btn { display: none; }
+    .hamburger { display: grid; }
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-visual { order: -1; aspect-ratio: 16/11; }
+    .bento { grid-template-columns: repeat(2, 1fr); }
+    .col-3,.col-2,.col-4 { grid-column: span 2; }
+    .steps, .tiers, .stats-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .bento { grid-template-columns: 1fr; }
+    .col-3,.col-2,.col-4 { grid-column: span 1; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .foot-grid { grid-template-columns: 1fr; }
+    .hero-meta { gap: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Announcement bar (dismissible) -->
+<div class="bar" id="bar">
+  <span>🧈 <strong>Stand-in demo mirror</strong> — placeholder copy &amp; colors, swap freely. Every section behaves like the original.</span>
+  <button class="bar-close" id="barClose" aria-label="Dismiss">×</button>
+</div>
+
+<!-- Nav -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="ButterMax home">
+      <span class="dot"><svg viewBox="0 0 24 24" fill="none"><path d="M4 15c3-6 5-8 8-8s2 4 5 4 3-3 3-3" stroke="#2A1E00" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+      ButterMax
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#showcase">Demo</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+        <svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" stroke-linecap="round"/></svg>
+      </button>
+      <a class="btn btn-ghost" href="#pricing">Sign in</a>
+      <a class="btn btn-primary" href="#cta">Start free</a>
+      <button class="icon-btn hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="mobile-menu" id="mobileMenu" aria-label="Mobile">
+  <a href="#features">Features</a>
+  <a href="#how">How it works</a>
+  <a href="#showcase">Demo</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#faq">FAQ</a>
+  <a class="btn btn-primary btn-block" href="#cta" style="margin-top:14px">Start free</a>
+</aside>
+
+<main id="top">
+
+  <!-- Hero -->
+  <section class="hero wrap">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow reveal">Rendering engine · v4.2</span>
+        <h1 class="reveal" style="margin-top:16px">Buttery-smooth<br>interfaces, <span class="swash">maxed</span> out.</h1>
+        <p class="hero-sub reveal">ButterMax locks every scroll, transition, and gesture to a steady 120fps — no jank, no dropped frames, no rewrites.</p>
+        <div class="hero-cta reveal">
+          <a class="btn btn-primary" href="#cta">Start free — no card ↗</a>
+          <a class="btn btn-ghost" href="#showcase">Watch the demo</a>
+        </div>
+        <div class="hero-meta reveal">
+          <span><b>12k+</b> teams shipping</span>
+          <span><b>0.4ms</b> frame budget</span>
+          <span><b>99.99%</b> uptime</span>
+        </div>
+      </div>
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="fps-chip"><span class="led"></span> <b id="fpsNum">120</b> fps · locked</div>
+        <canvas id="ribbon"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Logo marquee -->
+  <div class="logos">
+    <div class="wrap"><p>Trusted by product teams at</p></div>
+    <div class="marquee">
+      <div class="marquee-track" id="mTrack">
+        <span class="logo">Nimbus</span><span class="logo">Orbit</span><span class="logo">Fathom</span><span class="logo">Vellum</span><span class="logo">Ridge</span><span class="logo">Halcyon</span><span class="logo">Quill</span><span class="logo">Cobalt</span>
+        <span class="logo">Nimbus</span><span class="logo">Orbit</span><span class="logo">Fathom</span><span class="logo">Vellum</span><span class="logo">Ridge</span><span class="logo">Halcyon</span><span class="logo">Quill</span><span class="logo">Cobalt</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features bento -->
+  <section id="features" class="wrap">
+    <div class="head reveal">
+      <span class="eyebrow">Why ButterMax</span>
+      <h2>Everything you need to ship silk.</h2>
+      <p>A drop-in layer that profiles, schedules, and paints your UI so the main thread never blocks.</p>
+    </div>
+    <div class="bento">
+      <div class="card feature-big col-3 tilt reveal">
+        <div>
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4 14h7l-1 8 9-12h-7z" stroke-linejoin="round"/></svg></div>
+          <h3>Frame scheduler</h3>
+          <p>Prioritizes paint work automatically and defers everything else to idle time.</p>
+        </div>
+        <p style="font-family:var(--font-mono);font-size:13px;color:var(--accent-strong)">main thread → never blocked</p>
+      </div>
+      <div class="card col-3 tilt reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>Live profiler</h3>
+        <p>See dropped frames the instant they happen, with a flamegraph down to the component.</p>
+      </div>
+      <div class="card col-2 tilt reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8" stroke-linecap="round"/></svg></div>
+        <h3>Any framework</h3>
+        <p>React, Vue, Svelte, or vanilla — one line of setup.</p>
+      </div>
+      <div class="card col-2 tilt reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10" stroke-linecap="round"/><path d="M12 6v6l4 2" stroke-linecap="round"/></svg></div>
+        <h3>0.4ms budget</h3>
+        <p>Deterministic frame timing you can actually rely on.</p>
+      </div>
+      <div class="card col-2 tilt reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z" stroke-linejoin="round"/></svg></div>
+        <h3>Zero-risk rollout</h3>
+        <p>Ships behind a flag; roll back any release in one click.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="wrap">
+    <div class="head reveal">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps to smooth.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <span class="num">1</span><span class="line"></span>
+        <h3>Install the layer</h3>
+        <p>Add the package and wrap your root. No build changes, no config to babysit.</p>
+      </div>
+      <div class="step reveal">
+        <span class="num">2</span><span class="line"></span>
+        <h3>Let it profile</h3>
+        <p>ButterMax watches real sessions and learns which frames cost you the most.</p>
+      </div>
+      <div class="step reveal">
+        <span class="num">3</span><span class="line"></span>
+        <h3>Ship at 120fps</h3>
+        <p>Work is rescheduled around paint automatically. You just watch the graph go flat.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Showcase / before-after -->
+  <section id="showcase" class="wrap">
+    <div class="head center reveal">
+      <span class="eyebrow">See the difference</span>
+      <h2>Drag to compare.</h2>
+      <p>Same app, same device. One is running ButterMax.</p>
+    </div>
+    <div class="demo reveal">
+      <div class="ba" id="ba">
+        <div class="panel after">
+          <span class="tag">With ButterMax</span>
+          <div><div class="big">120<span style="font-size:.4em">fps</span></div><div class="lbl">buttery, locked, zero drops</div></div>
+        </div>
+        <div class="panel before" id="baBefore">
+          <span class="tag">Before</span>
+          <div><div class="big">31<span style="font-size:.4em">fps</span></div><div class="lbl">janky, stuttering, dropped frames</div></div>
+        </div>
+        <div class="ba-handle" id="baHandle"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="wrap">
+    <div class="stats reveal">
+      <div class="stats-grid">
+        <div class="stat"><div class="n" data-count="120" data-suffix="fps">0</div><div class="l">locked frame rate</div></div>
+        <div class="stat"><div class="n" data-count="87" data-suffix="%">0</div><div class="l">fewer dropped frames</div></div>
+        <div class="stat"><div class="n" data-count="12" data-suffix="k+">0</div><div class="l">teams onboarded</div></div>
+        <div class="stat"><div class="n" data-count="3" data-suffix="min">0</div><div class="l">to first paint</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="wrap">
+    <div class="head center reveal">
+      <span class="eyebrow">Loved by builders</span>
+      <h2>What teams say.</h2>
+    </div>
+    <div class="quotes reveal">
+      <div class="quote-view">
+        <div class="quote-track" id="qTrack">
+          <figure class="quote">
+            <blockquote>“We deleted three weeks of hand-tuned rAF hacks and our scroll got smoother anyway.”</blockquote>
+            <div class="who"><div class="av">MR</div><div><b>Mara Reyes</b><span>Staff Engineer, Nimbus</span></div></div>
+          </figure>
+          <figure class="quote">
+            <blockquote>“The profiler paid for itself in the first afternoon. We found a 40ms paint we'd chased for months.”</blockquote>
+            <div class="who"><div class="av">DK</div><div><b>Dev Kapoor</b><span>Frontend Lead, Orbit</span></div></div>
+          </figure>
+          <figure class="quote">
+            <blockquote>“Our lowest-end Android devices now feel like the flagship. Support tickets dropped noticeably.”</blockquote>
+            <div class="who"><div class="av">SL</div><div><b>Sofia Lund</b><span>Head of Product, Fathom</span></div></div>
+          </figure>
+        </div>
+      </div>
+      <div class="q-controls">
+        <button class="icon-btn" id="qPrev" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="q-dots" id="qDots"></div>
+        <button class="icon-btn" id="qNext" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="wrap">
+    <div class="head center reveal">
+      <span class="eyebrow">Pricing</span>
+      <h2>Simple, per-seat plans.</h2>
+    </div>
+    <div style="text-align:center">
+      <div class="price-toggle reveal">
+        <button class="active" data-cycle="mo" id="cycleMo">Monthly</button>
+        <button data-cycle="yr" id="cycleYr">Yearly <span class="save">−20%</span></button>
+      </div>
+    </div>
+    <div class="tiers">
+      <div class="tier reveal">
+        <div class="name">Starter</div>
+        <div class="amt" data-mo="0" data-yr="0">$0<small>/mo</small></div>
+        <p style="color:var(--text-soft);font-size:14px;margin:0">For solo devs and side projects.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>1 project</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>Live profiler</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>Community support</li>
+        </ul>
+        <a class="btn btn-ghost btn-block" href="#cta" style="margin-top:auto">Get started</a>
+      </div>
+      <div class="tier pop reveal">
+        <div class="name">Team</div>
+        <div class="amt" data-mo="24" data-yr="19">$24<small>/mo</small></div>
+        <p style="color:var(--text-soft);font-size:14px;margin:0">For teams shipping to production.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited projects</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>Flamegraph history</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>Priority support</li>
+        </ul>
+        <a class="btn btn-primary btn-block" href="#cta" style="margin-top:auto">Start free trial</a>
+      </div>
+      <div class="tier reveal">
+        <div class="name">Enterprise</div>
+        <div class="amt" data-mo="—" data-yr="—">Custom<small></small></div>
+        <p style="color:var(--text-soft);font-size:14px;margin:0">SSO, SLAs, and dedicated tuning.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>Everything in Team</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>SSO &amp; audit logs</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>Dedicated engineer</li>
+        </ul>
+        <a class="btn btn-ghost btn-block" href="#cta" style="margin-top:auto">Contact sales</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="wrap">
+    <div class="head center reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions, answered.</h2>
+    </div>
+    <div class="faq" id="faqList">
+      <div class="qa">
+        <button class="qa-q">Does ButterMax require rewriting my app?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="qa-a"><p>No. It's a drop-in layer — wrap your root component once and you're done. There's nothing to migrate.</p></div>
+      </div>
+      <div class="qa">
+        <button class="qa-q">Which frameworks are supported?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="qa-a"><p>React, Vue, Svelte, Solid, and plain JavaScript. Anything that paints to the DOM works.</p></div>
+      </div>
+      <div class="qa">
+        <button class="qa-q">Will it slow down my bundle?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="qa-a"><p>The runtime is 6kb gzipped and loads off the critical path. Net effect on real devices is faster, not slower.</p></div>
+      </div>
+      <div class="qa">
+        <button class="qa-q">Can I roll back a release?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="qa-a"><p>Yes — every change ships behind a flag. Toggle it off and you're back to your previous behavior instantly.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta" class="wrap">
+    <div class="cta-band reveal">
+      <h2>Ship the smoothest release you've ever shipped.</h2>
+      <p>Free while you're building. Bring a card only when you go to production.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#top">Start free — no card ↗</a>
+        <a class="btn btn-ghost" href="#showcase">Book a demo</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top">
+          <span class="dot"><svg viewBox="0 0 24 24" fill="none"><path d="M4 15c3-6 5-8 8-8s2 4 5 4 3-3 3-3" stroke="#2A1E00" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+          ButterMax
+        </a>
+        <p>The rendering layer that keeps every interface buttery smooth.</p>
+        <div class="news">
+          <input type="email" placeholder="you@team.com" aria-label="Email for newsletter" />
+          <button class="btn btn-primary" id="newsBtn">Subscribe</button>
+        </div>
+      </div>
+      <div class="foot-col"><h4>Product</h4><a href="#features">Features</a><a href="#showcase">Demo</a><a href="#pricing">Pricing</a><a href="#how">Changelog</a></div>
+      <div class="foot-col"><h4>Company</h4><a href="#top">About</a><a href="#top">Careers</a><a href="#top">Blog</a><a href="#top">Press</a></div>
+      <div class="foot-col"><h4>Resources</h4><a href="#faq">Docs</a><a href="#faq">FAQ</a><a href="#top">Status</a><a href="#top">Contact</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 ButterMax — stand-in demo mirror. Placeholder content.</span>
+      <span>Privacy · Terms · Cookies</span>
+    </div>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" aria-label="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+
+<script>
+(function () {
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var $ = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+
+  /* Theme toggle (persisted) */
+  try {
+    var saved = localStorage.getItem("bm-theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  } catch (e) {}
+  $("#themeBtn").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    if (!cur) cur = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    var next = cur === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("bm-theme", next); } catch (e) {}
+  });
+
+  /* Announcement bar */
+  $("#barClose").addEventListener("click", function () { $("#bar").hidden = true; });
+
+  /* Nav scrolled state + back-to-top */
+  var nav = $("#nav"), toTop = $("#toTop");
+  function onScroll() {
+    var y = window.scrollY || window.pageYOffset;
+    nav.classList.toggle("scrolled", y > 8);
+    toTop.classList.toggle("show", y > 600);
+  }
+  window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  toTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); });
+
+  /* Mobile menu */
+  var menu = $("#mobileMenu"), scrim = $("#scrim"), burger = $("#hamburger");
+  function setMenu(open) {
+    menu.classList.toggle("open", open);
+    scrim.classList.toggle("open", open);
+    burger.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  burger.addEventListener("click", function () { setMenu(!menu.classList.contains("open")); });
+  scrim.addEventListener("click", function () { setMenu(false); });
+  $$("#mobileMenu a").forEach(function (a) { a.addEventListener("click", function () { setMenu(false); }); });
+
+  /* Scroll reveal */
+  var revs = $$(".reveal");
+  if ("IntersectionObserver" in window && !reduce) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    revs.forEach(function (el, i) { el.style.transitionDelay = (Math.min(i, 6) * 40) + "ms"; io.observe(el); });
+  } else {
+    revs.forEach(function (el) { el.classList.add("in"); });
+  }
+
+  /* Card hover tilt */
+  $$(".card.tilt").forEach(function (card) {
+    card.addEventListener("mousemove", function (e) {
+      if (reduce) return;
+      var r = card.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width - 0.5;
+      var py = (e.clientY - r.top) / r.height - 0.5;
+      card.style.setProperty("--ry", (px * 6).toFixed(2) + "deg");
+      card.style.setProperty("--rx", (-py * 6).toFixed(2) + "deg");
+    });
+    card.addEventListener("mouseleave", function () {
+      card.style.setProperty("--ry", "0deg"); card.style.setProperty("--rx", "0deg");
+    });
+  });
+
+  /* Stat counters */
+  var counted = false;
+  function runCounters() {
+    if (counted) return; counted = true;
+    $$(".stat .n").forEach(function (el) {
+      var target = parseFloat(el.getAttribute("data-count"));
+      var suffix = el.getAttribute("data-suffix") || "";
+      if (reduce) { el.textContent = target + suffix; return; }
+      var start = null, dur = 1400;
+      function tick(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+  var statsEl = $(".stats");
+  if ("IntersectionObserver" in window) {
+    var sio = new IntersectionObserver(function (en) {
+      if (en[0].isIntersecting) { runCounters(); sio.disconnect(); }
+    }, { threshold: 0.4 });
+    sio.observe(statsEl);
+  } else { runCounters(); }
+
+  /* Before/After slider */
+  (function () {
+    var ba = $("#ba"), handle = $("#baHandle"), before = $("#baBefore");
+    var dragging = false;
+    function setPos(clientX) {
+      var r = ba.getBoundingClientRect();
+      var pct = Math.max(0, Math.min(100, ((clientX - r.left) / r.width) * 100));
+      handle.style.left = pct + "%";
+      before.style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)";
+    }
+    function down(e) { dragging = true; setPos(e.touches ? e.touches[0].clientX : e.clientX); e.preventDefault(); }
+    function move(e) { if (!dragging) return; setPos(e.touches ? e.touches[0].clientX : e.clientX); }
+    function up() { dragging = false; }
+    ba.addEventListener("mousedown", down); ba.addEventListener("touchstart", down, { passive: false });
+    window.addEventListener("mousemove", move); window.addEventListener("touchmove", move, { passive: false });
+    window.addEventListener("mouseup", up); window.addEventListener("touchend", up);
+  })();
+
+  /* Testimonial carousel */
+  (function () {
+    var track = $("#qTrack"), dotsWrap = $("#qDots");
+    var slides = $$(".quote", track), n = slides.length, idx = 0, timer;
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement("button");
+      d.className = "q-dot" + (i === 0 ? " active" : "");
+      d.setAttribute("aria-label", "Slide " + (i + 1));
+      (function (k) { d.addEventListener("click", function () { go(k, true); }); })(i);
+      dotsWrap.appendChild(d);
+    }
+    var dots = $$(".q-dot", dotsWrap);
+    function go(k, manual) {
+      idx = (k + n) % n;
+      track.style.transform = "translateX(" + (-idx * 100) + "%)";
+      dots.forEach(function (dot, j) { dot.classList.toggle("active", j === idx); });
+      if (manual) restart();
+    }
+    function restart() { if (reduce) return; clearInterval(timer); timer = setInterval(function () { go(idx + 1); }, 5000); }
+    $("#qNext").addEventListener("click", function () { go(idx + 1, true); });
+    $("#qPrev").addEventListener("click", function () { go(idx - 1, true); });
+    restart();
+  })();
+
+  /* Pricing toggle */
+  (function () {
+    var mo = $("#cycleMo"), yr = $("#cycleYr");
+    function apply(cycle) {
+      mo.classList.toggle("active", cycle === "mo");
+      yr.classList.toggle("active", cycle === "yr");
+      $$(".tier .amt").forEach(function (el) {
+        var v = el.getAttribute("data-" + cycle);
+        var small = el.querySelector("small");
+        var suffix = small ? small.outerHTML : "";
+        if (v === "—") { el.innerHTML = "Custom" + suffix; }
+        else { el.innerHTML = "$" + v + suffix; }
+      });
+    }
+    mo.addEventListener("click", function () { apply("mo"); });
+    yr.addEventListener("click", function () { apply("yr"); });
+  })();
+
+  /* FAQ accordion (single open) */
+  $$("#faqList .qa").forEach(function (qa) {
+    var btn = $(".qa-q", qa), ans = $(".qa-a", qa);
+    btn.addEventListener("click", function () {
+      var isOpen = qa.classList.contains("open");
+      $$("#faqList .qa").forEach(function (o) { o.classList.remove("open"); $(".qa-a", o).style.maxHeight = null; });
+      if (!isOpen) { qa.classList.add("open"); ans.style.maxHeight = ans.scrollHeight + "px"; }
+    });
+  });
+
+  /* Newsletter (demo) */
+  $("#newsBtn").addEventListener("click", function () {
+    var input = $(".news input");
+    if (input.value && input.value.indexOf("@") > 0) { this.textContent = "Subscribed ✓"; input.value = ""; }
+    else { input.focus(); }
+  });
+
+  /* Hero "butter ribbon" canvas */
+  (function () {
+    var cv = $("#ribbon"); if (!cv) return;
+    var ctx = cv.getContext("2d"), W, H, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    function size() {
+      var r = cv.getBoundingClientRect();
+      W = r.width; H = r.height;
+      cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    size(); window.addEventListener("resize", size);
+    var waves = [
+      { amp: 0.16, freq: 1.4, speed: 0.6, col: "rgba(255,194,75,0.9)", w: 3 },
+      { amp: 0.12, freq: 2.1, speed: -0.9, col: "rgba(234,160,0,0.55)", w: 2 },
+      { amp: 0.20, freq: 1.0, speed: 0.4, col: "rgba(255,220,150,0.35)", w: 6 }
+    ];
+    var t = 0;
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      var grd = ctx.createLinearGradient(0, 0, 0, H);
+      grd.addColorStop(0, "rgba(255,194,75,0.05)"); grd.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+      for (var k = 0; k < waves.length; k++) {
+        var wv = waves[k];
+        ctx.beginPath();
+        for (var x = 0; x <= W; x += 6) {
+          var nx = x / W;
+          var y = H / 2 + Math.sin(nx * Math.PI * 2 * wv.freq + t * wv.speed) * H * wv.amp
+                        + Math.sin(nx * Math.PI * 5 + t * wv.speed * 0.5) * H * wv.amp * 0.25;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = wv.col; ctx.lineWidth = wv.w; ctx.lineJoin = "round";
+        ctx.shadowColor = "rgba(255,194,75,0.5)"; ctx.shadowBlur = 12;
+        ctx.stroke(); ctx.shadowBlur = 0;
+      }
+      t += 0.016;
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    frame();
+
+    /* subtle fps flicker on the chip for flavor */
+    if (!reduce) {
+      var fps = $("#fpsNum");
+      setInterval(function () { fps.textContent = (118 + Math.floor(Math.random() * 3)); }, 1200);
+    }
+  })();
+})();
+</script>
+</body>
+</html>
