@@ -42,8 +42,13 @@ async function loadJSON(url) {
 }
 
 // ── Config ───────────────────────────────────────────────────────────────
-const sceneCfg = await loadJSON('config/scene.json').catch((e) => fail(`Could not load scene config — ${e.message}`));
-const monitorsCfg = await loadJSON('config/monitors.json').catch(() => ({ monitors: [] }));
+// ?scene=NAME loads config/scene.NAME.json + config/monitors.NAME.json
+// (e.g. ?scene=office for the real scan; default is the placeholder office).
+const SCENE_NAME = new URLSearchParams(location.search).get('scene');
+const sceneCfg = await loadJSON(SCENE_NAME ? `config/scene.${SCENE_NAME}.json` : 'config/scene.json')
+  .catch((e) => fail(`Could not load scene config — ${e.message}`));
+const monitorsCfg = await loadJSON(SCENE_NAME ? `config/monitors.${SCENE_NAME}.json` : 'config/monitors.json')
+  .catch(() => ({ monitors: [] }));
 
 // ── Renderer / scene / camera ────────────────────────────────────────────
 if (!document.createElement('canvas').getContext('webgl2')) {
@@ -140,16 +145,27 @@ splat.initialized
 // bypassing Spark's raster pipeline entirely (useful on software GL / CI).
 if (new URLSearchParams(location.search).get('debug') === 'points') {
   splat.visible = false;
-  const { PlyReader } = await import('@sparkjsdev/spark');
+  const { PlyReader, SpzReader } = await import('@sparkjsdev/spark');
   const bytes = EMBED?.splatSource?.fileBytes
     ?? new Uint8Array(await (await fetch(sceneCfg.splatUrl)).arrayBuffer());
-  const reader = new PlyReader({ fileBytes: bytes });
-  await reader.parseHeader();
   const pos = [], col = [];
-  await reader.parseSplats((i, x, y, z, sx, sy, sz, qx, qy, qz, qw, opacity, r, g, b) => {
-    pos.push(x, y, z);
-    col.push(r, g, b);
-  });
+  const isSpz = bytes[0] === 0x1f && bytes[1] === 0x8b; // gzip magic
+  if (isSpz) {
+    const reader = new SpzReader({ fileBytes: bytes });
+    await reader.parseHeader();
+    await reader.parseSplats(
+      (i, x, y, z) => pos.push(x, y, z),
+      undefined,
+      (i, r, g, b) => col.push(r, g, b),
+    );
+  } else {
+    const reader = new PlyReader({ fileBytes: bytes });
+    await reader.parseHeader();
+    await reader.parseSplats((i, x, y, z, sx, sy, sz, qx, qy, qz, qw, opacity, r, g, b) => {
+      pos.push(x, y, z);
+      col.push(r, g, b);
+    });
+  }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));

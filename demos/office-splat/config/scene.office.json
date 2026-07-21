@@ -1,0 +1,39 @@
+{
+  "splatUrl": "assets/office-scan.spz",
+  "rotateXDeg": -90,
+  "camera": {
+    "start": {
+      "position": [
+        7.0,
+        0.4,
+        2.2
+      ],
+      "target": [
+        8.6,
+        0.0,
+        3.6
+      ]
+    },
+    "fov": 55,
+    "minDistance": 0.3,
+    "maxDistance": 14,
+    "maxPolarAngleDeg": 95,
+    "bounds": {
+      "min": [
+        -12.5,
+        -2.6,
+        -7.2
+      ],
+      "max": [
+        18.0,
+        4.5,
+        16.3
+      ]
+    }
+  },
+  "renderer": {
+    "maxPixelRatioDesktop": 2.0,
+    "maxPixelRatioMobile": 1.25,
+    "background": "#0b0b0e"
+  }
+}
