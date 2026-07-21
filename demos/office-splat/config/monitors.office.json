@@ -1,3 +1,119 @@
 {
-  "monitors": []
+  "monitors": [
+    {
+      "id": "left",
+      "label": "left monitor",
+      "mode": "canvas",
+      "src": null,
+      "variant": "terminal",
+      "corners": {
+        "tl": [
+          0.5949,
+          -0.0201,
+          0.3126
+        ],
+        "tr": [
+          0.6034,
+          -0.0906,
+          0.8861
+        ],
+        "br": [
+          0.5953,
+          -0.4146,
+          0.8463
+        ],
+        "bl": [
+          0.5868,
+          -0.3441,
+          0.2728
+        ]
+      }
+    },
+    {
+      "id": "center",
+      "label": "center monitor",
+      "mode": "iframe",
+      "src": "screens/demo-site.html",
+      "corners": {
+        "tl": [
+          0.5866,
+          -0.0625,
+          0.9423
+        ],
+        "tr": [
+          0.3156,
+          -0.0677,
+          1.4066
+        ],
+        "br": [
+          0.3061,
+          -0.393,
+          1.3974
+        ],
+        "bl": [
+          0.5771,
+          -0.3877,
+          0.9331
+        ]
+      }
+    },
+    {
+      "id": "rightA",
+      "label": "right-center monitor",
+      "mode": "canvas",
+      "src": null,
+      "variant": "dashboard",
+      "corners": {
+        "tl": [
+          0.2447,
+          -0.0695,
+          1.4781
+        ],
+        "tr": [
+          -0.2897,
+          -0.0215,
+          1.747
+        ],
+        "br": [
+          -0.3155,
+          -0.3599,
+          1.7561
+        ],
+        "bl": [
+          0.2189,
+          -0.4079,
+          1.4872
+        ]
+      }
+    },
+    {
+      "id": "rightB",
+      "label": "far-right monitor",
+      "mode": "canvas",
+      "src": null,
+      "variant": "slideshow",
+      "corners": {
+        "tl": [
+          -0.3682,
+          -0.0557,
+          1.7323
+        ],
+        "tr": [
+          -0.9086,
+          -0.0073,
+          1.6228
+        ],
+        "br": [
+          -0.932,
+          -0.3165,
+          1.6013
+        ],
+        "bl": [
+          -0.3916,
+          -0.3649,
+          1.7108
+        ]
+      }
+    }
+  ]
 }
