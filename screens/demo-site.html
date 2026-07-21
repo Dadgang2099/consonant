@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>live screen</title>
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 3.5% 5%;
+      border-bottom: 1px solid #21262d;
+      font-size: 2.4vw; font-weight: 600;
+    }
+    .dot { width: 1.6vw; height: 1.6vw; border-radius: 50%; background: #f85149; animation: pulse 1.6s infinite; }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+    main { flex: 1; padding: 5%; }
+    h1 { font-size: 5.4vw; line-height: 1.15; margin-bottom: 3%; }
+    h1 span { color: #58a6ff; }
+    p { font-size: 2.6vw; color: #8b949e; max-width: 34em; }
+    .ticker {
+      margin-top: 6%;
+      display: flex; gap: 4%;
+    }
+    .stat { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 3% 4%; flex: 1; }
+    .stat b { display: block; font-size: 3.6vw; color: #3fb950; font-variant-numeric: tabular-nums; }
+    .stat i { font-style: normal; font-size: 1.9vw; color: #8b949e; }
+  </style>
+</head>
+<body>
+  <header><span class="dot"></span> this monitor is a live web page</header>
+  <main>
+    <h1>Rendered by the <span>browser</span>, inside the splat.</h1>
+    <p>An iframe, CSS3D-transformed to match the physical screen — HTML, video, or an entire site can play here.</p>
+    <div class="ticker">
+      <div class="stat"><b id="clock">--:--:--</b><i>local time</i></div>
+      <div class="stat"><b id="count">0</b><i>frames alive</i></div>
+      <div class="stat"><b>60 fps</b><i>target</i></div>
+    </div>
+  </main>
+  <script>
+    let frames = 0;
+    (function tick() {
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+      document.getElementById('count').textContent = (++frames).toLocaleString();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
