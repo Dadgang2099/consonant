@@ -52,7 +52,7 @@ export class MonitorLayer {
     entry.group.add(backing);
 
     const mode = cfg.mode ?? 'canvas';
-    if (mode === 'iframe' && cfg.src) this.#buildIframe(entry, zOffset);
+    if (mode === 'iframe' && (cfg.src || cfg.srcdoc)) this.#buildIframe(entry, zOffset);
     else if (mode === 'video' && cfg.src) this.#buildVideo(entry, zOffset);
     else this.#buildCanvas(entry, zOffset);
 
@@ -125,7 +125,8 @@ export class MonitorLayer {
     const widthPx = Math.round(frame.width * IFRAME_PX_PER_METER);
     const heightPx = Math.round(frame.height * IFRAME_PX_PER_METER);
     const iframe = document.createElement('iframe');
-    iframe.src = cfg.src;
+    if (cfg.srcdoc) iframe.srcdoc = cfg.srcdoc; // single-file embeds inline the page
+    else iframe.src = cfg.src;
     iframe.width = widthPx;
     iframe.height = heightPx;
     iframe.style.width = `${widthPx}px`;

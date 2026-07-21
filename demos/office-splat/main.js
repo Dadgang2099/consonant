@@ -30,7 +30,12 @@ function fail(msg) {
   throw new Error(msg);
 }
 
+// Embed hook: a host page (or single-file bundle) can pre-supply configs and
+// splat bytes via window.__officeSplatEmbed = { files: {path: json}, splatSource }.
+const EMBED = window.__officeSplatEmbed;
+
 async function loadJSON(url) {
+  if (EMBED?.files?.[url]) return structuredClone(EMBED.files[url]);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res.json();
@@ -110,7 +115,7 @@ function applyFly(dt) {
 
 // ── Splat scene ──────────────────────────────────────────────────────────
 const splat = new SplatMesh({
-  url: sceneCfg.splatUrl,
+  ...(EMBED?.splatSource ?? { url: sceneCfg.splatUrl }),
   raycastable: true,      // calibration tool click-picks points on the splat
   minRaycastOpacity: 0.4, // ignore wispy floaters when picking
   onProgress: (e) => {
@@ -136,7 +141,8 @@ splat.initialized
 if (new URLSearchParams(location.search).get('debug') === 'points') {
   splat.visible = false;
   const { PlyReader } = await import('@sparkjsdev/spark');
-  const bytes = new Uint8Array(await (await fetch(sceneCfg.splatUrl)).arrayBuffer());
+  const bytes = EMBED?.splatSource?.fileBytes
+    ?? new Uint8Array(await (await fetch(sceneCfg.splatUrl)).arrayBuffer());
   const reader = new PlyReader({ fileBytes: bytes });
   await reader.parseHeader();
   const pos = [], col = [];
