@@ -1,0 +1,50 @@
+name: Deploy office-splat to GitHub Pages
+
+on:
+  push:
+    branches: [claude/google-drive-document-5s9uny]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble site (office scan as default scene)
+        run: |
+          mkdir -p _site
+          cp -r demos/office-splat/. _site/
+          # real scan is the default scene at the root URL
+          cp _site/config/scene.office.json _site/config/scene.json
+          cp _site/config/monitors.office.json _site/config/monitors.json
+          # keep monitors config consistent: iframe screen ships with the site
+          rm -f _site/server.js _site/CLAUDE.md
+          rm -rf _site/scripts
+          ls -la _site
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
