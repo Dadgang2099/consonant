@@ -119,22 +119,34 @@ function applyFly(dt) {
 }
 
 // ── Splat scene ──────────────────────────────────────────────────────────
-const splat = new SplatMesh({
-  ...(EMBED?.splatSource ?? { url: sceneCfg.splatUrl }),
-  raycastable: true,      // calibration tool click-picks points on the splat
-  minRaycastOpacity: 0.4, // ignore wispy floaters when picking
-  onProgress: (e) => {
-    if (e.lengthComputable) {
-      const pct = Math.round((e.loaded / e.total) * 100);
-      loadingBar.style.width = `${pct}%`;
-      loadingLabel.textContent = `Loading scene… ${pct}%`;
-    }
-  },
-});
-if (sceneCfg.rotateXDeg) splat.rotation.x = THREE.MathUtils.degToRad(sceneCfg.rotateXDeg);
-scene.add(splat);
+// Large scans ship as multiple part files (GitHub caps files at 100 MB);
+// `splatUrls` loads them all into one scene. `splatUrl` stays the simple path.
+const splatSources = EMBED?.splatSource
+  ? [EMBED.splatSource]
+  : (sceneCfg.splatUrls ?? [sceneCfg.splatUrl]).map((url) => ({ url }));
 
-splat.initialized
+const partProgress = splatSources.map(() => 0);
+const splats = splatSources.map((source, idx) => {
+  const mesh = new SplatMesh({
+    ...source,
+    raycastable: true,      // calibration tool click-picks points on the splat
+    minRaycastOpacity: 0.4, // ignore wispy floaters when picking
+    onProgress: (e) => {
+      if (e.lengthComputable) {
+        partProgress[idx] = e.loaded / e.total;
+        const pct = Math.round((partProgress.reduce((a, b) => a + b, 0) / partProgress.length) * 100);
+        loadingBar.style.width = `${pct}%`;
+        loadingLabel.textContent = `Loading scene… ${pct}%`;
+      }
+    },
+  });
+  if (sceneCfg.rotateXDeg) mesh.rotation.x = THREE.MathUtils.degToRad(sceneCfg.rotateXDeg);
+  scene.add(mesh);
+  return mesh;
+});
+const splat = splats[0];
+
+Promise.all(splats.map((s) => s.initialized))
   .then(() => {
     loadingEl.hidden = true;
     introEl.hidden = false;
@@ -144,27 +156,29 @@ splat.initialized
 // Diagnostic: ?debug=points renders the PLY as a raw three.js point cloud,
 // bypassing Spark's raster pipeline entirely (useful on software GL / CI).
 if (new URLSearchParams(location.search).get('debug') === 'points') {
-  splat.visible = false;
+  splats.forEach((s) => { s.visible = false; });
   const { PlyReader, SpzReader } = await import('@sparkjsdev/spark');
-  const bytes = EMBED?.splatSource?.fileBytes
-    ?? new Uint8Array(await (await fetch(sceneCfg.splatUrl)).arrayBuffer());
   const pos = [], col = [];
-  const isSpz = bytes[0] === 0x1f && bytes[1] === 0x8b; // gzip magic
-  if (isSpz) {
-    const reader = new SpzReader({ fileBytes: bytes });
-    await reader.parseHeader();
-    await reader.parseSplats(
-      (i, x, y, z) => pos.push(x, y, z),
-      undefined,
-      (i, r, g, b) => col.push(r, g, b),
-    );
-  } else {
-    const reader = new PlyReader({ fileBytes: bytes });
-    await reader.parseHeader();
-    await reader.parseSplats((i, x, y, z, sx, sy, sz, qx, qy, qz, qw, opacity, r, g, b) => {
-      pos.push(x, y, z);
-      col.push(r, g, b);
-    });
+  for (const source of splatSources) {
+    const bytes = source.fileBytes
+      ?? new Uint8Array(await (await fetch(source.url)).arrayBuffer());
+    const isSpz = bytes[0] === 0x1f && bytes[1] === 0x8b; // gzip magic
+    if (isSpz) {
+      const reader = new SpzReader({ fileBytes: bytes });
+      await reader.parseHeader();
+      await reader.parseSplats(
+        (i, x, y, z) => pos.push(x, y, z),
+        undefined,
+        (i, r, g, b) => col.push(r, g, b),
+      );
+    } else {
+      const reader = new PlyReader({ fileBytes: bytes });
+      await reader.parseHeader();
+      await reader.parseSplats((i, x, y, z, sx, sy, sz, qx, qy, qz, qw, opacity, r, g, b) => {
+        pos.push(x, y, z);
+        col.push(r, g, b);
+      });
+    }
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -203,7 +217,7 @@ function pick(ev) {
     ),
     camera,
   );
-  return raycaster.intersectObject(splat, false)[0] ?? null;
+  return raycaster.intersectObjects(splats, false)[0] ?? null;
 }
 
 // ── Calibration tool (dev-only, lazy) ────────────────────────────────────

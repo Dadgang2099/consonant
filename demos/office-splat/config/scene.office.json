@@ -1,5 +1,8 @@
 {
-  "splatUrl": "assets/office-scan.spz",
+  "splatUrls": [
+    "assets/office-scan-part1.spz",
+    "assets/office-scan-part2.spz"
+  ],
   "rotateXDeg": -90,
   "camera": {
     "start": {
