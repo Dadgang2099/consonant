@@ -3,6 +3,9 @@
     "assets/office-scan-part1.spz",
     "assets/office-scan-part2.spz"
   ],
+  "splatUrlsMobile": [
+    "assets/office-scan-mobile.spz"
+  ],
   "rotateXDeg": -90,
   "camera": {
     "start": {

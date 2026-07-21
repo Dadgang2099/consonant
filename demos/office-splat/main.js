@@ -9,7 +9,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { SplatMesh } from '@sparkjsdev/spark';
+import { SplatMesh, SparkRenderer } from '@sparkjsdev/spark';
 import { MonitorLayer } from './monitors.js';
 
 const section = document.getElementById('splat-section');
@@ -28,6 +28,23 @@ function fail(msg) {
   errorEl.hidden = false;
   errorEl.textContent = msg;
   throw new Error(msg);
+}
+
+// ?debug=hud mirrors console warnings/errors into an on-screen log, so a
+// phone with no devtools can still tell us what broke.
+if (new URLSearchParams(location.search).get('debug') === 'hud') {
+  const hud = document.getElementById('calibrate-hint');
+  hud.hidden = false;
+  hud.textContent = `HUD on · ua: ${navigator.userAgent.slice(0, 60)}`;
+  const log = (tag) => (...args) => {
+    hud.textContent = `${hud.textContent}\n[${tag}] ${args.map((a) => String(a?.message ?? a)).join(' ')}`.split('\n').slice(-14).join('\n');
+  };
+  for (const level of ['error', 'warn']) {
+    const orig = console[level].bind(console);
+    console[level] = (...args) => { log(level)(...args); orig(...args); };
+  }
+  addEventListener('error', (e) => log('window')(e.message));
+  addEventListener('unhandledrejection', (e) => log('promise')(e.reason));
 }
 
 // Surface any unexpected failure on screen — a silent black canvas is
@@ -85,6 +102,9 @@ renderer.setClearColor(new THREE.Color(sceneCfg.renderer.background), 1);
 cssLayer.style.background = sceneCfg.renderer.background;
 
 const scene = new THREE.Scene();
+// Explicit SparkRenderer bound to our renderer — Spark's auto-created one
+// relies on detection that can silently fail, leaving splats invisible.
+scene.add(new SparkRenderer({ renderer }));
 const camera = new THREE.PerspectiveCamera(sceneCfg.camera.fov, 1, 0.02, 100);
 camera.position.fromArray(sceneCfg.camera.start.position);
 
@@ -140,7 +160,8 @@ function applyFly(dt) {
 // `splatUrls` loads them all into one scene. `splatUrl` stays the simple path.
 const splatSources = EMBED?.splatSource
   ? [EMBED.splatSource]
-  : (sceneCfg.splatUrls ?? [sceneCfg.splatUrl]).map((url) => ({ url }));
+  : ((IS_TOUCH && sceneCfg.splatUrlsMobile) || sceneCfg.splatUrls || [sceneCfg.splatUrl])
+      .map((url) => ({ url }));
 
 const partProgress = splatSources.map(() => 0);
 const splats = splatSources.map((source, idx) => {
