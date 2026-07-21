@@ -1,0 +1,38 @@
+name: Deploy office-splat to GitHub Pages
+
+on:
+  push:
+    branches: [claude/google-drive-document-5s9uny]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble site (office scan as default scene)
+        run: |
+          mkdir -p _site
+          cp -r demos/office-splat/. _site/
+          # real scan is the default scene at the root URL
+          cp _site/config/scene.office.json _site/config/scene.json
+          cp _site/config/monitors.office.json _site/config/monitors.json
+          rm -f _site/server.js _site/CLAUDE.md
+          rm -rf _site/scripts
+          touch _site/.nojekyll
+          ls -la _site
+
+      - name: Publish to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          force_orphan: true

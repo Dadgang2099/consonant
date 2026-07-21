@@ -29,7 +29,9 @@
     "dev:mcp": "concurrently -n \"storybook,story-ui-mcp\" -c \"blue,yellow\" \"npm run storybook\" \"npm run story-ui:mcp\"",
     "claude": "node scripts/claude.js",
     "icons:fetch": "node scripts/fetch-spectrum-icons.js",
-    "demo:iphone": "node demos/iphone-scroll/server.js"
+    "demo:iphone": "node demos/iphone-scroll/server.js",
+    "demo:office": "node demos/office-splat/server.js",
+    "demo:office:placeholder": "node demos/office-splat/scripts/make-placeholder-splat.mjs"
   },
   "keywords": [],
   "author": "",
