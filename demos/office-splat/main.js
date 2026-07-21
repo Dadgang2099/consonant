@@ -30,6 +30,23 @@ function fail(msg) {
   throw new Error(msg);
 }
 
+// Surface any unexpected failure on screen — a silent black canvas is
+// undebuggable on someone else's phone.
+addEventListener('error', (e) => {
+  if (errorEl.hidden) {
+    errorEl.hidden = false;
+    loadingEl.hidden = true;
+    errorEl.textContent = `Something broke: ${e.message ?? e.error ?? 'unknown error'}`;
+  }
+});
+addEventListener('unhandledrejection', (e) => {
+  if (errorEl.hidden) {
+    errorEl.hidden = false;
+    loadingEl.hidden = true;
+    errorEl.textContent = `Something broke: ${e.reason?.message ?? e.reason ?? 'unknown rejection'}`;
+  }
+});
+
 // Embed hook: a host page (or single-file bundle) can pre-supply configs and
 // splat bytes via window.__officeSplatEmbed = { files: {path: json}, splatSource }.
 const EMBED = window.__officeSplatEmbed;
