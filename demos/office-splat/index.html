@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Office — Gaussian Splat</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.js",
+        "three/addons/": "./vendor/three/addons/",
+        "@sparkjsdev/spark": "./vendor/spark/spark.module.min.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!--
+    Embeddable section. To drop into the portfolio, either <iframe> this page
+    or copy the .splat-section markup + importmap + main.js into the host page.
+  -->
+  <section class="splat-section" id="splat-section">
+    <div class="splat-stage">
+      <!-- CSS3D layer sits BEHIND the WebGL canvas; iframe-mode monitors show
+           through holes punched in the canvas (see monitors.js) -->
+      <div class="css3d-layer" id="css3d-layer"></div>
+      <canvas id="splat-canvas"></canvas>
+    </div>
+
+    <div class="splat-hud">
+      <div class="splat-loading" id="loading">
+        <div class="splat-loading-bar"><span id="loading-bar"></span></div>
+        <p id="loading-label">Loading scene…</p>
+      </div>
+      <div class="splat-intro" id="intro" hidden>
+        <h2>My office, scanned.</h2>
+        <p>Drag to orbit · scroll to zoom · double-click to focus<span class="desktop-only"> · WASD to move</span></p>
+        <button id="enter-btn" type="button">Look around</button>
+      </div>
+      <div class="splat-error" id="error" hidden></div>
+      <div class="splat-calibrate-hint" id="calibrate-hint" hidden></div>
+    </div>
+  </section>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

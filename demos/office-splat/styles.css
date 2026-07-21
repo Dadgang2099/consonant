@@ -1,0 +1,118 @@
+/* office-splat — embeddable Gaussian splat section */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #0b0b0e;
+  color: #f4f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.splat-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;      /* host page can override; the viewer tracks its box */
+  height: 100dvh;
+  overflow: hidden;
+  background: #0b0b0e;
+}
+
+.splat-stage,
+.splat-stage canvas,
+.css3d-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* CSS3D iframe layer renders *behind* the transparent-holed canvas */
+.css3d-layer { z-index: 0; overflow: hidden; }
+#splat-canvas { z-index: 1; display: block; touch-action: none; }
+
+/* Until the user clicks "Look around", the canvas ignores the pointer so the
+   section never hijacks page scroll. */
+.splat-section:not(.is-active) #splat-canvas { pointer-events: none; }
+/* iframe monitors only become interactive in inspect mode (press I) */
+.css3d-layer iframe { border: 0; pointer-events: none; }
+.splat-section.iframe-input .css3d-layer iframe { pointer-events: auto; }
+
+.splat-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.splat-hud > * { pointer-events: auto; }
+
+.splat-loading { text-align: center; }
+.splat-loading-bar {
+  width: 220px;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  margin: 0 auto 12px;
+}
+.splat-loading-bar span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: #f4f4f6;
+  transition: width 0.2s ease;
+}
+.splat-loading p { font-size: 13px; letter-spacing: 0.02em; opacity: 0.7; margin: 0; }
+
+.splat-intro {
+  text-align: center;
+  background: rgba(11, 11, 14, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 36px;
+  max-width: 90vw;
+}
+.splat-intro h2 { margin: 0 0 6px; font-size: 22px; font-weight: 600; }
+.splat-intro p { margin: 0 0 18px; font-size: 13px; opacity: 0.7; }
+.splat-intro button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b0b0e;
+  background: #f4f4f6;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 26px;
+  cursor: pointer;
+}
+.splat-intro button:hover { background: #fff; }
+
+.splat-error {
+  background: rgba(120, 30, 30, 0.85);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-size: 13px;
+  max-width: 80vw;
+}
+
+.splat-calibrate-hint {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  background: rgba(11, 11, 14, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  white-space: pre-line;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .desktop-only { display: none; }
+}
